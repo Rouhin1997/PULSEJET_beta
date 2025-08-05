@@ -38,6 +38,11 @@ struct CmdLineOptions {
   long nsamples;
   std::string timeseries_dump_dir;
   bool no_search;
+  bool distill_circular_orbit_cands;
+  bool single_precision_harmonic_sums;
+  bool exact_resampler;
+  std::string keplerian_tb_file;
+
 };
 
 struct FFACmdLineOptions {
@@ -78,7 +83,7 @@ bool read_cmdline_options(CmdLineOptions& args, int argc, char **argv)
 {
   try
     {
-      TCLAP::CmdLine cmd("Peasoup - a GPU pulsar search pipeline", ' ', "1.0");
+      TCLAP::CmdLine cmd("Peasoup - a GPU pulsar search pipeline that performs Polynomial and Keplerian parameter searches", ' ', "2.0");
 
       TCLAP::ValueArg<std::string> arg_infilename("i", "inputfile",
 						  "File to process (.fil)",
@@ -153,6 +158,8 @@ bool read_cmdline_options(CmdLineOptions& args, int argc, char **argv)
       TCLAP::ValueArg<float> arg_acc_pulse_width("", "acc_pulse_width",
                                                  "Minimum pulse width for which acc_tol is valid",
 						 false, 64.0, "float (us)",cmd);
+      
+
 
       TCLAP::ValueArg<float> arg_boundary_5_freq("", "boundary_5_freq",
                                                  "Frequency at which to switch from median5 to median25",
@@ -206,9 +213,15 @@ bool read_cmdline_options(CmdLineOptions& args, int argc, char **argv)
         "dump dedispersed time series to this directory",
         false, "", "string",cmd);
 
-       TCLAP::SwitchArg arg_no_search("", "nosearch", "Do not search while dumping timeseries, no effect otherwise", cmd);
+      TCLAP::SwitchArg arg_no_search("", "nosearch", "Do not search while dumping timeseries, no effect otherwise", cmd);
+      TCLAP::SwitchArg arg_distill_circular_orbit_cands("", "distill_circular_orbit_cands", "Distill candidates from circular orbit searches", cmd);
+      TCLAP::SwitchArg arg_single_precision_harmonic_sums("", "single_precision_harmonic_sums", "Perform harmonic sums with single precision instead of double.", cmd);
+      TCLAP::SwitchArg arg_exact_resampler("", "exact_resampler", "Run exact resampler using linear interpolation", cmd);
 
 
+      TCLAP::ValueArg<std::string> arg_keplerian_template_bank_filename("K", "keplerian_template_bank_file",
+                                                                         "filename of keplerian template bank",
+                                                                         false, "none", "string", cmd);
       
 
       cmd.parse(argc, argv);
@@ -222,7 +235,7 @@ bool read_cmdline_options(CmdLineOptions& args, int argc, char **argv)
       args.dm_file           = arg_dm_file.getValue();
       args.cdm               = arg_cdm.getValue();
       args.dm_end            = arg_dm_end.getValue();
-      args.dm_start            = arg_dm_start.getValue();
+      args.dm_start          = arg_dm_start.getValue();
       args.dm_tol            = arg_dm_tol.getValue();
       args.dm_pulse_width    = arg_dm_pulse_width.getValue();
       args.host_ram_limit_gb = arg_host_ram_limit_gb.getValue();
@@ -246,6 +259,11 @@ bool read_cmdline_options(CmdLineOptions& args, int argc, char **argv)
       args.nsamples           = arg_nsamples.getValue();
       args.timeseries_dump_dir = arg_timeseries_dump_dir.getValue();
       args.no_search         = arg_no_search.getValue();
+      args.distill_circular_orbit_cands = arg_distill_circular_orbit_cands.getValue();
+      args.single_precision_harmonic_sums = arg_single_precision_harmonic_sums.getValue();
+      args.exact_resampler   = arg_exact_resampler.getValue();
+      args.keplerian_tb_file = arg_keplerian_template_bank_filename.getValue();
+
 
     }catch (TCLAP::ArgException &e) {
     std::cerr << "Error: " << e.error() << " for arg " << e.argId()

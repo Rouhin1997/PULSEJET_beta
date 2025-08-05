@@ -12,12 +12,14 @@ private:
   float** h_data_ptrs;
   float** d_data_ptrs;
   HarmonicSums<float>& sums;
+  bool single_precision_mode;
 
 public:
   HarmonicFolder(HarmonicSums<float>& sums,
+         bool single_precision_mode,
 		 unsigned int max_blocks=MAX_BLOCKS,
 		 unsigned int max_threads=MAX_THREADS)
-    :sums(sums),max_blocks(max_blocks),max_threads(max_threads)
+    :sums(sums),single_precision_mode(single_precision_mode),max_blocks(max_blocks),max_threads(max_threads)
   {
     Utils::device_malloc<float*>(&d_data_ptrs,sums.size());
     Utils::host_malloc<float*>(&h_data_ptrs,sums.size());
@@ -32,7 +34,7 @@ public:
       }
     Utils::h2dcpy<float*>(d_data_ptrs,h_data_ptrs,sums.size());
     device_harmonic_sum(fold0.get_data(),d_data_ptrs,
-			fold0.get_nbins(),sums.size(),
+			fold0.get_nbins(),sums.size(), single_precision_mode,
 			max_blocks,max_threads);
     POP_NVTX_RANGE
       }

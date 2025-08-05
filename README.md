@@ -1,70 +1,83 @@
 # Peasoup
 
-**Peasoup** is a fast, GPU-accelerated acceleration search pipeline for discovering compact binary pulsars in high time resolution radio observations. It operates on filterbank data and outputs an XML file of candidate detections. Peasoup is optimized for large-scale, high-throughput pulsar searches on modern GPU architectures. It uses the library [`dedisp`](https://github.com/vishnubk/dedisp) originally written by [`Ben Barsdell`](https://github.com/benbarsdell)  to perform dedispersion.
+**Peasoup** is a fast, GPU-accelerated time-domain pulsar search pipeline designed to discover compact binary pulsars in high time resolution radio observations. It operates on filterbank files and outputs XML files of candidate detections. It uses the [`dedisp`](https://github.com/vishnubk/dedisp) library (originally written by [`Ben Barsdell`](https://github.com/benbarsdell)) to perform incoherent dedispersion.
 
+> ⚠️ Peasoup does **not** fold candidates. Use tools like [`psrfold_fil`](https://github.com/ypmen/PulsarX) (recommended), [`prepfold`](https://github.com/scottransom/presto), or [`dspsr`](https://dspsr.sourceforge.net/current/) to fold using candidate outputs.
 
-> ⚠️ Peasoup does **not** fold candidates. Use tools like [`psrfold_fil`](https://github.com/ypmen/PulsarX) (from PulsarX -> recommended), [`prepfold`](https://github.com/scottransom/presto) (from PRESTO), or [`dspsr`](https://dspsr.sourceforge.net/current/), to fold using candidate outputs.
+---
 
+## Table of Contents
+
+* [New Features](#new-features-in-the-latest-version)
+* [Installation](#installation)
+* [Acceleration Search](#acceleration-search)
+
+  * [Basic Usage for Full Length Acceleration Search](#basic-usage-for-full-length-acceleration-search)
+  * [Segmented Acceleration Search](#segmented-acceleration-search)
+  * [Folding Acceleration Candidates](#folding-acceleration-candidates)
+* [Template Bank Searches](#template-bank-searches)
+
+  * [Generating a Template-Bank](#generating-a-template-bank)
+  * [Basic Usage](#basic-usage-template-bank-peasoup)
+  * [Folding Keplerian Parameter Search Candidates](#folding-keplerian-parameter-search-candidates)
+* [Acknowledgements](#acknowledgements)
+
+---
 
 ## New Features in the Latest Version
 
-- **CUDA 12.6 Compatibility**  
-  Peasoup now builds and runs successfully with CUDA versions up to **12.6**.  
-  > Previous versions of `dedisp` failed to compile with CUDA > 12 due to the deprecation of legacy texture memory code.
+* **Template Bank Searches**: `Peasoup` now supports going beyond acceleration and jerk searches to perform coherent Keplerian binary parameter searches using a template bank. Circular orbit templates use three parameters: orbital angular frequency (ω), projected semi-major axis (τ), and orbital phase (ϕ). Elliptical templates add eccentricity (e) and longitude of periastron (ωₚ), enabling detection of short-period compact orbit binaries.
 
+* **CUDA 12.6 Compatibility**: Now builds and runs with CUDA versions up to 12.6. Previous issues with legacy texture memory in `dedisp` are fixed.
 
-- **Segmented Acceleration Search Support**  
-  Peasoup now supports **segmented acceleration searches**, allowing you to process specific chunks of your filterbank file. You can control the search segment using:
+* **Segmented Acceleration Search Support**: Allows you to process specific chunks of a filterbank file using:
 
-  - `--start_sample`: Index of the first sample (inclusive) where the segment begins.
-  - `--fft_size`: Number of samples to use in the FFT. This defines the length of the filterbank file to be analyzed. If the specified range exceeds the end of the filterbank, Peasoup will **zero-pad** the remaining samples after baseline subtraction.
-  - `--nsamples` *(Optional)*: Exact number of samples to read from the filterbank file. 
+  * `--start_sample`: Starting sample index.
+  * `--fft_size`: FFT window length.
+  * `--nsamples` (optional): Explicit cap on number of real samples.
 
+  **What’s the difference?**
 
+  * `--fft_size`: Total number of samples to use for FFT. 
+  * `--nsamples`: Upper bound on how many real samples.
 
-   **Difference between `--fft_size` and `--nsamples`**:
-  
-  - `--fft_size` determines the **search transform size**, i.e., how many samples Peasoup will use *regardless of what's available*—it pads with zeros if needed.
-   - `--nsamples` enforces a **strict upper bound** on how many real samples. If `--fft_size` > `--nsamples`, then the software will pad zeros after reading `--nsamples` from the filterbank file.
-  
-  *Recommended usage:* Use `--start_sample` and `--fft_size` for most search scenarios. Use `--nsamples` only when you want to tightly control the **actual** number of samples read from the filterbank file.
+  Recommended usage: use `--start_sample` and `--fft_size`. Use `--nsamples` only when you're intentionally truncating the read segment.
 
-  ### Example: Illustrating the difference.
+  Example scenarios:
+  * `--start_sample=0.25*total`,  `--fft_size=0.5*total`: Peasoup reads `25%` to `75%` of the filterbank time samples.
+  * `--start_sample=0.25*total`, `--nsamples=0.25*total`, `--fft_size=0.5*total`: Peasoup reads only `25%` to `50%` of the filterbank samples, and pads an additional `0.25*total` of zeros before searching.
 
-  - Using `--start_sample=0.25*total`, `--fft_size=0.5*total`:  
-    → Peasoup reads 25% to 75% of the filterbank file time samples (Applicable to most scenarios).
-  
-  - Using `--start_sample=0.25*total`, `--nsamples=0.25*total`, `--fft_size=0.5*total`:  
-    → Peasoup reads only 25% to 50% of the filterbank file time samples, and pads an additional `0.25*total` of zeros.
+* **Coherent DM Correction (`--cdm`)**: If your filterbank file has been coherently dedispersed to a non-zero DM, you can now inform Peasoup using the `--cdm` flag. This modifies the acceleration plan, making the search step size finer near the coherent DM value and improving sensitivity.
 
-- **Coherent DM Correction (`--cdm`)**  
-  If your filterbank file has been **coherently dedispersed to a non-zero DM**, you can now inform Peasoup using the `--cdm` flag.  
-  - This modifies the acceleration plan, making the search step size finer near the coherent DM value and improving sensitivity. 
+* **Single Precision Harmonic Sums**: Enabled via 
+`--single_precision_harmonic_sums`. Reduces GPU memory and speeds up harmonic summing.
 
+* **Presto-Compatible Dedispersed Time Series**: Run Peasoup in "dedispersion-only" mode with `-d` and `--nosearch`. This dumps `.dat` files compatible with PRESTO. No barycentric correction is applied. Equivalent to PRESTO’s `prepdata -nobary -dm $dm $input_file`.
 
+* **Live Progress Bar**: Useful for multi-day or multi-week searches. Activate it with the `-p` flag.
+
+---
 
 ## Installation
 
-### Recommended: Docker (or Singularity for HPC)
-
-Pull from DockerHub:
+### Docker
 
 ```bash
 docker pull vishnubk/peasoup
 ```
-Singularity/Apptainer
+
+### Singularity / Apptainer
+
 ```bash
 apptainer pull docker://vishnubk/peasoup
 ```
 
-Build from Source (Advanced)
-
-After cloning the repo, edit `Makefile.inc` to point to the location where you have CUDA installated. Current version supports from `sm_60` to `sm_90`. If your GPU's compute capability is not covered in this range, add the appropriate `-gencode` flags to the `GPU_ARCH_FLAG` variable to both `dedisp` and `peasoup` to ensure compatibility.
+### Build from Source (Advanced)
 
 ```bash
 git clone https://github.com/vishnubk/dedisp.git
 cd dedisp
-make 
+make
 make install
 
 cd ..
@@ -74,7 +87,15 @@ make
 make install
 ```
 
-Basic Usage
+Peasoup supports GPU architectures from `sm_60` to `sm_90`. If you're using a different architecture, edit `Makefile.inc` and add the appropriate `-gencode` flags.
+
+---
+
+## Acceleration Search
+
+Use `--acc_start`, `--acc_end`, and either `--dm_file` or the `--dm_start`/`--dm_end` range.
+
+### Basic Usage for Full Length Acceleration Search
 
 ```bash
 peasoup -i data.fil \
@@ -83,74 +104,174 @@ peasoup -i data.fil \
         -m 7.0 \
         -o output_dir \
         -t 1 \
-        --acc_start -50 \
-        --acc_end 50 \
+        --acc_start -50.0 \
+        --acc_end 50.0 \
         --dm_file my_dm_trials.txt \
         --ram_limit_gb 180.0 \
-        -n 4
-
+        -n 4 \
+        -p 
 ```
 
-> ⚠️ IMPORTANT: Always specify `--fft_size` explicitly. If omitted, Peasoup defaults to the nearest lower power-of-two FFT size. While `cuFFT` supports efficient FFTs for sizes composed of 2, 3, 5, or 7 as prime factors, performance can vary across GPUs. For large-scale surveys, we recommend benchmarking different FFT sizes and explicitly setting `--fft_size` to avoid issues from observations that fall slightly short of the next optimal size. Peasoup still supports specifying a DM range using `--dm_start` and `--dm_end`, allowing `dedisp` to generate internal trial steps. However, we strongly recommend using the `--dm_file` flag to provide full control over dispersion trials. Create a file where each line contains a DM value, and pass it to Peasoup using `--dm_file`. You can generate this file using `DDplan.py` from the PRESTO suite to ensure optimal coverage.
+> ⚠️ Always specify `--fft_size`. Peasoup defaults to the next lowest power-of-two if it's missing. While `cuFFT` supports efficient FFTs for sizes composed of 2, 3, 5, or 7 as prime factors, performance can vary across GPUs. For large-scale surveys, we recommend benchmarking different FFT sizes and explicitly setting `--fft_size` to avoid issues from observations that fall slightly short of the next optimal size.
 
-Folding Candidates
+Peasoup still supports specifying a DM range using `--dm_start` and `--dm_end`, allowing dedisp to generate internal trial steps. However, we strongly recommend using the `--dm_file` flag to provide full control over dispersion trials.
+You can generate `dm_file` using `DDplan.py` from PRESTO. An example file is available [here](https://github.com/vishnubk/peasoup/blob/master/examples/sample_input_files/dm_file.txt).
 
-Using PulsarX
+---
 
-Use the value of `--segment_pepoch` from the Peasoup output XML as `--pepoch` in either `psrfold_tim`, `psrfold_fil` or `psrfold_fil2`:
+### Segmented Acceleration Search
 
 ```bash
+peasoup -i data.fil \
+        --start_sample 4194304 \
+        --fft_size 33554432 \
+        --acc_start -100.0 \
+        --acc_end 100.0 \
+        --dm_file dm_trials.txt \
+        --cdm 33.0 \
+        -n 4 -t 1 -p -o output_dir
+```
 
+---
+
+### Folding Acceleration Candidates
+
+#### Using PulsarX
+
+Use the `segment_pepoch` from Peasoup’s XML output (example [here](https://github.com/vishnubk/peasoup/blob/master/examples/sample_output/acceleration_search.xml)) as the reference epoch.
+
+```bash
 psrfold_fil -v -t 12 --candfile pulsarx.candfile \
-    -n 64 -b 128 --template meerkat_fold.template \
+    -n 64 -b 64 --template meerkat_fold.template \
     -f data.fil --pepoch ${segment_pepoch} -o results
 ```
 
-Using `prepfold` (PRESTO)
+Example `pulsarx.candfile`:
 
-Peasoup reports spin period referring to the middle epoch of your `--fft_size` whereas `prepfold` needs the period at the beginning of your observation. To fold peasoup search candidates with `prepfold`, you need to do three steps:  
+```
+#id DM accel F0 F1 F2 S/N
+0 46.840000 -38.537781 275.478302 0 0 8.938008
+1 46.750000 548.444214 162.808395 0 0 8.425230
+```
 
-A) Convert acceleration to Pdot:
+Bonus Tip: Use `psrfold_fil2` for faster dedispersion+folding of hundreds of candidates.
+
+#### Using prepfold (PRESTO)
+
+Convert acceleration to Ṗ and shift period to the start of the FFT:
 
 ```python
-
 def a_to_pdot(P_s, acc_ms2):
     c = 2.99792458e8
     return P_s * acc_ms2 / c
-```
-B) Shift period to the start of the observation:
 
-```python
 def period_correction_for_prepfold(p0, pdot, tsamp, fft_size):
     return p0 - pdot * fft_size * tsamp / 2
 ```
 
-C) Add the `--topo` flag while folding with `prepfold`. This is because `Peasoup` does not barycenter the timeseries and therefore your non-zero acceleration search detections are only valid in topocentric units.
-
-```python
-
-prepfold -topo -noxwin -p ${corrected_period} -pd ${pdot} data.fil
-
-```
-
-Using DSPSR 
-
-Create a phase predictor file and pass that to `-P` flag in `dspsr`. Use the value of `--segment_pepoch` from the Peasoup output XML as `EPOCH` inside your phase predictor file.
- 
+Then fold:
 
 ```bash
+prepfold -topo -noxwin -p ${corrected_period} -pd ${pdot} -dm ${dm} data.fil
+```
+
+#### Using DSPSR
+
+Example predictor file:
+
+```
 SOURCE: J1546-5431
-EPOCH: 55739.5399653 #This should be same as --segment_epoch from peasoup
+EPOCH: 55739.5399653
 PERIOD: 1.466892342 s
 DM: 316.2835
-ACC: 1.25571819897 (m/s/s)
+ACC: 1.25571819897
 RA: 15:46:48.00
 DEC: -54:31:00.216
 ```
 
-Acknowledgements
+```bash
+dspsr -P predictor.txt -O folded_output data.fil
+```
 
-Peasoup is almost entirely written by [`Ewan Barr`](https://github.com/ewanbarr) (MPIfR). With minor contributions over the years from different people, including Vivek, Vishnu, Prajwal, Yunpeng and Jiri. It has already been used to discover > 200 pulsars. There may be a paper on this someday, but until then, if you use **Peasoup** in a publication, please cite the repository.
+---
 
+## Template Bank Searches
+
+### Generating a Template-Bank
+
+Use the [`template_bank_generator`](https://github.com/erc-compact/template_bank_generator) repository to create a `.txt` file with one template per line. Each line should contain Keplerian parameters.
+
+Examples are available [here](https://github.com/vishnubk/peasoup/blob/master/examples/sample_input_files).
+
+---
+
+### Basic Usage: Template Bank Peasoup
+
+```bash
+peasoup -i data.fil \
+        --start_sample 4194304 \
+        --fft_size 33554432 \
+        -K circular_orbit_template_bank.txt \
+        --dm_file dm_trials.txt \
+        --cdm 33.0 \
+        -n 4 -t 1 -p -o output_dir
+```
+
+### Segmented template bank Searches
+
+Segmented template bank searches follow the same logic as segmented acceleration searches described above. Just pass the appropriate template bank file for the observation time corresponding to your search segment using the `-K` flag.
+
+---
+
+### Folding Keplerian Parameter Search Candidates
+
+The `segment_pepoch` corresponds to the start of the FFT segment. No conversion required.
+
+#### Using PulsarX
+
+```bash
+psrfold_fil -v -t 12 --candfile keplerian_pulsarx.candfile \
+    -n 64 -b 64 --template meerkat_fold.template \
+    -f data.fil --pepoch ${segment_pepoch} -o results
+```
+
+Example `keplerian_pulsarx.candfile`:
+
+```
+#id DM accel F0 F1 F2 Pb A1 T0 OM ECC S/N
+0 20.0 0 399.9958801269538 0 0 0.04166666671427778 2.32141701093094 50000.02083333336 0 0 11.1497869491577
+```
+
+#### Using prepfold
+
+```bash
+prepfold -topo -noxwin -p ${xml_period} -dm ${dm} -bin \
+         -pb ${xml_pb} -x ${xml_a1} -To ${xml_t0} -w ${xml_omega} -e ${xml_ecc} data.fil
+```
+
+---
+
+### Optional Features
+
+* `--exact_resampler`: Use linear interpolation instead of nearest-neighbor. Slower but helpful for known sources.
+* `--distill_circular_orbit_cands`: Enables candidate filtering in template bank mode (currently off by default).
+
+
+## Benchmarks on A100 GPUs
+
+Peasoup’s performance scales with FFT size and the number of harmonic sums. The table below shows the measured runtimes (in seconds) per binary trial, per DM trial, per beam on an A100 80 GB GPU. 
+
+| FFT Size | 8 Harmonics (-n 3) | 16 Harmonics (-n 4)| 32 Harmonics (-n 5)|
+| -------- | ----------- | ------------ | ------------ |
+| 2²⁴      | 0.00087     | 0.00126      | 0.00139      |
+| 2²⁵      | 0.00173     | 0.00252      | 0.00277      |
+| 2²⁶      | 0.00327     | 0.00477      | 0.00525      |
+
+These numbers are useful baselines when estimating total search runtime. Actual performance may vary depending on your GPU model and the amount of RFI in your data.
+
+
+## Acknowledgements
+
+Peasoup was developed by Ewan Barr with contributions from Vishnu, Vivek, Prajwal, Yunpeng, and Jiri. It has been used to discover over 200 pulsars. If you use Peasoup in your research, please cite this repository.
 
 

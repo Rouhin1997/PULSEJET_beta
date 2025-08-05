@@ -79,15 +79,20 @@ public:
     root.append(header);
   }
 
-  void add_segment_parameters(SigprocFilterbank& f){
+  void add_segment_parameters(SigprocFilterbank& f, CmdLineOptions& args){
     XML::Element segment_parameters("segment_parameters");
     segment_parameters.append(XML::Element("segment_start_sample", f.get_start_sample()));
     segment_parameters.append(XML::Element("segment_nsamples", f.get_effective_nsamps()));
-    segment_parameters.append(XML::Element("segment_pepoch", f.get_segment_pepoch()));
+
+    if (args.keplerian_tb_file != "none") {
+            segment_parameters.append(XML::Element("segment_pepoch", f.get_segment_pepoch_template_bank()));
+    } else {
+            segment_parameters.append(XML::Element("segment_pepoch", f.get_segment_pepoch_accel_search()));
+    }
     root.append(segment_parameters);
   }
 
-  void add_search_parameters(CmdLineOptions& args){
+  void add_search_parameters(CmdLineOptions& args, const Keplerian_TemplateBank_Reader* tb_reader = nullptr){
     XML::Element search_options("search_parameters");
     search_options.append(XML::Element("infilename",args.infilename));
     search_options.append(XML::Element("outdir",args.outdir));
@@ -116,6 +121,30 @@ public:
     search_options.append(XML::Element("freq_tol",args.freq_tol));
     search_options.append(XML::Element("verbose",args.verbose));
     search_options.append(XML::Element("progress_bar",args.progress_bar));
+    search_options.append(XML::Element("template_bank_file", args.keplerian_tb_file));
+    
+    if (tb_reader != nullptr) {
+      for (auto const& kv : tb_reader->get_metadata()) {
+        std::string raw_key = kv.first;     
+        std::string raw_val = kv.second;    
+        // Clean the key:
+        std::string cleaned_key;
+        for (char c : raw_key) {
+          if (std::isspace((unsigned char)c)) {
+            cleaned_key.push_back('_');
+          }
+          else if (c == '(' || c == ')') {
+            // drop parentheses
+          }
+          else {
+            cleaned_key.push_back(
+              static_cast<char>(std::tolower((unsigned char)c)));
+          }
+        }
+        search_options.append(XML::Element(cleaned_key, raw_val));
+      }
+    }
+    
     root.append(search_options);
   }
 
@@ -191,29 +220,50 @@ public:
   }
 
   void add_candidates(std::vector<Candidate>& candidates, 
-		      std::map<unsigned,long int> byte_map)
-  {
+                    const std::map<unsigned, long int>& byte_map, 
+                    SigprocFilterbank& f)
+{
     XML::Element cands("candidates");
-    for (int ii=0;ii<candidates.size();ii++){
-      XML::Element cand("candidate");
-      cand.add_attribute("id",ii);
-      cand.append(XML::Element("period",1.0/candidates[ii].freq));
-      cand.append(XML::Element("opt_period",candidates[ii].opt_period));
-      cand.append(XML::Element("dm",candidates[ii].dm));
-      cand.append(XML::Element("acc",candidates[ii].acc));
-      cand.append(XML::Element("nh",candidates[ii].nh));
-      cand.append(XML::Element("snr",candidates[ii].snr));
-      cand.append(XML::Element("folded_snr",candidates[ii].folded_snr));
-      cand.append(XML::Element("is_adjacent",candidates[ii].is_adjacent));
-      cand.append(XML::Element("is_physical",candidates[ii].is_physical));
-      cand.append(XML::Element("ddm_count_ratio",candidates[ii].ddm_count_ratio));
-      cand.append(XML::Element("ddm_snr_ratio",candidates[ii].ddm_snr_ratio));
-      cand.append(XML::Element("nassoc",candidates[ii].count_assoc()));
-      cand.append(XML::Element("byte_offset",byte_map[ii]));
-      cands.append(cand);
+    constexpr double RAD2DEG = 180.0 / M_PI;
+    constexpr double TWO_PI = 2 * M_PI;
+
+    for (std::size_t ii = 0; ii < candidates.size(); ++ii) {
+        const Candidate& cand_ref = candidates[ii];
+
+        XML::Element cand("candidate");
+
+        double pb_days = (cand_ref.n > 0) ? TWO_PI / (cand_ref.n * 86400.0) : 0.0;
+        double phi_normalised = (cand_ref.phi > 0.0) ? (cand_ref.phi / TWO_PI) : 0.0;
+        double T0 = (pb_days > 0.0) ? f.get_segment_pepoch_template_bank() + phi_normalised * pb_days : 0.0;
+        double phi_deg = (cand_ref.phi > 0.0) ? (cand_ref.phi * RAD2DEG) : 0.0;
+        double omega_deg = (cand_ref.omega > 0.0) ? (cand_ref.omega * RAD2DEG) : 0.0;
+
+        cand.add_attribute("id", static_cast<int>(ii));
+        cand.append(XML::Element("period", 1.0 / cand_ref.freq));
+        cand.append(XML::Element("opt_period", cand_ref.opt_period));
+        cand.append(XML::Element("dm", cand_ref.dm));
+        cand.append(XML::Element("acc", cand_ref.acc));
+        cand.append(XML::Element("jerk", cand_ref.jerk));
+        cand.append(XML::Element("pb", pb_days));
+        cand.append(XML::Element("a1", cand_ref.a1));
+        cand.append(XML::Element("phi", phi_deg));
+        cand.append(XML::Element("t0", T0));
+        cand.append(XML::Element("omega", omega_deg));
+        cand.append(XML::Element("ecc", cand_ref.ecc));
+        cand.append(XML::Element("nh", cand_ref.nh));
+        cand.append(XML::Element("snr", cand_ref.snr));
+        cand.append(XML::Element("folded_snr", cand_ref.folded_snr));
+        cand.append(XML::Element("is_adjacent", cand_ref.is_adjacent));
+        cand.append(XML::Element("is_physical", cand_ref.is_physical));
+        cand.append(XML::Element("ddm_count_ratio", cand_ref.ddm_count_ratio));
+        cand.append(XML::Element("ddm_snr_ratio", cand_ref.ddm_snr_ratio));
+        cand.append(XML::Element("nassoc", candidates[ii].count_assoc()));
+        cands.append(cand);
     }
+
     root.append(cands);
-  }
+}
+
 
   void add_candidates(std::vector<Candidate>& candidates,
 		      std::map<int,std::string>& filenames){
@@ -264,11 +314,6 @@ public:
     char actualpath [PATH_MAX];
     std::stringstream filepath;
     filepath << output_dir << "/" << filename;
-
-    if (realpath(filepath.str().c_str(), actualpath) == NULL) {
-        perror("realpath failed");
-        return;
-    }
         
     FILE* fo = fopen(actualpath,"w");
     if (fo == NULL) {
@@ -295,6 +340,11 @@ public:
 	fwrite(&detections[0],sizeof(CandidatePOD),ndets,fo);
       }
     fclose(fo);
+
+    if (realpath(filepath.str().c_str(), actualpath) == NULL) {
+        perror("Binary candidate file realpath error");
+        return;
+    }
   }
   
   void write_binaries(std::vector<Candidate>& candidates)

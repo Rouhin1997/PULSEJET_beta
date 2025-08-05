@@ -211,7 +211,7 @@ int main(int argc, char **argv)
   else
     size = std::min(args.size,filobj.get_nsamps());
   if (args.verbose)
-    std::cout << "Setting transform length to " << size << " points" << std::endl;
+    std::cout << "Setting FFT length to " << size << " points" << std::endl;
 
   CuFFTerR2C r2cfft(size);
   CuFFTerC2R c2rfft(size);
