@@ -137,6 +137,8 @@ void device_circular_orbit_resampler(float * d_idata,
                                     double n, double a1, double phi, double tsamp, double inverse_tsamp,  
                                     size_t size, unsigned int max_threads, unsigned int max_blocks);
 
+void device_resample_acc_jerk(float* d_idata, float* d_odata, size_t size, float acc_value, float jerk_value, float tsamp, unsigned int max_threads, unsigned int max_blocks);                                    
+
 void device_ell8_resampler(float * d_idata, 
                         float * d_odata, 
                         double n, double a1, double phi, double omega, double ecc, 

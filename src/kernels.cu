@@ -27,6 +27,7 @@
 #include <map>
 
 #define SQRT2 1.4142135623730951f
+#define SPEED_OF_LIGHT 299792458.0
 
 //--------------Harmonic summing----------------//
 
@@ -459,6 +460,34 @@ void device_resample(float * d_idata, float * d_odata,
 						       calc[ii].data_idx);
   ErrorChecker::check_cuda_error("Error from device_resample");
 }
+
+
+//------------------Polynomial template bank based acceleration and Jerk Resampler-----------------//
+
+__device__ unsigned long getAcceleratedJerkedIndex(double accel_factor, double jerk_factor, double size, unsigned long idx) {
+    return __double2ull_rn(idx + idx * accel_factor * (idx - size) + 0.5 * jerk_factor * (idx - size) * (idx - size));
+}
+
+__global__ void resample_acc_jerk_kernel(float* input_d, float* output_d, double accel_factor, double jerk_factor, size_t size) {
+    for (unsigned long idx = blockIdx.x * blockDim.x + threadIdx.x; idx < size; idx += blockDim.x * gridDim.x) {
+        unsigned long out_idx = getAcceleratedJerkedIndex(accel_factor, jerk_factor, size, idx);
+        if(out_idx < size){
+            output_d[idx] = input_d[out_idx];
+        } else {
+            output_d[idx]=0.0f;
+        }
+    }
+}
+
+void device_resample_acc_jerk(float* d_idata, float* d_odata, size_t size, float acc_value, float jerk_value, float tsamp, unsigned int max_threads, unsigned int max_blocks) {
+    double accel_factor = ((acc_value * tsamp) / (2 * SPEED_OF_LIGHT));
+    double jerk_factor = ((jerk_value * tsamp * tsamp) / (6 * SPEED_OF_LIGHT));
+    unsigned blocks = size / max_threads + 1;
+    if (blocks > max_blocks) blocks = max_blocks;
+    resample_acc_jerk_kernel<<<blocks, max_threads>>>(d_idata, d_odata, accel_factor, jerk_factor, size);
+    ErrorChecker::check_cuda_error("Error from device_resample_acc_jerk");
+}
+
 
 //------------------Circular Orbit Search Template Bank Resampler-----------------//
 
@@ -1414,7 +1443,7 @@ float median5(float a, float b, float c, float d, float e) {
                                                  : c < b ? c : b
                          : b < c ? a < e ? a < c ? e < c ? e : c
                                                  : d < a ? d : a
-                                         : e < c ? a < c ? a : c
+                                         : e < c ? b < c ? b : c
                                                  : d < e ? d : e
                                  : d < e ? b < d ? a < d ? a : d
                                                  : e < b ? e : b
@@ -1681,6 +1710,11 @@ template void device_conversion<unsigned char,float>(unsigned char*, float*, uns
 template void device_conversion<unsigned int,float>(unsigned int*, float*, unsigned int, unsigned int, unsigned int);
 template void device_conversion<unsigned char, double>(unsigned char*, double*, unsigned int, unsigned int, unsigned int);
 template void device_conversion<float, float>(float*, float*, unsigned int, unsigned int, unsigned int);
+template void device_conversion<double, float>(double*, float*, unsigned int, unsigned int, unsigned int);
+template void device_conversion<float, double>(float*, double*, unsigned int, unsigned int, unsigned int);
+template void device_conversion<double, double>(double*, double*, unsigned int, unsigned int, unsigned int);
+template void device_conversion<int, float>(int*, float*, unsigned int, unsigned int, unsigned int);
+template void device_conversion<float, int>(float*, int*, unsigned int, unsigned int, unsigned int);
 
 
 

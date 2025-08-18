@@ -15,6 +15,7 @@
 #include <transforms/harmonicfolder.hpp>
 #include <transforms/scorer.hpp>
 #include <transforms/template_bank_reader.hpp>
+#include <transforms/polynomial_templatebank_reader.hpp>
 #include <utils/exceptions.hpp>
 #include <utils/utils.hpp>
 #include <utils/stats.hpp>
@@ -86,6 +87,7 @@ private:
   int device;
   std::map<std::string,Stopwatch> timers;
   std::optional<Keplerian_TemplateBank_Reader>& keplerian_tb;
+  std::optional<Polynomial_TemplateBank_Reader>& polynomial_tb;       
   bool elliptical_orbit_search;
 
   void preprocess_time_series(DedispersedTimeSeries<DedispOutputType>& tim,
@@ -249,6 +251,25 @@ void run_elliptical_orbit_search_resampler(
         resampler.ell8_resampler(d_tim, d_tim_resampled, n, a1, phi, omega, ecc, tsamp, inverse_tsamp, size);
        
     }
+}
+
+// new Polynomial TB based jerk resampler helper function
+
+void run_polynomial_time_domain_resampler(
+    ReusableDeviceTimeSeries<float, DedispOutputType>& d_tim,
+    DeviceTimeSeries<float>& d_tim_resampled,
+    float acc, float jerk, float tsamp, unsigned int size)
+{
+    if (args.verbose)
+        std::cout << "Resampling with acc=" << acc << " m/s^2, jerk=" << jerk << " m/s^3\n";
+    float* d_idata = d_tim.get_data();
+    float* d_odata = d_tim_resampled.get_data();
+    device_resample_acc_jerk(
+        d_idata, d_odata, size, acc, jerk, tsamp,
+        args.max_threads, args.max_blocks
+    );
+    if (args.verbose)
+        std::cout << "Polynomial (acc+jerk) resampling complete\n";
 }
 
 void exact_resampler_elliptical(
@@ -443,18 +464,21 @@ public:
 }
 
   Worker(DispersionTrials<DedispOutputType>& trials, DMDispenser& manager,
-	 AccelerationPlan& acc_plan, CmdLineOptions& args, unsigned int size, int device, ProgressMonitor* prog,
-         std::optional<Keplerian_TemplateBank_Reader>& keplerian_tb, bool elliptical_orbit_search)
-    :trials(trials)
-    ,manager(manager)
-    ,acc_plan(acc_plan)
-    ,args(args)
-    ,size(size)
-    ,device(device)
-    ,prog(prog)
-    ,keplerian_tb(keplerian_tb)
-    ,elliptical_orbit_search(elliptical_orbit_search)  
-  {}
+           AccelerationPlan& acc_plan, CmdLineOptions& args, unsigned int size, int device, ProgressMonitor* prog,
+           std::optional<Keplerian_TemplateBank_Reader>& keplerian_tb,
+           std::optional<Polynomial_TemplateBank_Reader>& polynomial_tb, 
+           bool elliptical_orbit_search)
+        :trials(trials)
+        ,manager(manager)
+        ,acc_plan(acc_plan)
+        ,args(args)
+        ,size(size)
+        ,device(device)
+        ,prog(prog)
+        ,keplerian_tb(keplerian_tb)
+        ,polynomial_tb(polynomial_tb) 
+        ,elliptical_orbit_search(elliptical_orbit_search)
+    {}
 
   void start(void)
   {
@@ -534,6 +558,31 @@ public:
                 dm_trial_cands.append(keplerian_search_cands.cands);
             }
         }
+
+        if (polynomial_tb) {
+    if (args.verbose) std::cout << "Searching polynomial (acc+jerk) templates for DM " << tim.get_dm() << "\n";
+    CandidateCollection polynomial_search_cands;
+
+    const auto& acc = polynomial_tb->get_acc();
+    const auto& jerk = polynomial_tb->get_jerk();
+
+    for (size_t kk = 0; kk < acc.size(); ++kk) {
+        run_polynomial_time_domain_resampler(
+            d_tim, d_tim_resampled, acc[kk], jerk[kk], tsamp, size
+        );
+        SearchParams poly_search;
+        poly_search.acc = acc[kk];
+        poly_search.jerk = jerk[kk];
+        SpectrumCandidates trial_cands(tim.get_dm(), idx, poly_search);
+        run_search_and_find_candidates(
+            d_tim_resampled, r2cfft, c2rfft, d_fseries, d_pspec, former,
+            sums, harm_folder, cand_finder, harm_finder, trial_cands,
+            polynomial_search_cands, mean, std, size
+        );
+        if (prog) prog->tick_bin();
+    }
+    dm_trial_cands.append(polynomial_search_cands.cands);
+}
 
         else {
         
@@ -683,6 +732,17 @@ int main(int argc, char **argv)
     if (args.verbose) std::cout << "Loaded " << keplerian_tb->get_n().size()  << " templates\n";
 }
 
+// polynomial template bank
+std::optional<Polynomial_TemplateBank_Reader> polynomial_tb;
+// If polynomial template bank is specified, load it
+if (args.polynomial_tb_file != "none") {
+    if (args.verbose)
+        std::cout << "Using polynomial template bank file: " << args.polynomial_tb_file << std::endl;
+
+    polynomial_tb.emplace(args.polynomial_tb_file);
+    if (args.verbose) std::cout << "Loaded " << polynomial_tb->get_acc().size()  << " templates\n";
+}
+
   // Compute the “elliptical or circular” flag once
   bool elliptical_orbit_search = false;
   if (keplerian_tb && keplerian_tb->get_num_columns() == 5) {
@@ -806,8 +866,9 @@ int main(int argc, char **argv)
     }
     
     for (int ii=0;ii<nthreads;ii++){
-      workers[ii] = (new Worker(trials,dispenser,acc_plan,args,size,ii,progPtr,keplerian_tb,elliptical_orbit_search));
-      pthread_create(&threads[ii], NULL, launch_worker_thread, (void*) workers[ii]);
+    workers[ii] = (new Worker(trials, dispenser, acc_plan, args, size, ii, progPtr,
+                              keplerian_tb, polynomial_tb, elliptical_orbit_search)); 
+    pthread_create(&threads[ii], NULL, launch_worker_thread, (void*) workers[ii]);
     }
 
     if(args.verbose)
