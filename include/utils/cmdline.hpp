@@ -42,6 +42,7 @@ struct CmdLineOptions {
   bool single_precision_harmonic_sums;
   bool exact_resampler;
   std::string keplerian_tb_file;
+  std::string polynomial_tb_file;
 
 };
 
@@ -222,7 +223,10 @@ bool read_cmdline_options(CmdLineOptions& args, int argc, char **argv)
       TCLAP::ValueArg<std::string> arg_keplerian_template_bank_filename("K", "keplerian_template_bank_file",
                                                                          "filename of keplerian template bank",
                                                                          false, "none", "string", cmd);
-      
+      TCLAP::ValueArg<std::string> arg_polynomial_template_bank_filename("P", "polynomial_template_bank_file",
+    "filename of polynomial template bank",
+    false, "none", "string", cmd);
+
 
       cmd.parse(argc, argv);
       args.infilename        = arg_infilename.getValue();
@@ -263,6 +267,7 @@ bool read_cmdline_options(CmdLineOptions& args, int argc, char **argv)
       args.single_precision_harmonic_sums = arg_single_precision_harmonic_sums.getValue();
       args.exact_resampler   = arg_exact_resampler.getValue();
       args.keplerian_tb_file = arg_keplerian_template_bank_filename.getValue();
+      args.polynomial_tb_file = arg_polynomial_template_bank_filename.getValue();
 
 
     }catch (TCLAP::ArgException &e) {

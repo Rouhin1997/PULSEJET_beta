@@ -559,7 +559,7 @@ public:
             }
         }
 
-        if (polynomial_tb) {
+      else if (polynomial_tb) {
     if (args.verbose) std::cout << "Searching polynomial (acc+jerk) templates for DM " << tim.get_dm() << "\n";
     CandidateCollection polynomial_search_cands;
 
