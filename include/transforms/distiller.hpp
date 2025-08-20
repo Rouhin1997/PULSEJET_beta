@@ -236,3 +236,38 @@ public:
     :BaseDistiller(keep_related),tolerance(tolerance){}
 };
 
+class Template_Bank_Polynomial_Distiller: public BaseDistiller {
+private:
+  float freq_tolerance;
+  float acc_tolerance;
+  float jerk_tolerance;
+
+  void condition(std::vector<Candidate>& cands, int idx) override
+  {
+    double fundi_freq = cands[idx].freq;
+    double fundi_acc = cands[idx].acc;
+    double fundi_jerk = cands[idx].jerk;
+    double edge_freq = std::abs(fundi_freq) * freq_tolerance + 1e-8;
+    double edge_acc = std::abs(fundi_acc) * acc_tolerance + 1e-8;
+    double edge_jerk = std::abs(fundi_jerk) * jerk_tolerance + 1e-8;
+
+    for (int ii = idx + 1; ii < size; ii++) {
+      if (std::abs(cands[ii].freq - fundi_freq) < edge_freq &&
+          std::abs(cands[ii].acc - fundi_acc) < edge_acc &&
+          std::abs(cands[ii].jerk - fundi_jerk) < edge_jerk) {
+        if (keep_related)
+          cands[idx].append(cands[ii]);
+        unique[ii] = false;
+      }
+    }
+  }
+
+public:
+  Template_Bank_Polynomial_Distiller(float freq_tol, float acc_tol, float jerk_tol, bool keep_related = true)
+    : BaseDistiller(keep_related),
+      freq_tolerance(freq_tol),
+      acc_tolerance(acc_tol),
+      jerk_tolerance(jerk_tol)
+  {}
+};
+

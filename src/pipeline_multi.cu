@@ -581,7 +581,15 @@ public:
         );
         if (prog) prog->tick_bin();
     }
-    dm_trial_cands.append(polynomial_search_cands.cands);
+    // Distill polynomial candidates
+
+    if (args.verbose) std::cout << "Distilling polynomial (acc+jerk) candidates\n";
+    // Set your tolerances here (example values, adjust as needed)
+    float freq_tol = args.freq_tol;      // or a new command-line arg if you want
+    float acc_tol = 0.01;                // set as needed or make configurable
+    float jerk_tol = 0.01;               // set as needed or make configurable
+    Template_Bank_Polynomial_Distiller poly_distiller(freq_tol, acc_tol, jerk_tol, true);
+    dm_trial_cands.append(poly_distiller.distill(polynomial_search_cands.cands));
 }
 
         else {
