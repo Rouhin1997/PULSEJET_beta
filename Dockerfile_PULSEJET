@@ -1,0 +1,29 @@
+FROM nvidia/cuda:12.6.1-devel-ubuntu22.04
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    LC_ALL=C \
+    CUDA_HOME=/usr/local/cuda \
+    PATH=/usr/local/bin:$PATH
+
+# Core toolchain & common libs
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      git build-essential make cmake pkg-config ca-certificates wget curl \
+      python3 python3-pip libfftw3-dev libxml2-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# ========= Build & install dedisp =========
+# If you prefer the original upstream, switch to: https://github.com/vishnubk/dedisp
+RUN git clone --depth 1 https://github.com/ajameson/dedisp.git /opt/dedisp \
+ && make -C /opt/dedisp -j"$(nproc)" \
+ && make -C /opt/dedisp install \
+ && ldconfig
+
+# ========= Build & install your fork =========
+WORKDIR /opt/PULSEJET_beta
+COPY . /opt/PULSEJET_beta
+
+# (Optional) If you need specific NVCC arch flags, edit Makefile.inc here
+# Example (A100):  sed -i 's/-gencode.*/-gencode arch=compute_80,code=sm_80/' Makefile.inc
+RUN make -j"$(nproc)" && make install
+
+ENTRYPOINT ["peasoup"]
