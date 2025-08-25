@@ -37,7 +37,7 @@ RUN git clone https://github.com/vishnubk/dedisp.git && \
     make install
 
 RUN git clone https://github.com/Rouhin1997/PULSEJET_beta.git && \
-    cd peasoup && \
+    cd PULSEJET_beta && \
     make -j 32 && \
     make install
 
