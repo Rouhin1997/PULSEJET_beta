@@ -1,0 +1,11 @@
+.git
+.github
+__pycache__/
+*.ipynb_checkpoints
+build/
+dist/
+*.sif
+*.fil
+*.fits
+*.png
+*.jpg
