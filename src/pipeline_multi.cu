@@ -38,6 +38,8 @@
 #include <thrust/host_vector.h>
 #include <thrust/sequence.h>
 #include <thrust/extrema.h>
+#include <kernels/defaults.h>
+#include <kernels/resample_acc_jerk.h>
 
 
 typedef float DedispOutputType;
@@ -266,7 +268,7 @@ void run_polynomial_time_domain_resampler(
     float* d_odata = d_tim_resampled.get_data();
     device_resample_acc_jerk(
         d_idata, d_odata, size, acc, jerk, tsamp,
-        args.max_threads, args.max_blocks
+        MAX_THREADS, MAX_BLOCKS
     );
     if (args.verbose)
         std::cout << "Polynomial (acc+jerk) resampling complete\n";
