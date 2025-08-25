@@ -54,7 +54,7 @@ RUN git clone https://github.com/Rouhin1997/PULSEJET_beta.git peasoup && \
       THRUST_DIR="${THRUST_DIR}" \
       INSTALL_DIR="${INSTALL_DIR}" \
       GPU_ARCH_FLAG="${GPU_ARCH_FLAG}" \
-      UCFLAGS="${UCFLAGS}" && \
+      UCFLAGS="${UCFLAGS}" V=1 && \
     # ensure target dir exists, then install
     mkdir -p "${INSTALL_DIR}/bin" && \
     make install INSTALL_DIR="${INSTALL_DIR}" && \
