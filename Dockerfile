@@ -18,8 +18,10 @@ RUN apt update -y && \
       libtclap-dev \
     && apt clean && rm -rf /var/lib/apt/lists/*
 
-# Small Python baseline (only numpy is needed by some tools)
-RUN pip3 install --no-cache-dir numpy
+# Small Python baseline (install numpy from Ubuntu repos for reliability in CI)
+RUN apt-get update -y && \
+    apt-get install -y python3-numpy && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # ---- Build-time env expected by your Makefile(.inc) ----
 # Adjust GPU_ARCH_FLAG to match the SMs you care about
