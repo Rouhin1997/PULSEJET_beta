@@ -40,7 +40,7 @@
 #include <thrust/extrema.h>
 #include <kernels/defaults.h>
 
-
+// Dedispersion trails
 
 typedef float DedispOutputType;
 

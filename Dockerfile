@@ -24,15 +24,12 @@ RUN apt-get update -y && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # ---- Build-time env expected by your Makefile(.inc) ----
-# Adjust GPU_ARCH_FLAG to match the SMs you care about
+# NOTE: DO NOT set/override GPU_ARCH_FLAG here; let Makefile.inc decide
 ENV CUDA_DIR=/usr/local/cuda \
     DEDISP_DIR=/usr/local \
     THRUST_DIR=/usr/local/cuda/include \
     INSTALL_DIR=/usr/local \
-    UCFLAGS="" \
-    GPU_ARCH_FLAG="-gencode arch=compute_80,code=sm_80 \
-                   -gencode arch=compute_86,code=sm_86 \
-                   -gencode arch=compute_89,code=sm_89"
+    UCFLAGS=""
 
 WORKDIR /software
 
@@ -55,7 +52,6 @@ RUN git clone https://github.com/Rouhin1997/PULSEJET_beta.git peasoup && \
       CUDA_DIR="${CUDA_DIR}" \
       THRUST_DIR="${THRUST_DIR}" \
       INSTALL_DIR="${INSTALL_DIR}" \
-      GPU_ARCH_FLAG="${GPU_ARCH_FLAG}" \
       UCFLAGS="${UCFLAGS}" V=1 && \
     # ensure target dir exists, then install
     mkdir -p "${INSTALL_DIR}/bin" && \
