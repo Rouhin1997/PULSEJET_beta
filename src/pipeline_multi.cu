@@ -39,7 +39,7 @@
 #include <thrust/sequence.h>
 #include <thrust/extrema.h>
 #include <kernels/defaults.h>
-#include <kernels/resample_acc_jerk.h>
+
 
 
 typedef float DedispOutputType;
