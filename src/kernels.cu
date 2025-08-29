@@ -465,7 +465,8 @@ void device_resample(float * d_idata, float * d_odata,
 //------------------Polynomial template bank based acceleration and Jerk Resampler-----------------//
 
 __device__ unsigned long getAcceleratedJerkedIndex(double accel_factor, double jerk_factor, double size, unsigned long idx) {
-    return __double2ull_rn(idx + idx * accel_factor * (idx - size) + 0.5 * jerk_factor * (idx - size) * (idx - size));
+    double center = size / 2.0;
+    return __double2ull_rn(idx + idx * accel_factor * (idx - center) + 0.5 * jerk_factor * (idx - center) * (idx - center));
 }
 
 __global__ void resample_acc_jerk_kernel(float* input_d, float* output_d, double accel_factor, double jerk_factor, size_t size) {
