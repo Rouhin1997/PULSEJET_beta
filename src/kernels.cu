@@ -466,7 +466,12 @@ void device_resample(float * d_idata, float * d_odata,
 
 __device__ unsigned long getAcceleratedJerkedIndex(double accel_factor, double jerk_factor, double size, unsigned long idx) {
     double center = size / 2.0;
-    return __double2ull_rn(idx + idx * accel_factor * (idx - center) + 0.5 * jerk_factor * (idx - center) * (idx - center));
+    double x  = (double)idx;
+    double dx = x - center;
+    
+    // return __double2ull_rn(idx + idx * accel_factor * (idx - center) + 0.5 * jerk_factor * (idx - center) * (idx - center));
+    // jerk contributes a cubic term; jerk_factor already includes 1/6
+    return __double2ull_rn(x + x * accel_factor * dx + jerk_factor * dx * dx * dx);
 }
 
 __global__ void resample_acc_jerk_kernel(float* input_d, float* output_d, double accel_factor, double jerk_factor, size_t size) {
@@ -1448,7 +1453,7 @@ float median5(float a, float b, float c, float d, float e) {
                                                  : d < e ? d : e
                                  : d < e ? b < d ? a < d ? a : d
                                                  : e < b ? e : b
-                                         : b < e ? a < e ? a : e
+                                         : a < e ? b < e ? b : e
                                                  : d < b ? d : b
 	         : d < c ? a < d ? b < e ? b < d ? e < d ? e : d
                                                  : c < b ? c : b
