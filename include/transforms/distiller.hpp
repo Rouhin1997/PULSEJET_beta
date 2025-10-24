@@ -271,3 +271,63 @@ public:
   {}
 };
 
+class Template_Bank_Polynomial_DopplerDistiller : public BaseDistiller {
+private:
+  double tobs;          // seconds
+  double halfT;         // tobs/2
+  double inv_c;         // 1/c
+  double freq_tolerance;
+
+  static inline double delta_v(double da, double dj, double t) {
+    return da * t + 0.5 * dj * t * t;
+  }
+
+  void condition(std::vector<Candidate>& cands, int idx) override
+  {
+    const double f0   = cands[idx].freq;
+    const double a0   = static_cast<double>(cands[idx].acc);
+    const double j0   = static_cast<double>(cands[idx].jerk);
+    const double edge = f0 * freq_tolerance;
+
+    for (int ii = idx + 1; ii < size; ++ii) {
+      // relative kinematics between candidate ii and the representative
+      const double da = static_cast<double>(cands[ii].acc)  - a0;
+      const double dj = static_cast<double>(cands[ii].jerk) - j0;
+
+      // Evaluate Δv(t) at the endpoints
+      double v1 = delta_v(da, dj, -halfT);
+      double v2 = delta_v(da, dj,  halfT);
+      double vmin = std::min(v1, v2);
+      double vmax = std::max(v1, v2);
+
+      // Interior extremum at t* = -Δa/Δj (if |Δj|>0 and inside window)
+      if (std::abs(dj) > 0.0) {
+        double tstar = -da / dj;
+        if (tstar >= -halfT && tstar <= halfT) {
+          double vs = delta_v(da, dj, tstar);
+          vmin = std::min(vmin, vs);
+          vmax = std::max(vmax, vs);
+        }
+      }
+
+      const double fmin = f0 * (1.0 + vmin * inv_c);
+      const double fmax = f0 * (1.0 + vmax * inv_c);
+
+      const double f = cands[ii].freq;
+      if (f > (fmin - edge) && f < (fmax + edge)) {
+        if (keep_related) cands[idx].append(cands[ii]);
+        unique[ii] = false; // same astrophysical signal -> collapse
+      }
+    }
+  }
+
+public:
+  Template_Bank_Polynomial_DopplerDistiller(double tobs_seconds, double freq_tol, bool keep_related = true)
+    : BaseDistiller(keep_related),
+      tobs(tobs_seconds),
+      halfT(0.5 * tobs_seconds),
+      inv_c(1.0 / SPEED_OF_LIGHT),
+      freq_tolerance(freq_tol)
+  {}
+};
+

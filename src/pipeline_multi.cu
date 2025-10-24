@@ -533,8 +533,8 @@ public:
 	PUSH_NVTX_RANGE("DM-Loop",0)
     while (true) {
         idx = manager.get_dm_trial_idx();
-        trials.get_idx(idx, tim, size);
-        if (idx == -1) break;
+        if (idx == -1) break;                // FIX: check before using idx
+        trials.get_idx(idx, tim, size);      // safe: idx is valid now
         //Start processing
         preprocess_time_series(tim, d_tim);
         remove_rednoise_and_zap(d_tim, r2cfft, c2rfft, d_fseries, d_pspec, rednoise, bzap, former, mean, rms, std);
@@ -584,14 +584,15 @@ public:
         if (prog) prog->tick_bin();
     }
     // Distill polynomial candidates
-
     if (args.verbose) std::cout << "Distilling polynomial (acc+jerk) candidates\n";
-    // Set your tolerances here (example values, adjust as needed)
-    float freq_tol = args.freq_tol;      // or a new command-line arg if you want
-    float acc_tol = 0.01;                // set as needed or make configurable
-    float jerk_tol = 0.01;               // set as needed or make configurable
-    Template_Bank_Polynomial_Distiller poly_distiller(freq_tol, acc_tol, jerk_tol, true);
-    dm_trial_cands.append(poly_distiller.distill(polynomial_search_cands.cands));
+
+    // New: physics-aware Doppler envelope collapse using Δa and Δj over Tobs
+    Template_Bank_Polynomial_DopplerDistiller poly_dopp_dist(/*tobs=*/tobs, /*freq_tol=*/args.freq_tol, /*keep_related=*/true);
+    auto distilled = poly_dopp_dist.distill(polynomial_search_cands.cands);
+    dm_trial_cands.append(distilled);
+
+    if (args.verbose)
+        std::cout << "[DEBUG] poly post-distill count added=" << distilled.size() << "\n";
 }
 
         else {
@@ -627,26 +628,25 @@ void* launch_worker_thread(void* ptr){
 
 bool getFileContent(std::string fileName, std::vector<float> & vecOfDMs)
 {
-    // Open the File
     std::ifstream in(fileName.c_str());
-    // Check if object is valid
-    if(!in)
-    {
-        std::cerr << "Cannot open the File : "<<fileName<<std::endl;
+    if(!in){
+        std::cerr << "Cannot open the File : " << fileName << std::endl;
         return false;
     }
     std::string str;
-    float fl;
-    // Read the next line from File untill it reaches the end.
-    while (std::getline(in, str))
-    {
-        // Line contains string of length > 0 then save it in vector
-        if(str.size() > 0)
-            fl = std::atof(str.c_str());
-            //fl = std::stof(str); //c++11
-            vecOfDMs.push_back(fl);
+    while (std::getline(in, str)){
+        // skip blanks and comments
+        if (str.empty()) continue;
+        // trim leading/trailing spaces
+        auto beg = str.find_first_not_of(" \t\r\n");
+        auto end = str.find_last_not_of(" \t\r\n");
+        if (beg == std::string::npos) continue;
+        std::string tok = str.substr(beg, end - beg + 1);
+        if (tok.empty() || tok[0] == '#') continue;
+
+        float fl = std::atof(tok.c_str());
+        vecOfDMs.push_back(fl);
     }
-    //Close The File
     in.close();
     return true;
 }
