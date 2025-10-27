@@ -291,21 +291,22 @@ void device_harmonic_sum(float* d_input_array, float** d_output_array,
 
 __global__
 void power_series_kernel(cufftComplex *d_idata, float* d_odata,
-			 size_t size, size_t gulp_index)
+             size_t size, size_t gulp_index)
 {
   int idx = blockIdx.x * blockDim.x + threadIdx.x + gulp_index;
-  cufftComplex& x = d_idata[idx];
-  if(idx<size)
-    {
-      float z = x.x*x.x+x.y*x.y;
-      if (z==0) {
-        //printf("zero at %d\n", idx);
-        d_odata[idx] = 0;
-      }
-      else{
-        d_odata[idx] = z*rsqrtf(z);
-      }
-    }
+
+  // FIX: check bounds before touching d_idata[idx]
+  if (idx >= (int)size) return;
+
+  // Read after the check (by value, not by reference)
+  cufftComplex x = d_idata[idx];
+
+  float z = x.x * x.x + x.y * x.y;
+  if (z == 0.0f) {
+    d_odata[idx] = 0.0f;
+  } else {
+    d_odata[idx] = z * rsqrtf(z);
+  }
   return;
 }
 
