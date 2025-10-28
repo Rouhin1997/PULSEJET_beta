@@ -402,30 +402,39 @@ inline __device__ unsigned long getAcceleratedIndexII(double accel_fact, double 
 
 
 __global__ void resample_kernel(float* input_d,
-				float* output_d,
-				double accel_fact,
-				size_t size,
-				double size_by_2,
-				size_t start_idx)
+                float* output_d,
+                double accel_fact,
+                size_t size,
+                double size_by_2,
+                size_t start_idx)
 {
   unsigned long idx = threadIdx.x + blockIdx.x * blockDim.x + start_idx;
-  if (idx>=size)
-    return;
-  unsigned long idx_read = getAcceleratedIndex(accel_fact,size_by_2,idx);
-  output_d[idx] = input_d[idx_read];
+  if (idx >= size) return;
+
+  unsigned long idx_read = getAcceleratedIndex(accel_fact, size_by_2, idx);
+  if (idx_read < size) {
+    output_d[idx] = input_d[idx_read];
+  } else {
+    output_d[idx] = 0.0f;  // zero-pad OOB
+  }
 }
 
 
 __global__ void resample_kernelII(float* input_d,
-				  float* output_d,
-				  double accel_fact,
-				  double size)
-
+                  float* output_d,
+                  double accel_fact,
+                  double size)
 {
-  for( unsigned long idx = blockIdx.x*blockDim.x + threadIdx.x ; idx < size ; idx += blockDim.x*gridDim.x )
+  for (unsigned long idx = blockIdx.x*blockDim.x + threadIdx.x;
+       idx < (unsigned long)size;
+       idx += blockDim.x*gridDim.x)
   {
-    unsigned long out_idx = getAcceleratedIndexII(accel_fact,size,idx);
-    output_d[idx] = input_d[out_idx];
+    unsigned long out_idx = getAcceleratedIndexII(accel_fact, size, idx);
+    if (out_idx < (unsigned long)size) {
+      output_d[idx] = input_d[out_idx];
+    } else {
+      output_d[idx] = 0.0f;  // zero-pad OOB
+    }
   }
 }
 
@@ -1455,7 +1464,7 @@ float median5(float a, float b, float c, float d, float e) {
                                  : d < e ? b < d ? a < d ? a : d
                                                  : e < b ? e : b
                                          : a < e ? b < e ? b : e
-                                                 : d < b ? d : b
+                                                 : c < a ? c : a
 	         : d < c ? a < d ? b < e ? b < d ? e < d ? e : d
                                                  : c < b ? c : b
                                          : e < d ? b < d ? b : d
