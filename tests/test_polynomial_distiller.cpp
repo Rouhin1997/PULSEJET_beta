@@ -13,7 +13,7 @@ int main() {
     {
         std::vector<Candidate> input;
         Template_Bank_Polynomial_Distiller distiller(1e-4f, 0.01f, 0.02f);
-        const auto result = distiller.distill(input);
+        auto result = distiller.distill(input);
         t.expect(result.empty(), "Empty input produces no candidates");
     }
 
@@ -22,7 +22,7 @@ int main() {
             make_candidate(100.0f, 15.0f, 50.0f, 0, 20.0f, 0.002f)
         };
         Template_Bank_Polynomial_Distiller distiller(1e-4f, 0.01f, 0.02f);
-        const auto result = distiller.distill(input);
+        auto result = distiller.distill(input);
         t.expect(result.size() == 1, "Single candidate is preserved");
         t.expect(result.size() == 1 && result[0].count_assoc() == 0,
                  "Single candidate has no associations");
@@ -37,7 +37,7 @@ int main() {
             make_candidate(100.0f,   15.0f, 50.0f, 0, 20.0f, 0.00200f)
         };
         Template_Bank_Polynomial_Distiller distiller(1e-4f, 0.01f, 0.02f);
-        const auto result = distiller.distill(input);
+        auto result = distiller.distill(input);
         t.expect(result.size() == 1, "Nearby parameter-matched detections collapse");
         t.expect(result.size() == 1 && near(result[0].snr, 15.0f),
                  "Highest-S/N detection is retained as representative");
