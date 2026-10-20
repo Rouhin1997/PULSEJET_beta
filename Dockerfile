@@ -43,8 +43,10 @@ RUN git clone https://github.com/vishnubk/dedisp.git && \
 
 # ---- Build & install your fork (to /usr/local/bin) ----
 # Clone your repo into a folder named 'peasoup' to match old path expectations
-RUN git clone https://github.com/Rouhin1997/PULSEJET_beta.git peasoup && \
-    cd peasoup && \
+# Use the exact GitHub Actions checkout (dev branch/commit), not master.
+# This is critical when building an image from dev/polynomial-search.
+COPY . /software/peasoup
+RUN cd /software/peasoup && \
     # clean + force rebuild so no stale objects sneak in
     make clean || true && \
     make -B -j 8 \
