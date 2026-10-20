@@ -2,7 +2,9 @@
 # PulseJet (PeaSoup) image
 # =========================
 # CUDA toolchain for nvcc and cuFFT
-FROM nvidia/cuda:12.6.0-cudnn-devel-ubuntu22.04
+# Match HPC NVIDIA driver 545.23.08 (CUDA 12.3) and A40 (sm_86).
+# The resampler does not use cuDNN; the CUDA devel image includes nvcc and cuFFT.
+FROM nvidia/cuda:12.3.2-devel-ubuntu22.04
 
 SHELL ["/bin/bash", "-lc"]
 ENV DEBIAN_FRONTEND=noninteractive
@@ -31,6 +33,10 @@ ENV CUDA_DIR=/usr/local/cuda \
     INSTALL_DIR=/usr/local \
     UCFLAGS=""
 
+# A40 is Ampere compute capability 8.6; build native SASS instead of relying
+# on PTX JIT and compiling several unrelated GPU architectures.
+ARG TARGET_GPU_ARCH=86
+
 WORKDIR /software
 
 # ---- Build & install dedisp (to /usr/local) ----
@@ -42,7 +48,7 @@ RUN git clone https://github.com/vishnubk/dedisp.git && \
     ldconfig /usr/local/lib
 
 # ---- Build & install your fork (to /usr/local/bin) ----
-# Clone your repo into a folder named 'peasoup' to match old path expectations
+# Keep the source directory named 'peasoup' for legacy path expectations.
 # Use the exact GitHub Actions checkout (dev branch/commit), not master.
 # This is critical when building an image from dev/polynomial-search.
 COPY . /software/peasoup
@@ -54,7 +60,9 @@ RUN cd /software/peasoup && \
       CUDA_DIR="${CUDA_DIR}" \
       THRUST_DIR="${THRUST_DIR}" \
       INSTALL_DIR="${INSTALL_DIR}" \
-      UCFLAGS="${UCFLAGS}" V=1 && \
+      UCFLAGS="${UCFLAGS}" \
+      GPU_ARCH_FLAG="-gencode arch=compute_${TARGET_GPU_ARCH},code=sm_${TARGET_GPU_ARCH}" \
+      V=1 && \
     # ensure target dir exists, then install
     mkdir -p "${INSTALL_DIR}/bin" && \
     make install INSTALL_DIR="${INSTALL_DIR}" && \
@@ -65,7 +73,8 @@ RUN cd /software/peasoup && \
 RUN which peasoup && \
     ls -lh $(which peasoup) && \
     strings $(which peasoup) | grep -q "polynomial_template_bank_file" && \
-    /usr/local/bin/peasoup --help | grep -A1 "polynomial_template_bank_file"
+    /usr/local/bin/peasoup --help | grep -A1 "polynomial_template_bank_file" && \
+    /usr/local/bin/peasoup --help | grep -q "candidate_diagnostics"
 
 # Default workdir for runtime
 WORKDIR /data
