@@ -19,5 +19,7 @@ jobs:
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
-      - name: Run CPU candidate tests
+      - name: Run CPU candidate and polynomial timing tests
         run: bash tests/run_cpu_tests.sh
+      - name: Verify polynomial source/container wiring
+        run: python3 tests/test_polynomial_wiring.py
