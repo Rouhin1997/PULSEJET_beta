@@ -1,8 +1,15 @@
 name: build-pulsejet-development-image
 
-# Manually triggered; no long CUDA image build for each CPU-test commit.
+# Development image builds are requested by editing the marker file.
+# The workflow can also be manually dispatched once registered on GitHub's
+# default branch. Push-trigger works without adding anything to master.
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - dev/polynomial-search
+    paths:
+      - ci/build-dev-request.txt
 
 permissions:
   contents: read
