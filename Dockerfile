@@ -76,6 +76,58 @@ RUN which peasoup && \
     /usr/local/bin/peasoup --help | grep -A1 "polynomial_template_bank_file" && \
     /usr/local/bin/peasoup --help | grep -q "candidate_diagnostics"
 
+# ---- PulsarX folding and scientific analysis ----
+# Source revisions pinned for reproducible candidate validation. PRESTO/DSPSR
+# are optional independent checks, not prerequisites for first folding tests.
+RUN apt-get update -y && \
+    apt-get install -y --no-install-recommends \
+      autoconf automake libtool pkg-config cmake gfortran \
+      libboost-dev libboost-system-dev libboost-program-options-dev \
+      libboost-log-dev libboost-thread-dev \
+      libcfitsio-dev libblas-dev liblapack-dev libeigen3-dev \
+      libpng-dev libfftw3-dev libx11-dev pgplot5 liberfa-dev \
+      python3-scipy python3-astropy python3-matplotlib python3-pandas \
+      python3-yaml \
+    && rm -rf /var/lib/apt/lists/*
+
+ENV PULSARX_HOME=/opt/pulsarx \
+    YMW16_DIR=/opt/pulsarx/src/XLibs/src/ymw16 \
+    OMP_NUM_THREADS=1
+ENV LD_LIBRARY_PATH=/usr/local/lib:/usr/local/lib64:$LD_LIBRARY_PATH
+
+RUN mkdir -p /opt/pulsarx/src && \
+    git clone https://github.com/ypmen/PlotX.git /opt/pulsarx/src/PlotX && \
+    cd /opt/pulsarx/src/PlotX && git checkout 4380dbbec91d5bed8a209da88ca4a22f9b1fddb3 && \
+    ./bootstrap && \
+    ./configure --prefix=/usr/local CXXFLAGS="-std=c++11 -O3" && \
+    make -j4 && make install && ldconfig
+
+RUN git clone https://github.com/ypmen/XLibs.git /opt/pulsarx/src/XLibs && \
+    cd /opt/pulsarx/src/XLibs && git checkout 7ce9473304f5feea8f91400253a11b0cbc9b0738 && \
+    ./bootstrap && \
+    ./configure --prefix=/usr/local CXXFLAGS="-std=c++11 -O3" \
+      CPPFLAGS="-I/usr/local/include" LDFLAGS="-L/usr/local/lib" && \
+    make -j4 && make install && ldconfig
+
+RUN git clone https://github.com/ypmen/PulsarX.git /opt/pulsarx/src/PulsarX && \
+    cd /opt/pulsarx/src/PulsarX && git checkout e7e91a852176cb425d15220c3d250e8d262e08f4 && \
+    ./bootstrap && \
+    ./configure --prefix=/usr/local CXXFLAGS="-std=c++11 -O3" \
+      CPPFLAGS="-I/usr/local/include" LDFLAGS="-L/usr/local/lib" && \
+    make -j4 && make install && ldconfig && \
+    install -D -m 0644 include/template/meerkat_fold.template \
+      /usr/local/share/pulsarx/meerkat_fold.template
+
+RUN install -m 0755 /software/peasoup/tools/pulsejet_xml_to_pulsarx.py \
+      /usr/local/bin/pulsejet_xml_to_pulsarx
+
+RUN python3 -c "import numpy, scipy, astropy, matplotlib, pandas; print('Scientific Python ready')" && \
+    which psrfold_fil && which psrfold_fil2 && which psrheader && \
+    which pulsar_injector && \
+    psrfold_fil --help | grep -q "f2search" && \
+    psrfold_fil2 --help | grep -q "candfile" && \
+    python3 /usr/local/bin/pulsejet_xml_to_pulsarx --help >/dev/null
+
 # Default workdir for runtime
 WORKDIR /data
 
