@@ -91,3 +91,8 @@ existing one, and do not replace physical signal-injection tests.
 Run with `bash tests/run_cpu_tests.sh`; output lines start with
 `[POPULATION]` and `[PASS]` or `[FAIL]`. All existing production
 algorithms, the Doppler distiller, and Peasoup components remain unchanged.
+
+## Step 2 results
+
+See [STEP2_FINDINGS.md](STEP2_FINDINGS.md) for the measured candidate counts,
+false-merge fixtures, limitations, and the next proposed diagnostic gate.
