@@ -1,0 +1,56 @@
+name: publish-inception-lite-folding-image
+# Docker Hub credentials exist in the PULSEJET repo, not necessarily in the INCEPTION fork.
+# Check out the INCEPTION development code explicitly, and publish a distinct Docker tag.
+# PULSEJET master and the production latest tag are never modified.
+on:
+  push:
+    branches: [dev/polynomial-search]
+    paths:
+      - ci/inception-image-request.txt
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  publish-inception-lite:
+    if: github.ref == 'refs/heads/dev/polynomial-search'
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Checkout publisher repository
+        uses: actions/checkout@v4
+      - name: Checkout INCEPTION-Lite source
+        uses: actions/checkout@v4
+        with:
+          repository: Rouhin1997/inception_injection_test_tool
+          ref: dev/pulsejet-injections
+          path: inception-lite
+          persist-credentials: false
+      - name: Record exact INCEPTION source revision
+        id: inception
+        shell: bash
+        run: |
+          COMMIT=$(git -C inception-lite rev-parse HEAD)
+          echo "sha=$COMMIT" >> "$GITHUB_OUTPUT"
+          echo "INCEPTION-Lite source: $COMMIT"
+          test -f inception-lite/Dockerfile.inception-lite-folding
+          test -f inception-lite/tests/smoke_real_pulsarx.py
+      - uses: docker/setup-buildx-action@v3
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build, test with REAL PulsarX, and publish injection image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./inception-lite
+          file: ./inception-lite/Dockerfile.inception-lite-folding
+          platforms: linux/amd64
+          push: true
+          tags: |
+            docker.io/${{ secrets.DOCKERHUB_USERNAME }}/pulsejet:inception-lite-${{ steps.inception.outputs.sha }}
+            docker.io/${{ secrets.DOCKERHUB_USERNAME }}/pulsejet:inception-lite-latest
+          labels: |
+            org.opencontainers.image.revision=${{ steps.inception.outputs.sha }}
+            org.opencontainers.image.source=https://github.com/Rouhin1997/inception_injection_test_tool
+            org.opencontainers.image.description=INCEPTION-Lite plus PulsarX truth-folding, based on pinned PULSEJET development image
