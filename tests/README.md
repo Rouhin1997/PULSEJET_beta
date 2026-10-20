@@ -125,3 +125,19 @@ search. It does not alter any resampling or distillation decision.
 counts and report formatting on CPU. **GitHub's CPU tests do not compile or
 execute the full CUDA pipeline.** The integrated build and a sample GPU run
 are still required before claiming the diagnostic works end-to-end.
+
+## Phase A: polynomial timing and pre-deployment wiring
+
+See [PHASE_A_FINDINGS.md](PHASE_A_FINDINGS.md) for the derived midpoint
+acceleration–jerk arrival-time convention, a reproducible CPU pulsar-signal
+injection experiment, the corrected polynomial-only kernel mapping, template
+reader and XML metadata changes, and the Phase B container/GPU checklist.
+
+The test runner also executes `test_polynomial_timing.cpp` and
+`test_polynomial_templatebank.cpp`. The CPU GitHub workflow separately runs
+`python3 tests/test_polynomial_wiring.py` to check the expected source-code
+connections and container build configuration.
+
+**Scope boundary:** Passing CPU/static checks does not prove NVCC compilation
+or GPU parity. The manual container build and SIF runtime testing remain the
+required next gate before observations.
