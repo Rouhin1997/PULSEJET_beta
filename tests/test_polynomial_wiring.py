@@ -66,7 +66,7 @@ check("Template bank rejects empty and non-finite entries",
 check("Makefile rebuilds the kernel and binary after header edits",
       "INCLUDE_HEADERS :=" in makefile and
       "kernels.cu $(INCLUDE_HEADERS)" in makefile and
-      "$(OBJECTS) $(INCLUDE_HEADERS)" in makefile)
+      ("${OBJECTS} $(INCLUDE_HEADERS)" in makefile or "$(OBJECTS) $(INCLUDE_HEADERS)" in makefile))
 check("Development Docker build uses checked-out code",
       "COPY . /software/peasoup" in docker and
       "git clone https://github.com/Rouhin1997/PULSEJET_beta.git" not in docker)
