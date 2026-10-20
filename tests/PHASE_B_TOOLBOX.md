@@ -92,3 +92,26 @@ truth; preserve the SIF version and all intermediate outputs.
 The shared Peasoup Candidate structure stores acceleration and jerk
 as float even though the polynomial resampler now accepts double.
 This limits output parameter precision.
+
+## First expanded image build result (2026-10-20)
+
+GitHub Actions build: https://github.com/Rouhin1997/PULSEJET_beta/actions/runs/39408031261
+
+Outcome: **SUCCESS**, published both a commit-specific tag and a mutable
+`dev-polynomial-latest` tag. Pin the immutable commit tag for SIF conversion.
+
+- Git commit: `513e80d1ace21868fd3d3d37734bcd79782abce3`
+- OCI manifest-list digest: `sha256:7d60ac506e48af31ad9dfbb4cb9c2a206d585156ce56333c818ef8ecf9b9a53c`
+- Docker Hub image: `<existing-dockerhub-namespace>/pulsejet:dev-polynomial-513e80d1ace21868fd3d3d37734bcd79782abce3`
+- Core PULSEJET CUDA `sm_86` compile: from existing build setup, successful.
+- PulsarX  native binaries linked and installed: `psrfold_fil`, `psrfold_fil2`, `pulsar_injector`, `psrheader` and others.
+- Python import smoke check: numpy, scipy, astropy, matplotlib, pandas successful.
+- CLI smoke checks: both folding programs and XML converter successful.
+- Converter scientific validation: CPU unit tests passed.
+
+**Not yet tested:** SingularityCE conversion/runtime on the A40 cluster,
+actual folded synthetic pulse profile, correct relative phase after matching
+a filtered/zero-padded data segment, and independent verification of PulsarX
+F2 reporting. The compiled PulsarX binaries used `-mavx2 -mfma` CPU flags,
+so verify those CPU features exist on your cluster's compute nodes before
+relying on these binaries (or rebuild for a portable target).
