@@ -850,6 +850,9 @@ if (args.polynomial_tb_file != "none") {
     std::size_t total_bin_trials;
     if (keplerian_tb) {
         total_bin_trials = full_dm_list.size() * keplerian_tb->get_n().size();
+    } else if (polynomial_tb) {
+        // Each DM trial searches every acceleration-jerk bank entry.
+        total_bin_trials = full_dm_list.size() * polynomial_tb->get_acc().size();
     } else {
         // number of acceleration trials changes with each DM.
         total_bin_trials = 0;
@@ -946,6 +949,8 @@ if (args.polynomial_tb_file != "none") {
   stats.add_header(filename);
   if (keplerian_tb) {
     stats.add_search_parameters(args, &*keplerian_tb);
+  } else if (polynomial_tb) {
+    stats.add_search_parameters(args, nullptr, &*polynomial_tb);
   } else {
     stats.add_search_parameters(args, nullptr);
   }
