@@ -18,7 +18,7 @@ int main() {
             make_candidate(100.0f,   18.0f, 50.0f, 0, 20.0f, 0.001f)
         };
         DMDistiller distiller(1e-4f, true);
-        const auto result = distiller.distill(input);
+        auto result = distiller.distill(input);
         t.expect(result.size() == 1, "DM distiller groups close frequencies");
         t.expect(result.size() == 1 && result[0].count_assoc() == 1,
                  "DM distiller retains an associated detection");
@@ -52,7 +52,7 @@ int main() {
             make_candidate(200.0f, 12.0f, 50.0f, 0, 20.0f, 0.001f)
         };
         HarmonicDistiller distiller(1e-4f, 16, true);
-        const auto result = distiller.distill(input);
+        auto result = distiller.distill(input);
         t.expect(result.size() == 1, "Harmonic distiller groups 2:1 frequencies");
         t.expect(result.size() == 1 && result[0].count_assoc() == 1,
                  "Harmonic association is retained");
@@ -78,7 +78,7 @@ int main() {
             make_candidate(100.00075f, 12.0f, 50.0f, 0, 20.0f, 0.001f) // B
         };
         DMDistiller distiller(1e-5f, true);
-        const auto result = distiller.distill(input);
+        auto result = distiller.distill(input);
         t.expect(result.size() == 2,
                  "Overlap fixture produces two representative frequency groups");
 
