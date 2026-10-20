@@ -116,7 +116,10 @@ globally optimal.
    copies the GitHub Actions checked-out source, preventing the
    historical Docker build from silently re-cloning \`master\` while
    triggered on a development branch.
-9. **Manual development-image workflow:** \`.github/workflows/build-dev.yml\`
+9. **Header-aware builds:** the Makefile now rebuilds CUDA objects and the
+   executable whenever project headers change. This prevents stale binaries
+   when editing the shared polynomial timing model inside a mounted SIF.
+10. **Manual development-image workflow:** \`.github/workflows/build-dev.yml\`
    builds a commit-tagged Docker image, without triggering an
    expensive build on every CPU-test push. **This Docker workflow has
    not yet been run or verified**.
@@ -134,7 +137,7 @@ Run:
     python3 tests/test_polynomial_wiring.py
 
 There are seven C++ suites: 12 + 8 + 17 + 12 + 5 + 31 + 10 =
-**95 assertions**, plus **15 static source-wiring checks**.
+**95 assertions**, plus **16 static source-wiring checks**.
 
 CPU assertions exercise:
 
