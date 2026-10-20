@@ -52,3 +52,42 @@ the existing Docker/GPU build and does not require Docker Hub credentials.
 
 Next: review results, isolate a failing scientifically justified candidate
 grouping fixture, then develop a correction in a separate change.
+
+## Step 2: labelled candidate-population experiments
+
+`test_candidate_populations.cpp` is a deterministic CPU-only characterization
+suite using the real production Peasoup/PULSEJET distillers. It reports for
+each scenario: input candidate count, number of top-level representatives,
+association count, unique event IDs represented, repeated memberships across
+groups, groups mixing ground-truth sources, and the number of independently
+represented source labels.
+
+The labelled populations isolate **candidate grouping**, not signal detection.
+Frequency offsets are deliberate stress-test values, not empirical models of
+frequency-estimation scatter or the output of a time-series simulation.
+
+Scenarios:
+
+1. 40 DM trials, one polynomial template and three harmonics per DM;
+   emulate the actual per-template harmonic -> per-DM Doppler -> cross-DM
+   -> final harmonic sequence.
+2. One source with a broader frequency scatter across 40 DMs.
+3. Two separable spin frequencies within the default *relative* DM-distiller
+   matching window (reveals false merging).
+4. One source across nearby acceleration/jerk templates near zero; compare
+   the user's polynomial rule with the currently wired Doppler rule.
+5. Two distinct sources with equal detected spin frequencies but different
+   acceleration/jerk (adversarial test of false merging).
+6. One-bin separation for 30-s versus 3600-s observations (demonstrates the
+   observation-length dependence missing from a fixed relative frequency
+   tolerance).
+7. Two well-separated spin frequencies across 20 DM trials.
+
+**Interpreting passing results:** A passing characterization assertion can
+identify *undesirable current behaviour*. See the `CHARACTERIZATION` prefix.
+The experiments do not establish which matching policy should replace an
+existing one, and do not replace physical signal-injection tests.
+
+Run with `bash tests/run_cpu_tests.sh`; output lines start with
+`[POPULATION]` and `[PASS]` or `[FAIL]`. All existing production
+algorithms, the Doppler distiller, and Peasoup components remain unchanged.
