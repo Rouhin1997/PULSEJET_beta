@@ -20,6 +20,7 @@ reader = source("include/transforms/polynomial_templatebank_reader.hpp")
 output = source("include/utils/output_stats.hpp")
 cmdline = source("include/utils/cmdline.hpp")
 docker = source("Dockerfile")
+makefile = source("Makefile")
 workflow = source(".github/workflows/build-dev.yml")
 timing = source("include/transforms/polynomial_timing.hpp")
 wrapper = source("include/transforms/polynomial_resampler.hpp")
@@ -62,6 +63,10 @@ check("Output uses midpoint for polynomial segment epoch",
 check("Template bank rejects empty and non-finite entries",
       "no usable acceleration-jerk templates" in reader and
       "std::isfinite(aval)" in reader)
+check("Makefile rebuilds the kernel and binary after header edits",
+      "INCLUDE_HEADERS :=" in makefile and
+      "kernels.cu $(INCLUDE_HEADERS)" in makefile and
+      "$(OBJECTS) $(INCLUDE_HEADERS)" in makefile)
 check("Development Docker build uses checked-out code",
       "COPY . /software/peasoup" in docker and
       "git clone https://github.com/Rouhin1997/PULSEJET_beta.git" not in docker)
