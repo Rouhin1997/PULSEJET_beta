@@ -17,6 +17,7 @@
 #include <thrust/fill.h>
 #include <kernels/defaults.h>
 #include <kernels/kernels.h>
+#include <transforms/polynomial_timing.hpp>
 #include <utils/exceptions.hpp>
 #include <utils/utils.hpp>
 #include <thrust/adjacent_difference.h>
@@ -472,38 +473,42 @@ void device_resample(float * d_idata, float * d_odata,
 }
 
 
-//------------------Polynomial template bank based acceleration and Jerk Resampler-----------------//
+//------------------Polynomial template bank based acceleration and jerk resampler-----------------//
+// Only the polynomial kernel uses this midpoint-referenced model. The
+// original acceleration-only / circular / Keplerian kernels remain unchanged.
+// A positive acceleration increases propagation delay away from the midpoint.
+// Timing arithmetic is computed in double precision until final sample read.
+__global__ void resample_acc_jerk_kernel(
+    const float* input_d, float* output_d,
+    double acceleration, double jerk, double tsamp, size_t size) {
+  for (unsigned long idx = blockIdx.x * blockDim.x + threadIdx.x;
+       idx < size; idx += blockDim.x * gridDim.x) {
+    const double source = pulsejet::polynomial::input_sample_index(
+        static_cast<double>(idx), static_cast<double>(size),
+        tsamp, acceleration, jerk);
 
-__device__ unsigned long getAcceleratedJerkedIndex(double accel_factor, double jerk_factor, double size, unsigned long idx) {
-    double center = size / 2.0;
-    double x  = (double)idx;
-    double dx = x - center;
-    
-    // return __double2ull_rn(idx + idx * accel_factor * (idx - center) + 0.5 * jerk_factor * (idx - center) * (idx - center));
-    // jerk contributes a cubic term; jerk_factor already includes 1/6
-    return __double2ull_rn(x + x * accel_factor * dx + jerk_factor * dx * dx * dx);
-}
-
-__global__ void resample_acc_jerk_kernel(float* input_d, float* output_d, double accel_factor, double jerk_factor, size_t size) {
-    for (unsigned long idx = blockIdx.x * blockDim.x + threadIdx.x; idx < size; idx += blockDim.x * gridDim.x) {
-        unsigned long out_idx = getAcceleratedJerkedIndex(accel_factor, jerk_factor, size, idx);
-        if(out_idx < size){
-            output_d[idx] = input_d[out_idx];
-        } else {
-            output_d[idx]=0.0f;
-        }
+    // Check the floating position BEFORE converting to an unsigned integer.
+    // Explicitly reject negative and out-of-range reads; round to nearest-even
+    // to retain the pre-existing nearest-neighbour sampling policy.
+    if (source >= 0.0 && source < static_cast<double>(size)) {
+      const unsigned long read_idx = __double2ull_rn(source);
+      output_d[idx] = (read_idx < size) ? input_d[read_idx] : 0.0f;
+    } else {
+      output_d[idx] = 0.0f;
     }
+  }
 }
 
-void device_resample_acc_jerk(float* d_idata, float* d_odata, size_t size, float acc_value, float jerk_value, float tsamp, unsigned int max_threads, unsigned int max_blocks) {
-    double accel_factor = ((acc_value * tsamp) / (2 * SPEED_OF_LIGHT));
-    double jerk_factor = ((jerk_value * tsamp * tsamp) / (6 * SPEED_OF_LIGHT));
-    unsigned blocks = size / max_threads + 1;
-    if (blocks > max_blocks) blocks = max_blocks;
-    resample_acc_jerk_kernel<<<blocks, max_threads>>>(d_idata, d_odata, accel_factor, jerk_factor, size);
-    ErrorChecker::check_cuda_error("Error from device_resample_acc_jerk");
+void device_resample_acc_jerk(
+    float* d_idata, float* d_odata, size_t size, double acceleration,
+    double jerk, double tsamp, unsigned int max_threads,
+    unsigned int max_blocks) {
+  const unsigned blocks = (size / max_threads + 1 > max_blocks)
+                              ? max_blocks : static_cast<unsigned>(size / max_threads + 1);
+  resample_acc_jerk_kernel<<<blocks, max_threads>>>(
+      d_idata, d_odata, acceleration, jerk, tsamp, size);
+  ErrorChecker::check_cuda_error("Error from device_resample_acc_jerk");
 }
-
 
 //------------------Circular Orbit Search Template Bank Resampler-----------------//
 
