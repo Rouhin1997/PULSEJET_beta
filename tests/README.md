@@ -96,3 +96,32 @@ algorithms, the Doppler distiller, and Peasoup components remain unchanged.
 
 See [STEP2_FINDINGS.md](STEP2_FINDINGS.md) for the measured candidate counts,
 false-merge fixtures, limitations, and the next proposed diagnostic gate.
+
+
+## Read-only candidate diagnostics in the actual polynomial search
+
+Run a polynomial-only search with an optional flag:
+
+```bash
+./bin/peasoup -i observation.fil -P polynomial_templates.txt \
+  --dm_file dm_trials.txt --fft_size 16777216 -t 1 \
+  -o results --candidate_diagnostics
+```
+
+The summary in stdout is bracketed by `[POLYNOMIAL_DIAGNOSTICS]` and
+`[END_POLYNOMIAL_DIAGNOSTICS]`. It reports the number of peaks before and
+after per-template harmonic grouping, before and after per-DM polynomial
+grouping, and before/after cross-DM and final harmonic grouping, and the
+final output limit. An additional recursive count of *nested associated nodes*
+is included. Associated nodes can appear in multiple groups, so this does
+not claim a count of unique detections.
+
+Each worker owns its counters; these are combined after the worker threads
+join, across all DM chunks. No extra lock is required. The report is only
+produced in polynomial mode, with `-P` and without an active Keplerian `-K`
+search. It does not alter any resampling or distillation decision.
+
+`test_candidate_diagnostics.cpp` tests accumulation, recursive association
+counts and report formatting on CPU. **GitHub's CPU tests do not compile or
+execute the full CUDA pipeline.** The integrated build and a sample GPU run
+are still required before claiming the diagnostic works end-to-end.
