@@ -5,6 +5,7 @@
 #include <data_types/filterbank.hpp>
 #include <transforms/dedisperser.hpp>
 #include <transforms/resampler.hpp>
+#include <transforms/polynomial_resampler.hpp>
 #include <transforms/folder.hpp>
 #include <transforms/ffter.hpp>
 #include <transforms/dereddener.hpp>
@@ -263,19 +264,18 @@ void run_elliptical_orbit_search_resampler(
 
 // new Polynomial TB based jerk resampler helper function
 
+// Polynomial resampling remains independent of Peasoup's TimeDomainResampler.
 void run_polynomial_time_domain_resampler(
     ReusableDeviceTimeSeries<float, DedispOutputType>& d_tim,
     DeviceTimeSeries<float>& d_tim_resampled,
-    float acc, float jerk, float tsamp, unsigned int size)
+    double acc, double jerk, double tsamp, unsigned int size)
 {
     if (args.verbose)
-        std::cout << "Resampling with acc=" << acc << " m/s^2, jerk=" << jerk << " m/s^3\n";
-    float* d_idata = d_tim.get_data();
-    float* d_odata = d_tim_resampled.get_data();
-    device_resample_acc_jerk(
-        d_idata, d_odata, size, acc, jerk, tsamp,
-        MAX_THREADS, MAX_BLOCKS
-    );
+        std::cout << "Resampling with acc=" << acc
+                  << " m/s^2, jerk=" << jerk << " m/s^3\n";
+    pulsejet::PolynomialTimeDomainResampler resampler;
+    resampler.resample(d_tim.get_data(), d_tim_resampled.get_data(), size,
+                       acc, jerk, tsamp);
     if (args.verbose)
         std::cout << "Polynomial (acc+jerk) resampling complete\n";
 }
