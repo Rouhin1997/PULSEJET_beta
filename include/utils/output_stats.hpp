@@ -10,6 +10,7 @@
 #include <fstream>
 #include <utils/xml_util.hpp>
 #include <utils/cmdline.hpp>
+#include <transforms/polynomial_templatebank_reader.hpp>
 #include <utils/stopwatch.hpp>
 #include <data_types/header.hpp>
 #include "cuda.h"
@@ -92,7 +93,8 @@ public:
     root.append(segment_parameters);
   }
 
-  void add_search_parameters(CmdLineOptions& args, const Keplerian_TemplateBank_Reader* tb_reader = nullptr){
+  void add_search_parameters(CmdLineOptions& args, const Keplerian_TemplateBank_Reader* tb_reader = nullptr,
+                             const Polynomial_TemplateBank_Reader* polynomial_reader = nullptr){
     XML::Element search_options("search_parameters");
     search_options.append(XML::Element("infilename",args.infilename));
     search_options.append(XML::Element("outdir",args.outdir));
@@ -122,6 +124,25 @@ public:
     search_options.append(XML::Element("verbose",args.verbose));
     search_options.append(XML::Element("progress_bar",args.progress_bar));
     search_options.append(XML::Element("template_bank_file", args.keplerian_tb_file));
+    if (args.polynomial_tb_file != "none" && args.keplerian_tb_file == "none") {
+      // Polynomial timing is defined at the midpoint, also used by
+      // get_segment_pepoch_accel_search() below.
+      search_options.append(XML::Element("polynomial_template_bank_file", args.polynomial_tb_file));
+      search_options.append(XML::Element("polynomial_reference_epoch", "segment_midpoint"));
+      search_options.append(XML::Element("polynomial_reference_velocity", "zero"));
+      search_options.append(XML::Element("polynomial_sampling", "nearest_neighbour"));
+      if (polynomial_reader != nullptr) {
+        for (const auto& pair : polynomial_reader->get_metadata()) {
+          std::string key = "polynomial_";
+          for (char ch : pair.first) {
+            if (std::isspace(static_cast<unsigned char>(ch))) key += '_';
+            else if (std::isalnum(static_cast<unsigned char>(ch)) || ch == '_')
+              key += static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
+          }
+          search_options.append(XML::Element(key, pair.second));
+        }
+      }
+    }
     
     if (tb_reader != nullptr) {
       for (auto const& kv : tb_reader->get_metadata()) {
