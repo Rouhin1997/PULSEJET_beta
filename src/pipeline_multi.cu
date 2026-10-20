@@ -23,6 +23,7 @@
 #include <utils/cmdline.hpp>
 #include <utils/output_stats.hpp>
 #include <utils/progress_monitor.hpp>
+#include <utils/candidate_diagnostics.hpp>
 #include <string>
 #include <iostream>
 #include <fstream>
@@ -158,7 +159,8 @@ void run_search_and_find_candidates(DeviceTimeSeries<float>& d_tim_resampled,
     HarmonicDistiller& harm_finder,
     SpectrumCandidates& trial_cands,
     CandidateCollection& output_cands,
-    float mean, float std, unsigned int size) {
+    float mean, float std, unsigned int size,
+    pulsejet::CandidateDiagnostics* diagnostics = nullptr) {
 
     if (args.verbose) std::cout << "Executing forward FFT\n";
     r2cfft.execute(d_tim_resampled.get_data(), d_fseries.get_data());
@@ -172,7 +174,11 @@ void run_search_and_find_candidates(DeviceTimeSeries<float>& d_tim_resampled,
     cand_finder.find_candidates(d_pspec, trial_cands);
     cand_finder.find_candidates(sums, trial_cands);
     if (args.verbose) std::cout << "Distilling harmonics\n";
-    output_cands.append(harm_finder.distill(trial_cands.cands));
+    const std::size_t raw_count = trial_cands.cands.size();
+    auto harmonic_distilled = harm_finder.distill(trial_cands.cands);
+    if (diagnostics)
+        diagnostics->record_template(raw_count, harmonic_distilled.size());
+    output_cands.append(harmonic_distilled);
 }
 
 void run_acceleration_time_domain_resampler(
@@ -457,6 +463,7 @@ void run_keplerian_search(int idx,
 
 public:
   CandidateCollection dm_trial_cands;
+  pulsejet::CandidateDiagnostics candidate_diagnostics;
 
   inline void find_min_max(thrust::device_vector<double> &dev_vec, double *min, double *max){
     thrust::pair<thrust::device_vector<double>::iterator,thrust::device_vector<double>::iterator> tuple;
@@ -579,7 +586,8 @@ public:
         run_search_and_find_candidates(
             d_tim_resampled, r2cfft, c2rfft, d_fseries, d_pspec, former,
             sums, harm_folder, cand_finder, harm_finder, trial_cands,
-            polynomial_search_cands, mean, std, size
+            polynomial_search_cands, mean, std, size,
+            args.candidate_diagnostics ? &candidate_diagnostics : nullptr
         );
         if (prog) prog->tick_bin();
     }
@@ -588,7 +596,10 @@ public:
 
     // New: physics-aware Doppler envelope collapse using Δa and Δj over Tobs
     Template_Bank_Polynomial_DopplerDistiller poly_dopp_dist(/*tobs=*/tobs, /*freq_tol=*/args.freq_tol, /*keep_related=*/true);
+    const std::size_t before_polynomial = polynomial_search_cands.cands.size();
     auto distilled = poly_dopp_dist.distill(polynomial_search_cands.cands);
+    if (args.candidate_diagnostics)
+        candidate_diagnostics.record_dm(before_polynomial, distilled.size());
     dm_trial_cands.append(distilled);
 
     if (args.verbose)
@@ -717,6 +728,7 @@ int main(int argc, char **argv)
   DMDistiller dm_still(args.freq_tol,true);
   HarmonicDistiller harm_still(args.freq_tol,args.max_harm,true,false);
   CandidateCollection dm_cands;
+  pulsejet::CandidateDiagnostics total_candidate_diagnostics;
 
 
 
@@ -887,6 +899,8 @@ if (args.polynomial_tb_file != "none") {
     for (int ii=0; ii<nthreads; ii++){
       pthread_join(threads[ii],NULL);
       dm_cands.append(workers[ii]->dm_trial_cands.cands);
+      if (args.candidate_diagnostics && polynomial_tb && !keplerian_tb)
+          total_candidate_diagnostics += workers[ii]->candidate_diagnostics;
       delete workers[ii];
     }
     if (progPtr) progPtr->finish(); 
@@ -897,8 +911,11 @@ if (args.polynomial_tb_file != "none") {
   if (args.verbose)
     std::cout << "Distilling DMs" << std::endl;
   
+  const std::size_t before_cross_dm = dm_cands.cands.size();
   dm_cands.cands = dm_still.distill(dm_cands.cands);
+  const std::size_t after_cross_dm = dm_cands.cands.size();
   dm_cands.cands = harm_still.distill(dm_cands.cands);
+  const std::size_t after_final_harmonic = dm_cands.cands.size();
 
   CandidateScorer cand_scorer(filobj.get_tsamp(),filobj.get_cfreq(), filobj.get_foff(),
 			      fabs(filobj.get_foff())*filobj.get_nchans());
@@ -912,6 +929,14 @@ if (args.polynomial_tb_file != "none") {
 
   int new_size = std::min(args.limit,(int) dm_cands.cands.size());
   dm_cands.cands.resize(new_size);
+
+  if (args.candidate_diagnostics && polynomial_tb && !keplerian_tb) {
+      pulsejet::print_candidate_diagnostics(
+          std::cout, total_candidate_diagnostics,
+          before_cross_dm, after_cross_dm, after_final_harmonic,
+          dm_cands.cands.size(),
+          pulsejet::count_associated_nodes(dm_cands.cands));
+  }
 
   CandidateFileWriter cand_files(args.outdir);
   //cand_files.write_binary(dm_cands.cands,"candidates.peasoup");
