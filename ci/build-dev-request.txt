@@ -1,0 +1,5 @@
+PULSEJET Phase B development CUDA image build request
+Target: SingularityCE 3.11.3, NVIDIA A40 (sm_86), Linux driver 545.23.08
+CUDA toolkit: 12.3.2
+Build the exact commit containing this marker and all prior Phase A changes.
+CPU characterization complete; NVCC build and image publishing are the next gate.
