@@ -86,6 +86,31 @@ without increasing the number of top-level output candidates; do not confuse
 None is confirmed as the sole cause of the previous run, because its XML and
 source-level event history have not yet been reproduced.
 
+## Step 2 completion: diagnostic instrumentation added
+
+The remaining Step 2 implementation gate is now complete on
+`dev/polynomial-search`. An optional `--candidate_diagnostics` flag
+reports per-template raw and post-harmonic peaks, per-DM polynomial
+input/output counts, before/after cross-DM candidates, before/after final
+harmonic grouping, candidate output-limit count, and recursively nested
+association nodes. These are counts, **not** changes to matching decisions.
+
+The report is generated only for polynomial-only searches and accumulates
+worker-local counters after thread joins, across DM chunks. The CPU helper
+tests cover aggregation, nested association counting, and formatting.
+Additional CPU CLI tests verify that diagnostics are disabled by default and
+can be enabled with the command-line switch.
+
+GitHub Actions CPU run:
+https://github.com/Rouhin1997/PULSEJET_beta/actions/runs/39396764488
+
+**54/54 assertions passed across five CPU test suites.**
+
+Boundary: this confirms the test helpers and the command-line parser.
+The complete CUDA binary and actual diagnostic reporting during a filterbank
+search have **not yet been verified** in a GPU run. That is a separate
+integration-validation task before relying on real observational results.
+
 ## Recommended next implementation gate
 
 Before modifying matching rules:
