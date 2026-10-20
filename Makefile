@@ -14,6 +14,10 @@ OBJ_DIR     = ./obj
 SRC_DIR     = ./src
 INCLUDE_DIR = ./include
 
+# Track project headers: changing the polynomial timing model or any other
+# included C++/CUDA header must rebuild the corresponding objects/executable.
+INCLUDE_HEADERS := $(shell find $(INCLUDE_DIR) -type f \( -name '*.h' -o -name '*.hpp' \))
+
 # Compiler flags
 OPTIMISE = -O3
 DEBUG    =
@@ -33,13 +37,13 @@ all: directories ${OBJECTS} ${EXE_FILES}
 
 # ----- Object build rules -----
 
-${OBJ_DIR}/kernels.o: ${SRC_DIR}/kernels.cu | directories
+${OBJ_DIR}/kernels.o: ${SRC_DIR}/kernels.cu $(INCLUDE_HEADERS) | directories
 	${NVCC} -c ${NVCCFLAGS} ${INCLUDE} $< -o $@
 
 # ----- Executables -----
 
-${BIN_DIR}/peasoup: ${SRC_DIR}/pipeline_multi.cu ${SRC_DIR}/utils.cpp ${OBJECTS} | directories
-	${NVCC} ${NVCCFLAGS} ${INCLUDE} ${LIBS} $^ -o $@
+${BIN_DIR}/peasoup: ${SRC_DIR}/pipeline_multi.cu ${SRC_DIR}/utils.cpp ${OBJECTS} $(INCLUDE_HEADERS) | directories
+	${NVCC} ${NVCCFLAGS} ${INCLUDE} ${LIBS} ${SRC_DIR}/pipeline_multi.cu ${SRC_DIR}/utils.cpp ${OBJECTS} -o $@
 
 # ----- Utilities -----
 
