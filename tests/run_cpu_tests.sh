@@ -7,7 +7,7 @@ CXX="${CXX:-g++}"
 BUILD_DIR="$(mktemp -d)"
 trap 'rm -rf "$BUILD_DIR"' EXIT
 
-for name in test_polynomial_distiller test_candidate_grouping test_candidate_populations; do
+for name in test_polynomial_distiller test_candidate_grouping test_candidate_populations test_candidate_diagnostics; do
     echo "=== Compiling ${name} ==="
     "$CXX" -std=c++17 -O2 -Wall -Wextra -pedantic \
         -I"$ROOT/include" -I"$ROOT/tests" \
