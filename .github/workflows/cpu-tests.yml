@@ -23,3 +23,5 @@ jobs:
         run: bash tests/run_cpu_tests.sh
       - name: Verify polynomial source/container wiring
         run: python3 tests/test_polynomial_wiring.py
+      - name: Check CUDA Makefile dependency graph without building
+        run: make -n all | grep -F nvcc
