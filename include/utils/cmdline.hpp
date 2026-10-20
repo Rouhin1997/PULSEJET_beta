@@ -34,6 +34,7 @@ struct CmdLineOptions {
   float freq_tol;
   bool verbose;
   bool progress_bar;
+  bool candidate_diagnostics = false;
   long  start_sample;
   long nsamples;
   std::string timeseries_dump_dir;
@@ -201,6 +202,8 @@ bool read_cmdline_options(CmdLineOptions& args, int argc, char **argv)
       TCLAP::SwitchArg arg_verbose("v", "verbose", "verbose mode", cmd);
 
       TCLAP::SwitchArg arg_progress_bar("p", "progress_bar", "Enable progress bar for DM search", cmd);
+      TCLAP::SwitchArg arg_candidate_diagnostics("", "candidate_diagnostics",
+          "Report polynomial candidate counts before and after distillation", cmd);
 
       TCLAP::ValueArg<unsigned int> arg_start_sample("", "start_sample",
 						 "Start from this sample",
@@ -259,6 +262,7 @@ bool read_cmdline_options(CmdLineOptions& args, int argc, char **argv)
       args.freq_tol          = arg_freq_tol.getValue();
       args.verbose           = arg_verbose.getValue();
       args.progress_bar      = arg_progress_bar.getValue();
+      args.candidate_diagnostics = arg_candidate_diagnostics.getValue();
       args.start_sample      = arg_start_sample.getValue();
       args.nsamples           = arg_nsamples.getValue();
       args.timeseries_dump_dir = arg_timeseries_dump_dir.getValue();
