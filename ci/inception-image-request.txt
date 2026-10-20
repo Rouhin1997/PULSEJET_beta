@@ -4,3 +4,6 @@ Source: Rouhin1997/inception_injection_test_tool dev/pulsejet-injections
 Base: rouhin1997/pulsejet:dev-polynomial-513e80d1ace21868fd3d3d37734bcd79782abce3
 Requirements: actual PulsarX PNG+archive generated from synthetic jerk injection before publication.
 Do not affect production :latest or main/master.
+
+Retry after real PulsarX test found native .ar but no PlotX PNG in headless runner.
+New INCEPTION-Lite fallback generates PNG by reading the actual folded PSRFITS archive.
