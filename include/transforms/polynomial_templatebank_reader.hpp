@@ -8,6 +8,9 @@
 #include <iostream>
 #include <map>
 #include <cctype>
+#include <cmath>
+#include <limits>
+#include <algorithm>
 
 // Reads polynomial template banks with a header like:
 // ---------------------------------------------
@@ -55,10 +58,14 @@ private:
     return s;
   }
 
-  static bool token_is_number(const std::string& t) {
-    // Simple numeric test by trying stod
-    try { (void)std::stod(t); return true; }
-    catch (...) { return false; }
+  static bool parse_number(const std::string& token, double& value) {
+    try {
+      std::size_t parsed = 0;
+      value = std::stod(token, &parsed);
+      return parsed == token.size(); // reject e.g. "10.0garbage"
+    } catch (...) {
+      return false;
+    }
   }
 
   // Capture "KEY ... number ... (units)" style header lines into metadata.
@@ -106,35 +113,47 @@ public:
       // Capture the two header lines if present
       if (try_parse_header_line(t)) continue;
 
-      // Skip a potential column header like "a j" (non-numeric tokens)
-      {
-        auto tokens = split(t);
-        if (tokens.size() == 2 && !(token_is_number(tokens[0]) && token_is_number(tokens[1]))) {
-          // Looks like a column header; ignore
+      const auto tokens = split(t);
+      if (tokens.size() == 2) {
+        double aval = 0.0;
+        double jval = 0.0;
+        const bool valid_acc = parse_number(tokens[0], aval);
+        const bool valid_jerk = parse_number(tokens[1], jval);
+        if (valid_acc && valid_jerk) {
+          if (!std::isfinite(aval) || !std::isfinite(jval))
+            throw std::runtime_error(
+              "Polynomial_TemplateBank_Reader: non-finite acceleration or jerk: " + t);
+          // Candidate output currently uses float fields. Keep the GPU
+          // parameters in double, but reject values impossible to report.
+          const double max_reportable = std::numeric_limits<float>::max();
+          if (std::abs(aval) > max_reportable || std::abs(jval) > max_reportable)
+            throw std::runtime_error(
+              "Polynomial_TemplateBank_Reader: parameter exceeds candidate float range: " + t);
+          acc.push_back(aval);
+          jerk.push_back(jval);
+          columns = 2;
           continue;
         }
-      }
-
-      // Parse data rows (expect exactly two numeric columns: a, j)
-      auto tokens = split(t);
-      if (columns == 0) columns = static_cast<int>(tokens.size());
-
-      if (tokens.size() == 2 && token_is_number(tokens[0]) && token_is_number(tokens[1])) {
-        acc.push_back(std::stod(tokens[0]));
-        jerk.push_back(std::stod(tokens[1]));
-      } else {
-        // Ignore any stray non-data lines gracefully, but if it's clearly malformed numeric data, throw.
-        bool any_numeric = false;
-        for (const auto& tok : tokens) any_numeric = any_numeric || token_is_number(tok);
-        if (any_numeric) {
+        if (valid_acc != valid_jerk)
           throw std::runtime_error(
-            "Polynomial_TemplateBank_Reader: Invalid data line with " +
-            std::to_string(tokens.size()) + " tokens. Expected exactly 2 numeric columns (a, j). Line: " + t
-          );
-        }
-        // else: benign non-data text; continue
+            "Polynomial_TemplateBank_Reader: partially numeric row: " + t);
+        // An all-text, two-column header is allowed.
+        continue;
       }
+
+      // Ignore descriptive headers but reject malformed numeric data rows.
+      bool numeric_token = false;
+      for (const auto& tok : tokens) {
+        double value = 0.0;
+        numeric_token = numeric_token || parse_number(tok, value);
+      }
+      if (numeric_token)
+        throw std::runtime_error(
+          "Polynomial_TemplateBank_Reader: expected two numeric columns: " + t);
     }
+    if (acc.empty())
+      throw std::runtime_error(
+        "Polynomial_TemplateBank_Reader: no usable acceleration-jerk templates in: " + filename);
   }
 
   const std::vector<double>& get_acc() const { return acc; }
