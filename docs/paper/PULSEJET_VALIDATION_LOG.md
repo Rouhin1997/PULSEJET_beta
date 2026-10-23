@@ -561,3 +561,19 @@ User attempted to split original M62 `.fil` using first-version `scripts/extract
 Corrected extractor [scripts/extract_sigproc_windows.py](https://github.com/Rouhin1997/inception_injection_test_tool/blob/dev/pulsejet-injections/scripts/extract_sigproc_windows.py) commit **`dd1dfb5182d261440684686c07b8946e849976ff`**: require tstart, tsamp, nchans, nbits but not nsamples; validate optional nsamples if present (0 or actual count), update/verify nsamples only if originally present, otherwise preserve exact field set and derive payload count. Preserve original read-only and refuse output overwrite. Added [tests/test_extract_sigproc_windows.py](https://github.com/Rouhin1997/inception_injection_test_tool/blob/dev/pulsejet-injections/tests/test_extract_sigproc_windows.py) at `7fbf8f9876a74d5c3fb900443271ee7cc63ba4d9` for optional `nsamples` and refusal to overwrite. Tests committed but not yet executed on actual HPC/SIGPROC; no original file mutation.
 
 Next: user reconnects to node2 (SSH dropped), redownloads fixed splitter from **pinned** SHA, confirms output dir absent and >=35GB free, executes four-window extraction and checks results/manifest. Then stage four already committed 5-source injection configs and start unattended, monitored scheduler jobs if runtime/storage allow. Maintain user's one-step-per-turn procedure.
+
+
+### M62 four-window real filterbank extraction complete (2026-10-23 ~16:03)
+
+**Status: successfully extracted four separate 256-channel observational SIGPROC filterbanks** from original 59.52-min M62 UHF `.fil` with the corrected optional-header extraction script. User provided terminal output. Input samples `59,285,407`, sample interval `6.02352941176e-05 s`, `256 bytes/sample`. Source remains unmodified. Windows:
+
+| Window | Samples | Duration (seconds) | Path |
+|---|---:|---:|---|
+| W1 | 14,821,351 | 892.768 | `$HOME/PULSEJET_validation/stage6_m62/m62_15m_windows/W1_M62_background.fil` |
+| W2 | 14,821,352 | 892.768 | `$HOME/PULSEJET_validation/stage6_m62/m62_15m_windows/W2_M62_background.fil` |
+| W3 | 14,821,352 | 892.768 | `$HOME/PULSEJET_validation/stage6_m62/m62_15m_windows/W3_M62_background.fil` |
+| W4 | 14,821,352 | 892.768 | `$HOME/PULSEJET_validation/stage6_m62/m62_15m_windows/W4_M62_background.fil` |
+
+Output ~3.6 G decimal each, `windows_manifest.json` generated. Sum of window sample counts matches original: **59,285,407**. Extractor verifies output size, preserves original header field set (modifies `tstart`; if present, `nsamples`), selected first/mid/last payload samples, and avoids overwrites. Shell terminal did not show any failures. Still appropriate to independently validate `readfile`/PulsarX input compatibility on a pilot; per-window PULSEJET FFT size/timing still needs matching.
+
+Already committed four distinct five-source real-noise injection configurations to INCEPTION-Lite `dev/pulsejet-injections`: `configs/m62_weekend_20_w1.json` (`4c741be60f9221c815ef4e06633987d0ec28a0ac`), `w2` (`0314a7164897c04c8d5c1b722bc477915af7fcb3`), `w3` (`ea9e5ee348f79ea4fbed3fbe1b47a32749360b1c`), `w4` (`6bd9feab17d8eba6397438e809e79cda1eb79463`). Each config sets `ncpu=16`, `mode=together`, fold enabled with actual PulsarX, source sample source-specific injection truth; `generate_fb` absent (preserve observed noise). No weekend jobs launched yet. Need user to stage all configs on node2, check no orphaned older injector processes and available scheduler (`sbatch` vs other); only launch unattended when cluster policy and storage/quotas permit.
