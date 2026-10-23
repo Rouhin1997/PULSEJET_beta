@@ -636,3 +636,17 @@ User read `weekend_slurm_logs/W{1..4}_<jobid>.out` on `frontend2`. **All four jo
 | W4 | 66453 | node3.cluster | 2026-10-23T16:21:37+0200; `m62_w4_job66453_30cpu.json`; I16–I20 |
 
 The logs confirm controller entry and correct Slurm CPU parameter propagation. **They do NOT yet demonstrate spawned worker progress or successful physical injection**, because INCEPTION-Lite redirects injector subprocess stdout and errors to `m62_15m_injections/W?/case_0001/inject.log`. Further investigate those 4 internal injector logs before asserting that workers are processing. No complete `.fil`, PulsarX `.ar`, or diagnostic figure verified. Slurm jobs survive SSH disconnect; later inspect both `sacct` final state and products.
+
+
+### Final Friday evening injector startup check: 4 x 30 workers operational (2026-10-23, ~16:42 Europe/Rome)
+
+On `frontend2`, user checked the actual per-case INCEPTION-Lite logs for all four Slurm jobs (`66450`–`66453`) and confirmed each reported `building 5 pulsar models...`, `writing fold files...`, `injection report written.`, `starting 30 workers, each builds its own models...`, `Models constructed, starting injection...`. Background sample mean/std from the log:
+
+| Window | Mean | Stddev | CPU workers | Slurm node/state |
+|---|---:|---:|---:|---|
+| W1 | 128.0184975 | 1.8169686234421105 | 30 | node2 RUNNING (66450) |
+| W2 | 128.0488675 | 1.8177889060698984 | 30 | node2 RUNNING (66451) |
+| W3 | 128.0219100 | 1.8162967423932015 | 30 | node3 RUNNING (66452) |
+| W4 | 128.0676625 | 1.8196374347275746 | 30 | node3 RUNNING (66453) |
+
+No Python traceback in the user-shared tails; logs show the injector's worker pool is initialized. **No chunk-progress messages were present yet**, and success must not be inferred. User may safely disconnect, since Slurm batch jobs are independent of their interactive login session. On return (Monday), query `sacct -j 66450,66451,66452,66453 --format=JobID,JobName,State,ExitCode,Elapsed,NodeList`, inspect latest Slurm logs + per-case `inject.log`, verify exactly four final `.fil` outputs and up to twenty `.ar` PulsarX truth archives before plotting or attempting search. In particular the source has only a 1D pulse-profile fallback; user requested full authentic PulsarX folded pulse/time/frequency diagnostic, so create one from actual .ar archive as a separate validation step. Don't claim a 20/20 fold success without product checks.
