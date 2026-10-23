@@ -570,3 +570,37 @@ with user before any modification.
 ## Stage 4 acceleration candidate identified (23 Oct 2026)
 
 The +150 m/s2, zero-jerk synthetic injection was searched using nine polynomial templates with acceleration -300 through +300 m/s2 in steps of 75, DM fixed to 10. GPU search succeeded: 386 raw detections, 77 after harmonic distillation, 27 after Doppler distillation, 50 nested associations. Top surviving candidate (ID 0) recovers f = 50.000186920166 Hz, acceleration +150 m/s2, jerk 0, DM 10, S/N 75.44, nassoc 11. This is correct recovery on the tested grid, not a demonstration of free acceleration estimation. Critically, the deployed output_stats.hpp writes only nassoc for each representative; the XML does not serialize associated candidate parameter records, and candidate binary output is commented out in pipeline_multi.cu. Therefore the 11 associations cannot be identified from overview.xml alone; to characterize per-template S/N and grouping without modifying code, run single-template control searches on the same injected file and compare results. Do not modify either third-party distiller without prior user discussion and approval.
+
+
+## Stage 4 acceleration correction vs uncorrected control (2026-10-23)
+
+Using exactly the SAME injected a=+150 m/s², j=0, P0=20 ms,
+DM=10 synthetic filterbank, the user ran a one-template
+**incorrect, stationary control** PULSEJET GPU search (a=0,j=0) with
+the otherwise identical settings to the previous nine-template
+search. Output directory:
+`/home/rnag/PULSEJET_validation/stage3/search_accel_zero_control`.
+
+GPU execution completed successfully: 1 DM, 1 polynomial template,
+37 raw spectral detections, 7 after per-template harmonic grouping,
+7 after polynomial Doppler distillation and 7 at final output
+(0 nested associations). Most significant candidate in
+`overview.xml`: `f=50.000187 Hz`, a=0, **S/N=52.76**.
+The matching candidate from the nine-template search had
+`f=50.000187 Hz`, a=+150, **S/N=75.44**, rank #1, with 11
+nested associated nodes.
+
+Correct template increases recovered PULSEJET search S/N by
+`(75.44/52.76-1)≈43.0%` (factor ≈1.43). The wrong stationary
+template still detects the injected signal: this is not a complete
+dropout, and it is not a detection-efficiency population estimate.
+The acceleration correction gain is compelling; still must establish
+that the multi-template Doppler distiller groups physically appropriate
+associations and preserves strong candidates.
+
+Scientific follow-up: run a correct-only a=150,j=0 bank on this same
+data with identical search settings, compare its detected ~50 Hz S/N
+to the full nine-template bank's 75.44 to ensure distiller retention
+and isolate template-specific response. After that, inspect recovered
+acceleration-dependent fold, then controlled jerk injection.
+No code/third-party distiller changes without user approval.
