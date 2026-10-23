@@ -398,3 +398,28 @@ User reports **64 logical CPUs available on node2** in addition to the previousl
 **Baseline policy:** start with an *uninjected, unmodified* 2^22-sample (~252.645 s) M62 segment searched at explicit **additional DM0** and one stationary polynomial template, with the known pulsar's ~278 Hz frequency included in the selected band. This is a read-only **pipeline/performance smoke test** under an assumed prior-DM-corrected input, **NOT** evidence the true residual DM has been optimized. The true residual may be negative and smear the known 3.6-ms pulsar; verify archival preprocessing, and design an appropriate residual-DM correction before claiming non-detection or performing sensitivity tests. Do not directly inject into the archival original or symlink; later create an isolated ~1 GiB segment for controlled injections.
 
 Record whole-process `/usr/bin/time -v` timing, input path and cache state for every benchmark. Distinguish initial cold archive I/O timing from warm repeat timing, CPU-intensive preparation from GPU search, and benchmarking compared with matched PRESTOzl. No actual M62 runtime has yet been recorded.
+
+### M62 baseline attempt 01: CUDA worker abort before search (FAILED) (2026-10-23)
+
+**Status: failed; zero valid benchmark or recovered candidates.** First attempted search on M62 256-channel 8-bit original using verified symlink `stage6_m62/m62_original.fil`, search segment `--start_sample 0 --nsamples 4194304 --fft_size 4194304` (~252.65 seconds), single residual DM 0, polynomial stationary template `0 0`, `-t 1 -n 4 -m 7 --min_freq 200 --max_freq 350 --candidate_diagnostics -v`. Host `node2`, singularity with `--nv --bind /archive1:/archive1`, immutable PULSEJET SIF.
+
+First two invocations never launched PULSEJET because host lacked `/usr/bin/time`; do not treat those attempts as runs. Third invocation used bash built-in `time`, stdout piped to `tee` with `set -o pipefail`, producing:
+
+```text
+Segment start sample: 0, Segment end sample: 4194304
+Effective nsamples 4194304 points
+Loaded 1 templates
+1 DM trials
+0
+Executing dedispersion
+Starting to dedisperse filterbank from Sample:0 to 4194304 samples, with gulp size of 1000000 samples
+Setting FFT length to 4194304 points
+Starting searching...
+Joining worker threads
+terminate called after throwing an instance of 'thrust::system::system_error'
+what(): trivial_device_copy D->H failed: cudaErrorInvalidValue: invalid argument
+```
+
+**Exit 134 (Aborted), wall-clock to abort 13.577 s; CPU user 0.129 s; system 2.831 s**. These timings measure a failed startup/run and MUST NOT be reported as successful pipeline performance. The observation was read and dedispersed enough to reach GPU worker launch; worker failed before any debug output from per-DM preprocess or resampler, so neither candidate distillation nor full polynomial template search ran. Fatal exception may have arisen during GPU worker object setup; exact cause NOT established. Do not claim hardware failure, memory exhaustion, dedispersion bug, or jerk resampler bug based on this lone trace.
+
+Next one-step isolation: rerun same real M62 file, same DM0/template/search options, but `--nsamples 1048576 --fft_size 1048576` (~63.16 s), new output directory and fresh bash wall-clock log. If successful, suggests data/FFT-size sensitivity; if failure persists, investigate input/config/GPU worker constructor and environment, then run device health checks. Keep original archive untouched; no code or distiller modifications without user approval.
