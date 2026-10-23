@@ -906,3 +906,47 @@ injection or search. No distiller edits without explicit consent.
 Other later follow-ups: extract true archive folding S/N,
 phase-v-time/phase-v-frequency for cand 1 and examine candidate
 archive naming/ID mapping.
+
+
+## Stage 5 same-seed noise-only control exposes pre-existing non-50 Hz candidates (2026-10-23)
+
+User ran the exact same 30-template a/j polynomial GPU search
+(with DM10, 20-100Hz) against the **original noise-only**
+`stage3/noise_baseline_fixed.fil` (before adding PSR_JERK_10).
+Output `stage3/search_jerk_noise_control/overview.xml`.
+There were **21** output candidates. No candidates within 0.1Hz
+of the injected 50Hz pulsar, whereas the injected-data run has
+f=50.000187Hz at exact a=150,j=10 with search S/N75.54.
+
+Highly significant non-50Hz search candidates pre-existed:
+| feature | noise-only top S/N | with injected pulsar top S/N |
+|---|---:|---:|
+| f=92.615120Hz (a=75,j=0) | 49.19, nassoc56 | 36.92, nassoc48 |
+| f=69.461815Hz (a=75,j=10) | 33.76 | 26.08 |
+| f=89.836113Hz (a=150,j=-10) | 14.31 | 14.52 |
+| f~79.39Hz | 17.58 | 23.50 (different nearby f/template) |
+
+Thus the strange high-SNR non-50Hz outputs are **not caused
+solely by injecting the 50Hz pulsar**. Do not label them real
+pulsars, RFI, pure random peaks or distiller bugs without further
+checks. Their preexistence in the noise-only search does not
+identify whether origin is raw synthetic input or processing
+(normalization/resampling/harmonics). The 92.615Hz candidate
+is especially suspicious because of its search S/N of 49.19
+in a nominally noise-only observation despite lacking
+convincing narrow independent folded profile after injection.
+
+**Next independent test:** inspect raw 8-bit noise-only filterbank
+via Python/NumPy *outside PULSEJET search*, summing its 16 channels
+and computing an ordinary raw FFT for high excess power around
+92.615, 69.462, 89.836 and 50Hz. Use known validated SIGPROC
+header size 267B, 1048576 time samples, tsamp=0.00025s, 16 channels
+and `--cleanenv` inception SIF. If raw FFT is unremarkable at
+92.615Hz despite search S/N49, examine search processing;
+if raw FFT shows a strong line, inspect noise generation
+and possible repeated patterns. Do not mistake this independent
+unaccelerated FFT as definitive because original search used
+nonzero a/j resampling.
+
+Preserve both distillers unchanged until explicit user approval.
+User requires one single HPC command/step at a time.
