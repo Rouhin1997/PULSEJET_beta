@@ -862,3 +862,47 @@ of a software defect.
 
 No changes to either distiller or algorithm without explicit
 discussion and approval by the user.
+
+
+## Stage 5 seven-fold visual review (2026-10-23)
+
+User uploaded and visually reviewed ALL SEVEN PulsarX archive-derived
+profiles for the 262.144-s +150m/s², +10m/s³ synthetic jerk injection:
+`jerk_run_a150_j10/case_0001/folds/PSR_JERK_10/PSR_JERK_10_folded_profile.png`
+(truth), `search_jerk_bank_01/top5_profiles/candidate_{0..4}_profile.png`
+(five recovered candidates), and
+`search_jerk_zero_control/recovered_zero_jerk_profile.png`
+(control). All from actual PulsarX `--nosearch` archives.
+
+Observations based on visual inspection:
+- Truth and recovered top candidate 0 (f=50.000187 Hz,
+  a=+150,j=+10,S/N75.54) have sharp, nearly identical phase~0.56
+  pulse widths and morphology; recovered peak visibly modestly
+  weaker. This is strong *visual* independent-fold agreement.
+- Zero-jerk a=+150,j=0 top candidate (f=49.999233 Hz,
+  search S/N49.92) still has a recognizable fairly narrow
+  peak at ~0.56–0.58 but substantially reduced peak prominence;
+  do NOT overclaim dramatic broadening or complete loss.
+- Full-bank candidate 1 f=92.615Hz S/N36.92 has irregular
+  multiple peaks with no comparably convincing narrow pulse;
+  candidate 2 69.462Hz S/N26.08, candidate 3 79.384Hz
+  S/N23.50, candidate 4 89.836Hz S/N14.52 similarly
+  noise-like or inconsistent phase profiles, though average
+  profiles alone cannot formally prove they are spurious.
+- Profile y-axis is arbitrary baseline-shifted archive intensity,
+  **not flux or statistically normalized folding S/N**. Do not
+  directly equate plot peak amplitude with FFT search S/N.
+- Candidate 1's strong spectral S/N despite unconvincing fold
+  warrants follow-up, not instant labeling as random noise or bug.
+  It was also recovered at 92.614647 Hz S/N22.60 in the
+  a=150,j=0 control.
+
+Recommended NEXT one-step test: run same 30-entry jerk bank
+(with exactly same DM10, other peasoup args) against unchanged
+noise-only `stage3/noise_baseline_fixed.fil`, output unique
+`stage3/search_jerk_noise_control/`, compare whether 92.615 Hz
+feature is present in *original noise*, versus introduced by
+injection or search. No distiller edits without explicit consent.
+Other later follow-ups: extract true archive folding S/N,
+phase-v-time/phase-v-frequency for cand 1 and examine candidate
+archive naming/ID mapping.
