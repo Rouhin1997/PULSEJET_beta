@@ -2,20 +2,20 @@
 
 **Document class:** paper evidence / experimental laboratory record (living; begins 2026-10-23).  
 **Status:** synthetic-injection recovery verified; empirical false-alarm calibration and observational validation pending.  
-**Development branch:** \`dev/polynomial-search\`, repository \`Rouhin1997/PULSEJET_beta\`.  
+**Development branch:** `dev/polynomial-search`, repository `Rouhin1997/PULSEJET_beta`.  
 **Companion documents:** [full cluster handoff](../../tests/PHASE_B_CLUSTER_HANDOFF.md), [synthetic-noise anomaly record](../../tests/DEFERRED_SYNTHETIC_NOISE_FALSE_ALARMS.md), [candidate-distiller characterization](../../tests/STEP2_FINDINGS.md).
 
-> **Integrity principle.** The pipeline's reported *search S/N*, a PulsarX archive plot's arbitrary y-axis values, a statistically calibrated folded S/N, and wall-clock computation time are **different measurements**. Do not exchange one for another. All numerical results below are controlled tests, not sky-sensitivity forecasts. The PDF companion \`PULSEJET_Synthetic_Validation_Dossier_2026-10-23.pdf\` contains the **actual twelve uploaded archive-derived plots**; primary PNGs and \`.ar\` files remain on the cluster at the paths specified in §8. The PDF is a local report/evidence export, not yet a tracked binary in the repository.
+> **Integrity principle.** The pipeline's reported *search S/N*, a PulsarX archive plot's arbitrary y-axis values, a statistically calibrated folded S/N, and wall-clock computation time are **different measurements**. Do not exchange one for another. All numerical results below are controlled tests, not sky-sensitivity forecasts. The PDF companion `PULSEJET_Synthetic_Validation_Dossier_2026-10-23.pdf` contains the **actual twelve uploaded archive-derived plots**; primary PNGs and `.ar` files remain on the cluster at the paths specified in §8. The PDF is a local report/evidence export, not yet a tracked binary in the repository.
 
 ## 1. Provenance: executable, GPU, and algorithm
 
-- PULSEJET compiled Singularity image: \`/home/rnag/PULSEJET_validation/images/pulsejet_dev.sif\`; source commit **\`513e80d1ace21868fd3d3d37734bcd79782abce3\`**, Docker \`rouhin1997/pulsejet:dev-polynomial-513e80d1ace21868fd3d3d37734bcd79782abce3\`.
-- INCEPTION-Lite image: \`/home/rnag/PULSEJET_validation/images/inception_lite.sif\`; injection source commit **\`5a9cd1c9b252ffd1797575267c4528fa5b8e81c5\`**.
-- Processing host: INAF OACagliari compute node \`node2\`, NVIDIA A40; Singularity \`--nv\` for \`peasoup\`, \`--cleanenv\` and \`PYTHONNOUSERSITE=1\` for INCEPTION-Lite Python calls.
-- Polynomial search uses custom **CUDA time-domain acceleration–jerk resampler** \`device_resample_acc_jerk\`, via \`pulsejet::PolynomialTimeDomainResampler\`. Each polynomial template is an \`a j\` row passed to \`peasoup -P <file>\`.
-- Per-template harmonic grouping followed by **\`Template_Bank_Polynomial_DopplerDistiller\`** per DM, then existing cross-DM and final harmonic processing. The separately defined \`Template_Bank_Polynomial_Distiller\` is **not** wired into this path. Distillers and matching rules were **not modified** during validation; correct-retention of the best detection does **not** establish correctness of every association.
-- Independent CUDA versus CPU polynomial-resampling parity: **15/15 scenarios, 491,520 samples compared with zero reported differences**; \`/home/rnag/PULSEJET_validation/stage2/polynomial_cuda_parity.log\`. This is numerical-parity evidence, not recovery or survey sensitivity.
-- Output chain: \`peasoup ... -P bank.txt\` -> \`overview.xml\` -> \`pulsejet_xml_to_pulsarx\` (F0,F1,F2) -> independent \`psrfold_fil --nosearch --pepoch 60000.0015170371\` -> actual PulsarX \`.ar\` -> \`inception_lite.fold_plots.plot_folded_archive\` PNG.
+- PULSEJET compiled Singularity image: `/home/rnag/PULSEJET_validation/images/pulsejet_dev.sif`; source commit **`513e80d1ace21868fd3d3d37734bcd79782abce3`**, Docker `rouhin1997/pulsejet:dev-polynomial-513e80d1ace21868fd3d3d37734bcd79782abce3`.
+- INCEPTION-Lite image: `/home/rnag/PULSEJET_validation/images/inception_lite.sif`; injection source commit **`5a9cd1c9b252ffd1797575267c4528fa5b8e81c5`**.
+- Processing host: INAF OACagliari compute node `node2`, NVIDIA A40; Singularity `--nv` for `peasoup`, `--cleanenv` and `PYTHONNOUSERSITE=1` for INCEPTION-Lite Python calls.
+- Polynomial search uses custom **CUDA time-domain acceleration–jerk resampler** `device_resample_acc_jerk`, via `pulsejet::PolynomialTimeDomainResampler`. Each polynomial template is an `a j` row passed to `peasoup -P <file>`.
+- Per-template harmonic grouping followed by **`Template_Bank_Polynomial_DopplerDistiller`** per DM, then existing cross-DM and final harmonic processing. The separately defined `Template_Bank_Polynomial_Distiller` is **not** wired into this path. Distillers and matching rules were **not modified** during validation; correct-retention of the best detection does **not** establish correctness of every association.
+- Independent CUDA versus CPU polynomial-resampling parity: **15/15 scenarios, 491,520 samples compared with zero reported differences**; `/home/rnag/PULSEJET_validation/stage2/polynomial_cuda_parity.log`. This is numerical-parity evidence, not recovery or survey sensitivity.
+- Output chain: `peasoup ... -P bank.txt` -> `overview.xml` -> `pulsejet_xml_to_pulsarx` (F0,F1,F2) -> independent `psrfold_fil --nosearch --pepoch 60000.0015170371` -> actual PulsarX `.ar` -> `inception_lite.fold_plots.plot_folded_archive` PNG.
 
 ## 2. Experimental input specification
 
@@ -24,22 +24,22 @@ All initial signal-level tests share one original fixed noise realization:
 | Field | Specification |
 |---|---|
 | Source | INCEPTION-Lite nominal Gaussian noise, unsigned 8-bit SIGPROC |
-| Baseline file | \`stage3/noise_baseline_fixed.fil\` |
+| Baseline file | `stage3/noise_baseline_fixed.fil` |
 | Sampling | 250 μs per sample, 1,048,576 original samples (262.144 s) |
-| Frequency setup | 16 channels, \`fch1=1400.0 MHz\`, \`foff=-1.0 MHz\`, channels 1400–1385 MHz |
+| Frequency setup | 16 channels, `fch1=1400.0 MHz`, `foff=-1.0 MHz`, channels 1400–1385 MHz |
 | SIGPROC tstart | MJD 60000.0 |
 | Raw file | 16,777,483 bytes; 267-byte header |
-| Injection | \`P0=0.020 s\` (50 Hz), \`DM=10 pc cm^-3\`, target injected S/N 80, duty cycle 0.06 |
+| Injection | `P0=0.020 s` (50 Hz), `DM=10 pc cm^-3`, target injected S/N 80, duty cycle 0.06 |
 | Motion | stationary; constant acceleration +150 m/s²; combined +150 m/s² and +10 m/s³ |
-| Search settings | one DM trial =10; \`-t 1 -n 4 -m 7 --min_freq 20 --max_freq 100 --candidate_diagnostics -v\` |
+| Search settings | one DM trial =10; `-t 1 -n 4 -m 7 --min_freq 20 --max_freq 100 --candidate_diagnostics -v` |
 | FFT | 1,048,576 padded samples; two padded samples after dedispersion in user logs |
-| Fold | PulsarX \`--nosearch -b 64 --nsubband 16\`, reference epoch MJD **60000.0015170371** |
+| Fold | PulsarX `--nosearch -b 64 --nsubband 16`, reference epoch MJD **60000.0015170371** |
 
-**Original synthetic SIGPROC header caveat:** the pinned INCEPTION-Lite image requires explicit float-valued \`--tstart 60000.0 --fch1 1400.0\` in noise generation to avoid an old 4-byte-versus-8-byte numeric header issue; the validated fixed baseline above is usable. The source repository subsequently received the header fix, but the pinned injection image was **not** rebuilt during this study.
+**Original synthetic SIGPROC header caveat:** the pinned INCEPTION-Lite image requires explicit float-valued `--tstart 60000.0 --fch1 1400.0` in noise generation to avoid an old 4-byte-versus-8-byte numeric header issue; the validated fixed baseline above is usable. The source repository subsequently received the header fix, but the pinned injection image was **not** rebuilt during this study.
 
 ## 3. Stage 3 — stationary synthetic-source baseline
 
-File \`stage3/baseline_run_clean/case_0001/noise_baseline_fixed_baseline_stationary_case_0001.fil\`, injection \`a=0,j=0\`.
+File `stage3/baseline_run_clean/case_0001/noise_baseline_fixed_baseline_stationary_case_0001.fil`, injection `a=0,j=0`.
 
 | Reported quantity | Measurement |
 |---|---:|
@@ -56,12 +56,12 @@ A true-ephemeris PulsarX truth fold and the top XML-recovered candidate's indepe
 
 ## 4. Stage 4 — acceleration-only injection and controlled recovery
 
-Injection: \`a=+150 m/s², j=0\`, otherwise identical model, same starting noise realization; INCEPTION-Lite file
-\`stage3/accel_run_a150/case_0001/noise_baseline_fixed_accel_a150_case_0001.fil\`.
+Injection: `a=+150 m/s², j=0`, otherwise identical model, same starting noise realization; INCEPTION-Lite file
+`stage3/accel_run_a150/case_0001/noise_baseline_fixed_accel_a150_case_0001.fil`.
 
-- Nine-row bank \`stage3/polynomial_accel_bank.txt\`: \`a = [-300,-225,-150,-75,0,75,150,225,300] m/s²\`, \`j=0\`.
+- Nine-row bank `stage3/polynomial_accel_bank.txt`: `a = [-300,-225,-150,-75,0,75,150,225,300] m/s²`, `j=0`.
 - Search 386 raw spectral detections -> 77 after per-template harmonic grouping -> 27 post-Doppler representatives -> 27 final, 50 nested association nodes.
-- Top bank candidate 50.000186920166 Hz, **a=150 m/s²**, S/N **75.44**, \`nassoc=11\`.
+- Top bank candidate 50.000186920166 Hz, **a=150 m/s²**, S/N **75.44**, `nassoc=11`.
 - Single-template true-acceleration control and single-template zero-acceleration control run on the **same injected data**.
 
 | Treatment | Recovered f (Hz) | a (m/s²) | j (m/s³) | Search S/N |
@@ -70,19 +70,19 @@ Injection: \`a=+150 m/s², j=0\`, otherwise identical model, same starting noise
 | Correct-only acceleration | 50.000187 | 150 | 0 | **75.44** |
 | Nine-template competition | 50.000187 | 150 | 0 | **75.44** |
 
-**Measured gain:** \`75.44/52.76 - 1 = 0.430\` (~**43.0% higher reported search S/N**). Correct-only and bank candidates agree in frequency and S/N to shown precision; bank retained the highest-S/N detection. The truth and corrected recovered \`.ar\` profiles show almost coincident narrow peaks near phase 0.56; uncorrected pulse is visibly broadened/asymmetric and weaker in the plotting units.
+**Measured gain:** `75.44/52.76 - 1 = 0.430` (~**43.0% higher reported search S/N**). Correct-only and bank candidates agree in frequency and S/N to shown precision; bank retained the highest-S/N detection. The truth and corrected recovered `.ar` profiles show almost coincident narrow peaks near phase 0.56; uncorrected pulse is visibly broadened/asymmetric and weaker in the plotting units.
 
 **Figure S2 (three panels):** acceleration truth, corrected recovery, and a=0 fold; actual archives, not simulations of what folds might look like. No statistically calibrated folded S/N or pulse-width fit yet.
 
 ## 5. Stage 5 — two-dimensional acceleration–jerk injection and recovery
 
-Injection: \`a=+150 m/s²\`, \`j=+10 m/s³\`, f=50 Hz, DM=10, S/N target 80; file
-\`stage3/jerk_run_a150_j10/case_0001/noise_baseline_fixed_jerk_a150_j10_case_0001.fil\`.
+Injection: `a=+150 m/s²`, `j=+10 m/s³`, f=50 Hz, DM=10, S/N target 80; file
+`stage3/jerk_run_a150_j10/case_0001/noise_baseline_fixed_jerk_a150_j10_case_0001.fil`.
 
-- 30-row controlled polynomial bank \`stage3/polynomial_jerk_bank.txt\`: acceleration \`[-150,0,75,150,225,300] m/s²\` × jerk \`[-10,0,5,10,20] m/s³\`; **exact truth included**.
+- 30-row controlled polynomial bank `stage3/polynomial_jerk_bank.txt`: acceleration `[-150,0,75,150,225,300] m/s²` × jerk `[-10,0,5,10,20] m/s³`; **exact truth included**.
 - Search diagnostics: 1 DM, 30 templates, **1536 raw spectral detections** -> **240** after per-template harmonics -> **29** after per-DM Doppler grouping -> **29** final representatives, **222** nested associated nodes.
-- Top candidate ID0 at f=**50.000186920166 Hz**, a=**150 m/s²**, j=**10 m/s³**, search S/N=**75.53636** (≈75.54), \`nassoc=37\`; strongest across all 30 competing templates.
-- Top-candidate PulsarX conversion: \`F0=50.00018692016603 Hz, F1=-2.501740066464549e-05 Hz/s, F2=-1.667801676256515e-06 Hz/s²\`, consistent with Doppler model.
+- Top candidate ID0 at f=**50.000186920166 Hz**, a=**150 m/s²**, j=**10 m/s³**, search S/N=**75.53636** (≈75.54), `nassoc=37`; strongest across all 30 competing templates.
+- Top-candidate PulsarX conversion: `F0=50.00018692016603 Hz, F1=-2.501740066464549e-05 Hz/s, F2=-1.667801676256515e-06 Hz/s²`, consistent with Doppler model.
 - Correct-only and zero-jerk controls use **the same jerk-injected filterbank**.
 
 | Treatment | Recovered f (Hz) | a (m/s²) | j (m/s³) | Search S/N |
@@ -91,7 +91,7 @@ Injection: \`a=+150 m/s²\`, \`j=+10 m/s³\`, f=50 Hz, DM=10, S/N target 80; fil
 | Correct a+j, **single template** | **50.000187** | **150** | **10** | **75.54** |
 | Correct a, **zero jerk** | **49.999233** | **150** | **0** | **49.92** |
 
-**Measured gain:** \`75.54/49.92 - 1 = 0.5132\` (~**51.3% higher search S/N** when jerk is included, for this deliberately large jerk). True-only and multi-template match, indicating highest-S/N candidate preservation by existing grouping.
+**Measured gain:** `75.54/49.92 - 1 = 0.5132` (~**51.3% higher search S/N** when jerk is included, for this deliberately large jerk). True-only and multi-template match, indicating highest-S/N candidate preservation by existing grouping.
 
 **Independent PulsarX folding:** the true-ephemeris and recovered candidate 0 folds show a sharp, closely matching phase≈0.56 pulse. The j=0 control still has a recognizable pulse near 0.56–0.58 but reduced prominence; do **not** claim the signal vanishes or is necessarily extremely broad. Archive intensity is arbitrary in the quicklook; these aren't calibrated fold-S/N measurements.
 
@@ -99,7 +99,7 @@ Injection: \`a=+150 m/s²\`, \`j=+10 m/s³\`, f=50 Hz, DM=10, S/N target 80; fil
 
 ### 5.1 Five strongest search candidates and independent folds
 
-All five were converted from \`search_jerk_bank_01/overview.xml\` by \`pulsejet_xml_to_pulsarx --min-snr 7 --limit 5\`, then independently folded with \`psrfold_fil --nosearch\` and plotted from actual \`.ar\` files.
+All five were converted from `search_jerk_bank_01/overview.xml` by `pulsejet_xml_to_pulsarx --min-snr 7 --limit 5`, then independently folded with `psrfold_fil --nosearch` and plotted from actual `.ar` files.
 
 | Rank/ID | f (Hz) | a (m/s²) | j (m/s³) | Search S/N | Visual fold |
 |---:|---:|---:|---:|---:|---|
@@ -116,7 +116,7 @@ Quicklook phase averages **cannot conclusively classify** the other candidates a
 ### 5.2 Important distiller limits
 
 - Multi-template run retained **the exact correct top candidate and its S/N**.
-- \`nassoc=37\` for ID0, but its 37 associated entries are **not independently validated** as same-source detections. The recorded total of 222 nested nodes even exceeds \`240-29=211\` top-level reductions; recursive nesting/association duplication affects counts.
+- `nassoc=37` for ID0, but its 37 associated entries are **not independently validated** as same-source detections. The recorded total of 222 nested nodes even exceeds `240-29=211` top-level reductions; recursive nesting/association duplication affects counts.
 - Independent CPU candidate-population characterization already exposed both false-merge and under-merging examples with different distillation strategies. This project does **not** alter their wiring absent prior user approval.
 
 ## 6. Known issue — anomalous candidate in nominal noise-only filterbank
@@ -127,17 +127,17 @@ The same **original no-injection** background searched at DM10 contains candidat
 |---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | Matched 92.615 Hz S/N | NR | 10.34 | NR | 9.38 | **45.90** | 10.14 | NR | 10.07 |
 
-\`NR\` means **not reported**, NOT zero S/N. **Cause unresolved**; may involve dedispersion, noise statistics, spectral whitening/harmonic summing or significance calibration. No claim of false-alarm-rate calibration is justified. We explicitly parked this issue to prioritize real-data injection; reopen if realistic data or broad null simulations reproduce it.
+`NR` means **not reported**, NOT zero S/N. **Cause unresolved**; may involve dedispersion, noise statistics, spectral whitening/harmonic summing or significance calibration. No claim of false-alarm-rate calibration is justified. We explicitly parked this issue to prioritize real-data injection; reopen if realistic data or broad null simulations reproduce it.
 
 Full details, exact noise-only file paths, FFT power ratios, harmonic check and investigation criteria: [dedicated anomaly record](../../tests/DEFERRED_SYNTHETIC_NOISE_FALSE_ALARMS.md).
 
 ## 7. Reproduction recipe and source artifacts
 
-Set \`cd /home/rnag/PULSEJET_validation/stage3\`, \`PULSEJET_SIF=$HOME/PULSEJET_validation/images/pulsejet_dev.sif\`.
+Set `cd /home/rnag/PULSEJET_validation/stage3`, `PULSEJET_SIF=$HOME/PULSEJET_validation/images/pulsejet_dev.sif`.
 
 The central search command for the 30-template jerk study was:
 
-\`\`\`bash
+```bash
 singularity exec --nv "$PULSEJET_SIF" peasoup \
   -i "$PWD/jerk_run_a150_j10/case_0001/noise_baseline_fixed_jerk_a150_j10_case_0001.fil" \
   -o "$PWD/search_jerk_bank_01" \
@@ -145,21 +145,21 @@ singularity exec --nv "$PULSEJET_SIF" peasoup \
   -P "$PWD/polynomial_jerk_bank.txt" \
   -t 1 -n 4 -m 7 --min_freq 20 --max_freq 100 \
   --candidate_diagnostics -v
-\`\`\`
+```
 
-The injection configurations are \`baseline_clean.json\`, \`accel_a150.json\`, and \`jerk_a150_j10.json\`; each wrote a resolved JSON, injection report and logs. Truth folds are under each run's \`case_0001/folds/<PSR_ID>/\`. All candidate XMLs and individual GPU logs live under \`stage3/search_*/\`.
+The injection configurations are `baseline_clean.json`, `accel_a150.json`, and `jerk_a150_j10.json`; each wrote a resolved JSON, injection report and logs. Truth folds are under each run's `case_0001/folds/<PSR_ID>/`. All candidate XMLs and individual GPU logs live under `stage3/search_*/`.
 
 To convert XML candidate(s):
-\`\`\`bash
+```bash
 singularity exec "$PULSEJET_SIF" pulsejet_xml_to_pulsarx \
   search_jerk_bank_01/overview.xml \
   -o search_jerk_bank_01/recovered_top5.cands \
   --manifest search_jerk_bank_01/recovered_top5.json \
   --min-snr 7 --limit 5
-\`\`\`
+```
 
 To fold unchanged recovered parameters (same filterbank used by PULSEJET):
-\`\`\`bash
+```bash
 singularity exec "$PULSEJET_SIF" psrfold_fil \
   --candfile "$PWD/search_jerk_bank_01/recovered_top5.cands" \
   --pepoch 60000.0015170371 \
@@ -167,30 +167,30 @@ singularity exec "$PULSEJET_SIF" psrfold_fil \
   --nosearch -b 64 --nsubband 16 \
   -f "$PWD/jerk_run_a150_j10/case_0001/noise_baseline_fixed_jerk_a150_j10_case_0001.fil" \
   -o "$PWD/search_jerk_bank_01/recovered_top5_fold"
-\`\`\`
+```
 
-Render archive quicklooks with the pinned INCEPTION-Lite image's \`inception_lite.fold_plots.plot_folded_archive\`, passing the actual PulsarX \`.ar\`, output PNG, and a descriptive \`label\`.
+Render archive quicklooks with the pinned INCEPTION-Lite image's `inception_lite.fold_plots.plot_folded_archive`, passing the actual PulsarX `.ar`, output PNG, and a descriptive `label`.
 
 ## 8. Paper figure manifest and archive paths
 
 Each listed PNG **exists and was inspected** on the HPC or uploaded by the user; source archive files exist from actual PulsarX folding. The companion local PDF embeds these exact uploaded PNG files. For paper submission, promote **calibrated quantitative plots / phase–time–frequency diagnostics** and figures with consistent axes, not the current arbitrary-intensity quicklooks alone.
 
-All relative paths below start at \`/home/rnag/PULSEJET_validation/stage3/\`.
+All relative paths below start at `/home/rnag/PULSEJET_validation/stage3/`.
 
 | Figure/panel | PNG path | Meaning |
 |---|---|---|
-| S1a | \`baseline_run_clean/case_0001/folds/PSR_BASELINE/PSR_BASELINE_folded_profile.png\` | stationary injection truth |
-| S1b | \`search_stationary_01/recovered_folded_profile.png\` | stationary recovered, blind frequency |
-| S2a | \`accel_run_a150/case_0001/folds/PSR_ACCEL_150/PSR_ACCEL_150_folded_profile.png\` | acceleration truth |
-| S2b | \`search_accel_bank_01/recovered_accel_folded_profile.png\` | corrected a=150 |
-| S2c | \`search_accel_zero_control/recovered_zero_folded_profile.png\` | uncorrected a=0 |
-| S3a | \`jerk_run_a150_j10/case_0001/folds/PSR_JERK_10/PSR_JERK_10_folded_profile.png\` | jerk truth |
-| S3b | \`search_jerk_bank_01/top5_profiles/candidate_0_profile.png\` | a=150,j=10 recovered |
-| S3c | \`search_jerk_zero_control/recovered_zero_jerk_profile.png\` | a=150,j=0 control |
-| S4a | \`search_jerk_bank_01/top5_profiles/candidate_1_profile.png\` | f=92.615Hz anomaly |
-| S4b | \`search_jerk_bank_01/top5_profiles/candidate_2_profile.png\` | f=69.462Hz |
-| S4c | \`search_jerk_bank_01/top5_profiles/candidate_3_profile.png\` | f=79.384Hz |
-| S4d | \`search_jerk_bank_01/top5_profiles/candidate_4_profile.png\` | f=89.836Hz |
+| S1a | `baseline_run_clean/case_0001/folds/PSR_BASELINE/PSR_BASELINE_folded_profile.png` | stationary injection truth |
+| S1b | `search_stationary_01/recovered_folded_profile.png` | stationary recovered, blind frequency |
+| S2a | `accel_run_a150/case_0001/folds/PSR_ACCEL_150/PSR_ACCEL_150_folded_profile.png` | acceleration truth |
+| S2b | `search_accel_bank_01/recovered_accel_folded_profile.png` | corrected a=150 |
+| S2c | `search_accel_zero_control/recovered_zero_folded_profile.png` | uncorrected a=0 |
+| S3a | `jerk_run_a150_j10/case_0001/folds/PSR_JERK_10/PSR_JERK_10_folded_profile.png` | jerk truth |
+| S3b | `search_jerk_bank_01/top5_profiles/candidate_0_profile.png` | a=150,j=10 recovered |
+| S3c | `search_jerk_zero_control/recovered_zero_jerk_profile.png` | a=150,j=0 control |
+| S4a | `search_jerk_bank_01/top5_profiles/candidate_1_profile.png` | f=92.615Hz anomaly |
+| S4b | `search_jerk_bank_01/top5_profiles/candidate_2_profile.png` | f=69.462Hz |
+| S4c | `search_jerk_bank_01/top5_profiles/candidate_3_profile.png` | f=79.384Hz |
+| S4d | `search_jerk_bank_01/top5_profiles/candidate_4_profile.png` | f=89.836Hz |
 
 **Draft figure captions** (not finalized):
 - **S1.** Controlled stationary injected pulsar: known-ephemeris truth fold (left) versus independently recovered candidate fold (right). Both identify the same narrow periodic pulse near phase 0.56.
@@ -201,10 +201,10 @@ All relative paths below start at \`/home/rnag/PULSEJET_validation/stage3/\`.
 ## 9. Next phase — real MeerKAT M62 filterbank
 
 **Proposed observational input (not yet inspected on cluster):**
-\`/archive1/ridolfi/DATA/MeerKAT/ALL_TRAPUM_GC_CENTRAL_BEAMS/M62_18U-trapum-pgb_cfbf00001sub_CB.fil\`.
+`/archive1/ridolfi/DATA/MeerKAT/ALL_TRAPUM_GC_CENTRAL_BEAMS/M62_18U-trapum-pgb_cfbf00001sub_CB.fil`.
 
 Immediate gates:
-1. Read-only \`stat/readlink/du\` and SIGPROC header verification of original M62 file (data size, sample format, actual channels, tsamp, frequency setup, tstart, source name, telescope ID, signedness, beam metadata; record if coherent dedispersion or downsampling already present).
+1. Read-only `stat/readlink/du` and SIGPROC header verification of original M62 file (data size, sample format, actual channels, tsamp, frequency setup, tstart, source name, telescope ID, signedness, beam metadata; record if coherent dedispersion or downsampling already present).
 2. Prefer a **symlink** inside project work directory to avoid copying an unexpectedly huge observational dataset; **never inject into or overwrite the original**. If injection software requires a mutable file, create an isolated working output/copy or small segment, preserving raw provenance.
 3. Uninjected M62 baseline search and independent validation of a known pulsar, if suitable. Then matched controlled injections at several DM, acceleration, jerk, spin-frequency, S/N and observation durations.
 4. Compare candidate sets, candidate ranks, coherent fold S/N/profile metrics, null behavior, GPU wall-clock and end-to-end throughput; record model assumptions and any RFI masks.
@@ -228,7 +228,7 @@ Record: experiment ID/date, exact immutable image/revision and binary flags, har
 - If possible separately instrument **I/O, dedispersion, preprocessing, resampling, FFT, harmonic summing and distillation**, and peak host RAM / peak GPU VRAM.
 - Use repeated samples (at least 3–5 after warm-up) and report median and run-to-run dispersion; do not mix worker timing with full process timing.
 - Normalize by **samples × DM trials × template count**, and independently report **effective searched volume**; naive per-template averages can hide overhead or different search coverage.
-- For PRESTO/PRESTOzl, specify exact \`zmax\`, \`wmax\`, harmonic settings, frequency selection, FFT size, data representation, CPU threads, GPU acceleration (if any), input file and masking/dedispersion. A wall-clock speed ratio is meaningful only with sufficiently matched completeness and search range.
+- For PRESTO/PRESTOzl, specify exact `zmax`, `wmax`, harmonic settings, frequency selection, FFT size, data representation, CPU threads, GPU acceleration (if any), input file and masking/dedispersion. A wall-clock speed ratio is meaningful only with sufficiently matched completeness and search range.
 - Measure **recovery fraction and empirical false-alarm / false-candidate workload** at the same sensitivity/compute budget; compare candidate coherent folding quality and astrophysical injection populations, not only wall-clock.
 
 ### Benchmark ledger — initial schema
