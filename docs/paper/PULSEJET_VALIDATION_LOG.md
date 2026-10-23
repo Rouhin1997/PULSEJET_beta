@@ -289,3 +289,35 @@ Next: read-only standard SIGPROC header parser on exact file, then
 decide safe working-link/copy strategy. Benchmark full wall-clock
 on real observation and later use matched PRESTOzl controls; no
 new timing measured yet.
+
+
+### M62 SIGPROC header verified: observational stage input (2026-10-23)
+
+Raw archival filterbank, untouched:
+`/archive1/ridolfi/DATA/MeerKAT/ALL_TRAPUM_GC_CENTRAL_BEAMS/M62_18U-trapum-pgb_cfbf00001sub_CB.fil`.
+Read-only SIGPROC header parsed on node2:
+
+| Item | Verified value |
+|---|---|
+| Header bytes | 291 |
+| File bytes | 15,177,064,483 (~14.14 GiB) |
+| telescope_id / machine_id / data_type | 64 / 11 / 1 |
+| source_name | J1701-3006B |
+| src_raj / src_dej | 170112.67 / -300649.0 |
+| barycentric | 0 |
+| nbits / nifs / nchans | 8 / 1 / 256 |
+| fch1 / foff (MHz) | 1086.87109375 / -2.125 |
+| Lowest channel center (MHz) | 544.99609375 |
+| tstart (MJD) | 59689.96788709412 |
+| tsamp (s) | 0.0000602352941176 |
+| samples | 59,285,407 (exact inferred from bytes and sample format) |
+| duration | 3571.073927526622 s = 59.5178987921 min |
+
+Archive file modified 2022-04-21 23:58:40 +0200; regular file, readable on node2; located on network-mounted `/archive1`.
+Header names the known M62 pulsar J1701-3006B; actual detectability in this file not yet measured.
+These values must be used to choose legal sample/FFT windows and correct dispersion configuration.
+
+First real-data step: establish project-side symlink to the immutable archive original and test container-visible header/size via Singularity with an explicit `/archive1` bind.
+Then run a short (~four-minute) **uninjected** segment first; log cold/warm end-to-end wall-clock and separate processing stages if available.
+Only generate injected **working segments** outside `/archive1`, never overwrite or write through original symlink.
+PRESTOzl timing and comparable search bounds have not yet been measured.
