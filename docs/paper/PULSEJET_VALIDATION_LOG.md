@@ -321,3 +321,36 @@ First real-data step: establish project-side symlink to the immutable archive or
 Then run a short (~four-minute) **uninjected** segment first; log cold/warm end-to-end wall-clock and separate processing stages if available.
 Only generate injected **working segments** outside `/archive1`, never overwrite or write through original symlink.
 PRESTOzl timing and comparable search bounds have not yet been measured.
+
+
+### M62 preprocessing warning: archival filterbank may have prior DM=114 correction (2026-10-23)
+
+Published M62 TRAPUM reduction methodology states that recorded data
+were **incoherently dedispersed at DM=114.00 pc cm^-3** before
+downsampling channel count to 256 and storage, with UHF follow-up
+DM trials spanning 108.00 to 120.20 pc cm^-3:
+[Vleeschower et al., *Discoveries and timing of pulsars in M62*,
+MNRAS 530, 1436 (2024)](https://academic.oup.com/mnras/article/530/2/1436/7632774).
+This is **consistent** with the M62 real file's 256 channels,
+but the precise processing provenance of this specific beam file
+still needs confirmation. Its SIGPROC header does **not** contain
+a refdm field, so do not assume the prior DM has been encoded
+for a search program. **Do not naively dedisperse the full
+DM=113.44 pc cm^-3 again** without confirming how
+PULSEJET/dedisp and the `--cdm` option interpret already
+dedispersed files. The known J1701-3006B has
+P≈3.593852ms (~278.25Hz) and published DM≈113.44–113.46;
+searching only the synthetic-test 20–100Hz band would miss
+this known pulsar. M62B can eclipse; lack of recovery in an
+arbitrary 4-minute segment would not automatically mean
+failure of the pipeline.
+
+NEXT read-only command: inspect the deployed `peasoup --help`
+options for coherent/reference DM, `--start_sample`,
+`--fft_size` and `--nsamples`; inspect the corresponding code
+if help text cannot establish whether the *existing* DM is
+subtracted or simply used for DM-trial planning. Then run a
+4-minute read-only baseline search on a pinned segment and
+time it with whole-process `/usr/bin/time`.
+No changes to immutable archive file, existing distillers,
+or search algorithm.
