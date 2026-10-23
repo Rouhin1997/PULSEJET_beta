@@ -1087,3 +1087,17 @@ independent NumPy dedispersed time-series FFT/harmonics
 and characterize pipeline normalization. Both third-party
 distillers unchanged unless explicit prior discussion and
 user approval. One conceptual cluster task per turn.
+
+
+## Canonical paper record / deferred DM anomaly / start of real M62 validation (2026-10-23)
+
+**Paper-quality living laboratory record (new):** [docs/paper/PULSEJET_VALIDATION_LOG.md](../docs/paper/PULSEJET_VALIDATION_LOG.md). It consolidates synthetic stationary/acceleration/jerk injected-truth and recovered S/N results, controlled-bank candidate counts, numerical model, actual archive-derived fold figure manifest, source paths, conservative draft paper text, and prospective wall-clock benchmarking / PRESTOzl matched-comparison protocol. An accompanying locally generated PDF dossier with the user's actual uploaded folded plots is distributed as a downloadable artifact, not yet committed as a binary file to GitHub. The tracked Markdown contains figure-path mapping so every plot can be regenerated/copied later.
+
+**Dedicated unresolved Gaussian-noise statistical anomaly record (new):** [tests/DEFERRED_SYNTHETIC_NOISE_FALSE_ALARMS.md](DEFERRED_SYNTHETIC_NOISE_FALSE_ALARMS.md).
+Stationary a=j=0 control on unchanged nominally Gaussian baseline at DM10 reported a 92.615601Hz candidate S/N45.90, even though at DM0 no near-92.615Hz candidate was reported. Full independent per-DM stationary sweep (DM: S/N at 92.615Hz): 0:NR, 5:10.34, 8:NR, 9:9.38, 10:45.90, 11:10.14, 12:NR, 15:10.07; NR means **not reported, NOT zero S/N**. Original noise-only 30-template search at DM10 found f=92.615120Hz S/N49.19 (also 69.461815Hz S/N33.76); corresponding injected run has f=92.615120Hz S/N36.92. Simple independent no-DM channel-averaged FFT and harmonic inspection did not show compelling stationary lines at the suspicious fundamental. The source of the anomaly is **UNRESOLVED** and may involve noise model, dedispersion/channel shifts or downstream shared harmonic significance calculations, though **neither nonzero a/j resampling nor cross-template distillation is necessary to create it**. No algorithm/distiller alterations.
+
+**User decision:** defer more synthetic-noise-only diagnostics until a comparable symptom appears in real observations or the project reaches quantitative false-alarm/completeness characterization. Do not describe the noise-only false-alarm statistics as validated.
+
+**Real-data input proposed by user (not yet inspected on cluster):**
+`/archive1/ridolfi/DATA/MeerKAT/ALL_TRAPUM_GC_CENTRAL_BEAM/M62_18U-trapum-pgb_cfbf00001sub_CB.fil`.
+NEXT ACTION: one read-only cluster `ls -lh/stat/readlink` check to establish file exists, size, symlink status and access. Then inspect actual SIGPROC header and duration, and prefer a **local symlink** to immutable original for read-only searches and independent copied output for any injections. Do NOT assume source header parameters, raw data byte format or coherent-DM state from the filename. Begin end-to-end A40 wall-clock measurement on real-data baseline; no PRESTOzl numbers have yet been measured in this study. Keep one command per turn.
