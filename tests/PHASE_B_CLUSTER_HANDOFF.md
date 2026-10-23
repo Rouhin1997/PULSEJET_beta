@@ -821,3 +821,44 @@ User wishes to archive-fold *multiple strong* full-bank candidates,
 particularly IDs 0,1,2,3,4, plus truth and zero-jerk controls.
 Do not edit distillers; discuss any proposed modifications and gain
 explicit approval first.
+
+
+## Stage 5 three-way a+j control comparison confirmed (2026-10-23)
+
+On the 262.144-s synthetic P0=20 ms, DM=10, injected a=+150 m/s²,
+j=+10 m/s³ .fil, user verified the top 50-Hz candidate across
+three search outputs by directly parsing their on-cluster XMLs:
+
+| Search | f (Hz) | a (m/s²) | j (m/s³) | S/N |
+|---|---:|---:|---:|---:|
+| 30-template bank | 50.000187 | 150 | 10 | 75.54 |
+| correct-only a+j | 50.000187 | 150 | 10 | 75.54 |
+| zero-jerk a-only | 49.999233 | 150 | 0 | 49.92 |
+
+The full bank **retained the best true-template S/N** to displayed
+precision. A+j improves search S/N 51.3% relative to a-only control.
+30-template candidate ID 0 has 37 nested associated nodes, whose
+physical association quality is NOT yet validated. Interesting other
+strong full-bank candidates: ID1 f=92.615120 Hz S/N=36.92,
+ID2 f=69.461815 Hz S/N=26.08,
+ID3 f=79.384323 Hz S/N=23.50,
+ID4 f=89.836113 Hz S/N=14.52.
+User requests independent PulsarX `--nosearch` fold for top five
+candidate IDs 0-4, plus injected truth and a-only zero-jerk control;
+investigate nature of 92.615-Hz feature (do not assume astrophysical).
+Next command: converter `pulsejet_xml_to_pulsarx` on 30-template
+`search_jerk_bank_01/overview.xml` with `--min-snr 7 --limit 5`,
+write top-five .cands and manifest and inspect output; subsequently
+fold all five in PulsarX and generate profiles from .ar,
+then prepare/fold a=150,j=0 zero-jerk control.
+Only ONE cluster step per exchange.
+
+The prior discrepancy of 7 vs 9 final candidates for zero-jerk was
+resolved: on-disk saved zero-jerk log and XML share mtime
+2026-10-23 12:25:53, and both show **9** final candidates
+(50 raw spectral detections), IDs 0-8. The 65 raw/7 final
+excerpt was from a different or unclear source, not evidence
+of a software defect.
+
+No changes to either distiller or algorithm without explicit
+discussion and approval by the user.
