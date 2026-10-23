@@ -262,3 +262,50 @@ Next Stage 3: start with a small, wholly synthetic SIGPROC noise
 filterbank and a bright stationary pulsar injection for baseline
 search/fold recovery, then +/- acceleration and jerk, then test a
 read-only copied/truncated segment of the M62 archive filterbank.
+
+
+## Stage 3 blocker: malformed generated SIGPROC header (2026-10-23)
+
+First synthetic Stage 3 data (generated on node2 using published
+`inception_lite.sif`):
+
+    /home/rnag/PULSEJET_validation/stage3/noise_baseline.fil
+
+Command used 1048576 samples × 16 8-bit channels, 0.00025 s,
+seed 771. File 16,777,475 bytes. First injection attempt (stationary
+P=0.02 s, DM=10, SNR=80, a=j=0; truth folds enabled) stopped
+**BEFORE injection or output directory creation** with
+`Invalid SIGPROC header string length`.
+
+Read-only diagnostic showed `HEADER_START`, `source_name`,
+`telescope_id`, `machine_id`, `data_type`, followed by
+`tstart` at offset 109 with an impossible 8-byte float and next
+field misaligned. Root cause identified in INCEPTION-Lite
+`make_filterbank.py`: `argparse` defaults `--tstart=60000` and
+`--fch1=1400` remain Python ints; writer previously chose 4-byte
+int serialization by `isinstance(value, int)` even though
+SIGPROC header requires 8-byte float for **both** fields. Header
+therefore 8 bytes too short (259 instead of 267); data untouched.
+
+Fixed in **INCEPTION-Lite `dev/pulsejet-injections` only**:
+- `inception_lite/make_filterbank.py`: serialize by SIGPROC field
+  wire types rather than Python value type; float defaults set to
+  60000.0/1400.0.
+- `tests/test_inception_lite.py`: new CLI defaults/header parser
+  regression and explicit integer-typed float field regression.
+- Fix source commit `c99d8fe96fd4a09d6d18156f422bda91ceb81d66`;
+  test source commit `076de52ae19aea210360f03694794e1eb98ff04d`.
+- Regression tests have not yet been executed and the published
+  immutable SIF still has the original source. **No new SIF built yet.**
+
+Safe immediate workaround inside existing SIF is to regenerate into
+a NEW path with explicitly passed CLI options
+`--tstart 60000.0 --fch1 1400.0`; argparse will produce floats and
+the old generator then correctly emits 8-byte values. Check parsed
+header independently before attempting to inject. Preserve original
+malformed file as diagnostic evidence, do not overwrite.
+
+Next: make `noise_baseline_fixed.fil`, parse it, adapt baseline JSON
+to new input path, then perform actual injection+truth fold. Do not
+confuse the software fault with PULSEJET GPU kernel parity, which
+previously passed 15/15.
