@@ -761,3 +761,30 @@ injected (a=150,j=10). Then run correct-only and zero-jerk controls
 and truth-versus-recovery PulsarX no-search folds. User explicitly
 forbids changing either third-party distiller without first discussing
 a proposed change and obtaining approval.
+
+
+## Stage 5 top recovered candidate at injected a=150,j=10 (2026-10-23)
+
+User parsed all 29 representative candidates in
+`stage3/search_jerk_bank_01/overview.xml`.
+Top S/N candidate (ID 0) independently found fundamental
+`f=50.000187 Hz` with **a=+150 m/s², j=+10 m/s³**, exactly
+matching injected polynomial template parameters in 30-member
+two-dimensional bank, **PULSEJET search S/N 75.54**, `nassoc=37`.
+DM fixed at 10, spin frequency blind, a/j recovered only on
+grid that includes truth. The Doppler distiller retains the best
+candidate, but associated members not inspectable from XML
+and quality of all 37 groupings is unverified.
+
+Next strongest output: candidate ID 1 at `f=92.615120 Hz`,
+a=+75, j=0, S/N=36.92, assoc=48. Do not assume it is a second
+pulsar: possible injection/noise artifact or other issue; investigate
+in later control search if persistent.
+
+Follow-up gates: run **true-only bank** a=150,j=10 on SAME injected
+file, match recovered peak S/N ≈75.54 against 30-member bank
+to verify no loss due to distillation; then run a zero-jerk control
+a=150,j=0 and compare S/N; then archive-convert and PulsarX
+`--nosearch` folds with segment-midpoint epoch and compare
+truth/corrected/uncorrected profiles. Keep ALL distillers untouched
+until discussed with and explicitly approved by user.
