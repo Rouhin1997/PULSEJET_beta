@@ -152,3 +152,53 @@ Open technical questions to revisit AFTER first tests:
 > Resume the PULSEJET + INCEPTION-Lite project from the 2026-10-20 cluster handoff. We are starting Stage 1: pull and verify both immutable Singularity SIFs on my A40 cluster. Read the GitHub \`tests/PHASE_B_CLUSTER_HANDOFF.md\` on the PULSEJET \`dev/polynomial-search\` branch and guide me through the first verification commands, one at a time.
 
 **Checkpoint rule:** No unpublished GPU or large-population results should be implied by this note; it is a plan and verified history, not completion of all phases.
+
+
+## Live cluster progress: 2026-10-23
+
+User successfully pulled BOTH pinned SIF images on frontend2 to
+\`/home/rnag/PULSEJET_validation/images/\`, each reported ~4.0 GB:
+
+- \`pulsejet_dev.sif\`, created 09:45.
+- \`inception_lite.sif\`, created 10:07.
+
+Host reports SingularityCE 3.11.5-1.el7; node2 has 2×A40 visible,
+driver 545.23.08, CUDA supported 12.3. \`singularity exec --nv
+pulsejet_dev.sif nvidia-smi -L\` saw both GPUs. The existing
+\`peasoup --help\` showed \`-P\` and \`--candidate_diagnostics\`;
+\`which\` found \`/usr/local/bin/peasoup\`,
+\`/usr/local/bin/psrfold_fil\`, and
+\`/usr/local/bin/pulsejet_xml_to_pulsarx\`.
+\`ldd\` resolved \`libcudart.so.12\`, \`libcufft.so.11\`,
+and \`libdedisp.so.1\`. This is environment/binary preflight,
+**not GPU kernel parity nor injector SIF execution verification**.
+
+User supplied a real MeerKAT filterbank for subsequent controlled tests:
+
+    /archive1/ridolfi/DATA/MeerKAT/ALL_TRAPUM_GC_CENTRAL_BEAMS/M62_18U-trapum-pgb_cfbf00001sub_CB.fil
+
+Never inject directly into this archive path; use a copy or small selected
+segment after verifying header/permissions/size.
+
+**New Stage 2 test code committed exclusively to dev/polynomial-search:**
+
+- \`tests/test_polynomial_cuda_parity.cu\`: 13 cases, independent
+  long-double CPU source-time reference, zero motion, ±acc, ±jerk,
+  mixed-sign combinations, source-index under/overflow, nearest-even
+  sampling, zero padding; compares every output against **actual**
+  compiled CUDA production resampler.
+- \`scripts/run_polynomial_cuda_parity.sh\`: invokes the CUDA 12.3 nvcc
+  within the pinned existing SIF and links against the already-built
+  \`/software/peasoup/obj/kernels.o\` binary. Does not rebuild PULSEJET
+  or alter the SIF. Runs test on A40 and writes a parity log.
+- These tests are **not yet executed**. First run will verify whether
+  the SIF retained \`kernels.o\` and whether the CUDA parity harness
+  compiles successfully.
+
+Next cluster steps: verify INCEPTION-Lite python CLI inside SIF, clone
+the explicit \`dev/polynomial-search\` source branch to host shared space
+(from frontend2 if necessary), execute
+\`bash scripts/run_polynomial_cuda_parity.sh
+/home/rnag/PULSEJET_validation/images/pulsejet_dev.sif
+/home/rnag/PULSEJET_validation/stage2\` on node2/SLURM-approved GPU
+allocation. Inspect all output before declaring Stage 2 passed.
