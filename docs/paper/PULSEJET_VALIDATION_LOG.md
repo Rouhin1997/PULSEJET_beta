@@ -622,3 +622,17 @@ User executed the pinned INCEPTION-Lite Slurm launcher from `node2` with `--part
 Allocation totals **120 CPUs over two 64-CPU nodes**, with four CPUs not reserved by these jobs on each. Each window contains 5 known injected pulsars with distinct f, residual DM, a/j and nominal S/N (10–100); four independent real-background files already prepared and checked. `mode=together` with five injections per new `.fil`; Slurm wrapper writes unique per-job JSON with `ncpu=SLURM_CPUS_PER_TASK`, uses `PYTHONNOUSERSITE=1` to avoid pandas/NumPy user-site conflict, and invokes real `psrfold_fil` for five truth folds after injection. Output directories under `$HOME/PULSEJET_validation/stage6_m62/m62_15m_injections/W{1..4}` and separate scheduler logs under `$HOME/PULSEJET_validation/stage6_m62/weekend_slurm_logs/W{1..4}_JOBID.{out,err}`.
 
 **Important qualification:** RUNNING is scheduler state only. As of this checkpoint no completed `.fil`, validated PulsarX `.ar`, PNG profile, or measured search recovery has been verified. Next inexpensive check: inspect tail of all four Slurm stdout/stderr logs to confirm worker launch and absence of early errors; later verify via `sacct -j 66450,66451,66452,66453 --format=JobID,JobName,State,ExitCode,Elapsed,NodeList` and manifests/folds. Avoid reporting weekend completion before inspecting actual products. Original M62 file remains read-only and intact. Keep failed original single-injection attempt logs as provenance.
+
+
+### Four M62 weekend Slurm job startup logs confirmed (2026-10-23, 16:21 Europe/Rome)
+
+User read `weekend_slurm_logs/W{1..4}_<jobid>.out` on `frontend2`. **All four jobs entered INCEPTION-Lite**, printed resolved per-job 30-worker JSON paths, correctly parsed five intended pulsars each and showed no stderr in the inspected logs:
+
+| Window | Slurm job | Node | Controller startup |
+|---|---:|---|---|
+| W1 | 66450 | node2.cluster | 2026-10-23T16:21:36+0200; `m62_w1_job66450_30cpu.json`; I01–I05 |
+| W2 | 66451 | node2.cluster | 2026-10-23T16:21:36+0200; `m62_w2_job66451_30cpu.json`; I06–I10 |
+| W3 | 66452 | node3.cluster | 2026-10-23T16:21:36+0200; `m62_w3_job66452_30cpu.json`; I11–I15 |
+| W4 | 66453 | node3.cluster | 2026-10-23T16:21:37+0200; `m62_w4_job66453_30cpu.json`; I16–I20 |
+
+The logs confirm controller entry and correct Slurm CPU parameter propagation. **They do NOT yet demonstrate spawned worker progress or successful physical injection**, because INCEPTION-Lite redirects injector subprocess stdout and errors to `m62_15m_injections/W?/case_0001/inject.log`. Further investigate those 4 internal injector logs before asserting that workers are processing. No complete `.fil`, PulsarX `.ar`, or diagnostic figure verified. Slurm jobs survive SSH disconnect; later inspect both `sacct` final state and products.
