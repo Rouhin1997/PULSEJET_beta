@@ -604,3 +604,32 @@ to the full nine-template bank's 75.44 to ensure distiller retention
 and isolate template-specific response. After that, inspect recovered
 acceleration-dependent fold, then controlled jerk injection.
 No code/third-party distiller changes without user approval.
+
+
+## Stage 4 correct-template versus multi-template S/N equality verified (2026-10-23)
+
+The user has now checked top ~50 Hz detections in three *independent*
+PULSEJET GPU searches of the exact same a=+150 m/s², j=0 injected
+filterbank, with identical DM=10, search settings and length:
+
+| Treatment | Recovered frequency (Hz) | Acceleration (m/s²) | S/N | Nested associates |
+| -- | --: | --: | --: | --: |
+| Zero correction only | 50.000186920 | 0 | 52.76 | 0 |
+| True +150 correction only | 50.000186920 | 150 | 75.44 | 0 |
+| Nine-template bank (-300..+300, spacing 75) | 50.000186920 | 150 | 75.44 | 11 |
+
+Measured corrected-vs-uncorrected S/N ratio ≈1.430 (=43.0% increase);
+same top frequency in all cases. The **Doppler distiller preserved the
+best correct-template detection at exactly the same S/N (75.44)** as the
+true-only experiment and retained it as top representative with 11
+associated detections. Does not prove all 11 associations represent
+one astrophysical signal: XML only exposes counts.
+
+Next: convert TOP candidate from nine-template output XML with
+`pulsejet_xml_to_pulsarx` and `--limit 1` to a recovered PulsarX
+candidate file and epoch-aware provenance. Then fold with PulsarX
+`--nosearch` and midpoint `--pepoch`, using exactly matching
+injected 262.144 s data; compare to independent truth fold.
+Also fold stationary a=0 control to visualize lost acceleration
+coherence. **Do not modify either third-party distiller without
+prior explicit user discussion and approval.**
