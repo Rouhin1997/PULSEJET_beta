@@ -269,3 +269,23 @@ This file is the **canonical, version-controlled development and paper-evidence 
 Figures are currently indexed by exact HPC source paths in §8, and the user has a self-contained ZIP/PDF copy. **Actual PNG binaries have not yet been committed to the GitHub branch**, so the figure manifest is a reproducibility index, not an assertion that the images render inline on GitHub. Promote selected originals or re-rendered publication figures into a tracked `docs/paper/figures/` directory when feasible, with captions and original archive provenance. Do not treat the separately created PDF as the primary living document.
 
 For observational data, record the **unaltered archive path**, symlink or working copy arrangement, file header, original-pulsar/RFI context, and an observational no-injection control before any injection. The initial user-selected file is at `/archive1/ridolfi/DATA/MeerKAT/ALL_TRAPUM_GC_CENTRAL_BEAMS/M62_18U-trapum-pgb_cfbf00001sub_CB.fil` (pending file stat/header verification). Any injected outputs must live outside the archive and must never overwrite the original.
+
+
+### Real M62 observation metadata checkpoint — file stat verified (2026-10-23)
+
+Read-only check on compute node `node2` confirmed the input exists
+and is readable at
+`/archive1/ridolfi/DATA/MeerKAT/ALL_TRAPUM_GC_CENTRAL_BEAMS/M62_18U-trapum-pgb_cfbf00001sub_CB.fil`
+(plural `BEAMS`, not `BEAM`). File is a regular file, owned by
+`ridolfi` group `pulsar`, mode `-rw-r--r--`,
+size **15,177,064,483 bytes** (~14.14 GiB), modified
+**2022-04-21 23:58:40 +0200**. Resolved path identical to given path.
+Archive storage `/archive1` is network-mounted as a large
+shared filesystem. No SIGPROC header keys, observation duration,
+or sample format have been read yet, so these remain **TBD**.
+Keep observational original immutable and use symlink for baseline
+searches; injected outputs/derived segments must be separate.
+Next: read-only standard SIGPROC header parser on exact file, then
+decide safe working-link/copy strategy. Benchmark full wall-clock
+on real observation and later use matched PRESTOzl controls; no
+new timing measured yet.
