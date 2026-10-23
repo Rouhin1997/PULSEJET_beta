@@ -545,3 +545,24 @@ write `stage3/accel_a150.json`, `output_dir` new
 `stage3/accel_run_a150`, source ID `PSR_ACCEL_150`, retaining fold
 settings. Do not reuse previously occupied output directories.
 Follow user's **one command/step at a time** preference.
+
+
+## USER REQUIREMENT: Distillers are third-party; do not modify without prior discussion and approval
+
+User explicitly stated (2026-10-23) that they did not author the polynomial
+candidate distiller; it was written by someone else and may have been tuned
+for a different coding/scientific application. **Do NOT modify the behavior,
+source, matching thresholds or pipeline wiring of either
+`Template_Bank_Polynomial_Distiller` or
+`Template_Bank_Polynomial_DopplerDistiller`, or related upstream
+distillers, without FIRST discussing the concrete proposed change and
+obtaining user's explicit approval.** This instruction applies even if
+injection tests reveal seemingly incorrect behavior. Keep original source
+intact; add only non-algorithmic diagnostic observations or external
+analysis as needed.
+
+Next test order: (1) nonzero acceleration/zero-jerk injection and bank
+search; (2) nonzero acceleration/nonzero jerk injection and bank search;
+(3) evaluate unchanged active Doppler-distiller's before/after retention,
+merges, candidates and relevant S/N/parameter biases. Discuss outcomes
+with user before any modification.
