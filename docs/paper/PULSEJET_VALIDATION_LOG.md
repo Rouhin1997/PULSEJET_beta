@@ -377,3 +377,13 @@ do NOT conflate it with our selected `...00001sub_CB.fil` (291-byte header, `sou
 
 Shared sample/channel/duration properties independently corroborate the observation setup. The source naming, coordinates, start time and header byte count differ, so they are **not interchangeable**.
 Published M62 TRAPUM processing records incoherent pre-dedispersion at DM 114.00 pc cm^-3, RFI cleaning and channel downsampling to 256 before storage (Vleeschower et al. 2024, MNRAS 530,1436, https://academic.oup.com/mnras/article/530/2/1436/7632774). This strengthens the need to verify what DM values the existing search software expects for this preprocessed observation. Neither file header itself explicitly records `refdm`.
+
+
+### Selected M62 central-beam readfile cross-check (2026-10-23)
+
+User ran `readfile` **inside Singularity** against the exact selected file `M62_18U-trapum-pgb_cfbf00001sub_CB.fil`, independently confirming the manually parsed header:
+`source_name=J1701-3006B`; UTC observation date `2022-04-20T23:13:45.4449`; RA `17:01:12.6700`; Dec `-30:06:49.0000`; MJD `59689.96788709412067`; sample time `60.2352941176 us`; channels 256, unsigned 8-bit, 2 polarizations summed; centre 815.93359375 MHz, low 544.99609375 MHz, high 1086.87109375 MHz, width 544 MHz, per-channel width 2.125 MHz; spectra per file 59285407, time per file 3571.07392753 sec; header bytes 291. `readfile` output also lists telescope MeerKAT and beam 0/1. All major fields agree with Python header parse.
+
+**Segment proposal (not yet executed):** 2^22=4,194,304 samples at 60.2352941176 us gives approximately 252.65 seconds. This is a controlled short baseline, not the complete 59.52-minute observation. Use the raw archive original only through the project symlink, already verified readable in pinned container; avoid any copy of entire ~15GB observation at this stage.
+
+**DM-processing gate remains open:** published TRAPUM M62 reduction reports prior DM114 incoherent dedispersion but exact handling by this built `peasoup` is not yet verified. Inspect the deployed help and implementation before setting trial DM or applying `--cdm`; do not blindly dedisperse raw DM 113.44 again, nor assume `--cdm` means subtract prior *incoherent* DM. The header contains no `refdm`.
