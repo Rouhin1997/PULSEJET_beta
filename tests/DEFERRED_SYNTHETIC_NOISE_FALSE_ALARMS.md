@@ -2,23 +2,23 @@
 
 **Status:** OPEN / DEFERRED for real-observation injection tests.  
 **Date:** 2026-10-23. **Priority:** revisit before publishing noise-only false-alarm statistics, production thresholds, or survey-scale detection rates; revisit sooner if the effect recurs in observational controls.  
-**Branch:** \`dev/polynomial-search\`. No source code or either candidate distiller was modified to investigate the anomaly.
+**Branch:** `dev/polynomial-search`. No source code or either candidate distiller was modified to investigate the anomaly.
 
 ## Concise finding
 
-An **un-injected** SIGPROC filterbank nominally generated from Gaussian noise produced a PULSEJET candidate at **92.615601 Hz, reported search S/N 45.90**, with one DM trial (DM=10) and one **stationary** polynomial template \`a=0, j=0\`. The same feature was not reported when the *identical* dataset was searched with DM=0. A narrow DM sweep showed a sharply enhanced response at DM=10 compared with neighboring DMs. The feature therefore **does not require nonzero polynomial resampling, an injected pulsar, or cross-template Doppler grouping**. Its origin is **not established**; in particular, these tests do not exonerate or implicate all other shared processing (dedispersion, FFT normalisation, spectral whitening, harmonic summing, output significance).
+An **un-injected** SIGPROC filterbank nominally generated from Gaussian noise produced a PULSEJET candidate at **92.615601 Hz, reported search S/N 45.90**, with one DM trial (DM=10) and one **stationary** polynomial template `a=0, j=0`. The same feature was not reported when the *identical* dataset was searched with DM=0. A narrow DM sweep showed a sharply enhanced response at DM=10 compared with neighboring DMs. The feature therefore **does not require nonzero polynomial resampling, an injected pulsar, or cross-template Doppler grouping**. Its origin is **not established**; in particular, these tests do not exonerate or implicate all other shared processing (dedispersion, FFT normalisation, spectral whitening, harmonic summing, output significance).
 
-The separate **signal-recovery** results still passed: a known 50-Hz signal at \`a=150 m/s², j=10 m/s³\` was recovered as the highest-ranked candidate with S/N 75.54 and a coherent, truth-like independent PulsarX fold. Treat signal recovery and false-alarm calibration as separate gates.
+The separate **signal-recovery** results still passed: a known 50-Hz signal at `a=150 m/s², j=10 m/s³` was recovered as the highest-ranked candidate with S/N 75.54 and a coherent, truth-like independent PulsarX fold. Treat signal recovery and false-alarm calibration as separate gates.
 
 ## Input and controlled environment
 
-- Original baseline: \`/home/rnag/PULSEJET_validation/stage3/noise_baseline_fixed.fil\`.
+- Original baseline: `/home/rnag/PULSEJET_validation/stage3/noise_baseline_fixed.fil`.
 - Nominal noise-generation model: Gaussian time-frequency samples, quantized to unsigned 8-bit data. Not verified by an independent multiseed goodness-of-fit test.
-- 1,048,576 time samples; \`tsamp=0.00025 s\`; duration **262.144 s**.
-- 16 channels, \`fch1=1400 MHz\`, \`foff=-1 MHz\` (1400 to 1385 MHz); \`tstart=60000.0 MJD\`; 267-byte SIGPROC header, 16,777,483-byte file.
-- One DM per run (no cross-DM grouping in the DM sweep), stationary bank \`0 0\`, \`-t 1 -n 4 -m 7 --min_freq 20 --max_freq 100 --candidate_diagnostics\`.
-- GPU image \`$HOME/PULSEJET_validation/images/pulsejet_dev.sif\`, source commit \`513e80d1ace21868fd3d3d37734bcd79782abce3\`; A40 cluster.
-- \`noise_baseline_fixed.fil\` is reused unchanged for every test below.
+- 1,048,576 time samples; `tsamp=0.00025 s`; duration **262.144 s**.
+- 16 channels, `fch1=1400 MHz`, `foff=-1 MHz` (1400 to 1385 MHz); `tstart=60000.0 MJD`; 267-byte SIGPROC header, 16,777,483-byte file.
+- One DM per run (no cross-DM grouping in the DM sweep), stationary bank `0 0`, `-t 1 -n 4 -m 7 --min_freq 20 --max_freq 100 --candidate_diagnostics`.
+- GPU image `$HOME/PULSEJET_validation/images/pulsejet_dev.sif`, source commit `513e80d1ace21868fd3d3d37734bcd79782abce3`; A40 cluster.
+- `noise_baseline_fixed.fil` is reused unchanged for every test below.
 
 ## A. Baseline versus injected candidates
 
@@ -49,12 +49,12 @@ Each trial used its own one-line DM file and own output directory. No results fr
 | 12 | 4 | not reported | 17.86 |
 | 15 | 5 | 10.07 | 17.97 |
 
-Relevant output directories in \`/home/rnag/PULSEJET_validation/stage3/\`:
-\`search_noise_stationary_control/\` (DM10);
-\`search_noise_dm0_stationary/\` (DM0);
-\`search_noise_dm5_stationary/\`, \`dm8\`, \`dm9\`, \`dm11\`, \`dm12\`, \`dm15\`;
-\`search_jerk_noise_control/\` (30 templates, DM10).
-Associated \`.log\` files and \`overview.xml\` are the primary machine-readable evidence.
+Relevant output directories in `/home/rnag/PULSEJET_validation/stage3/`:
+`search_noise_stationary_control/` (DM10);
+`search_noise_dm0_stationary/` (DM0);
+`search_noise_dm5_stationary/`, `dm8`, `dm9`, `dm11`, `dm12`, `dm15`;
+`search_jerk_noise_control/` (30 templates, DM10).
+Associated `.log` files and `overview.xml` are the primary machine-readable evidence.
 
 ## C. Independent input-spectrum checks
 
