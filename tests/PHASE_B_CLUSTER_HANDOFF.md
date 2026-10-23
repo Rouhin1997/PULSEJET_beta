@@ -202,3 +202,32 @@ the explicit \`dev/polynomial-search\` source branch to host shared space
 /home/rnag/PULSEJET_validation/images/pulsejet_dev.sif
 /home/rnag/PULSEJET_validation/stage2\` on node2/SLURM-approved GPU
 allocation. Inspect all output before declaring Stage 2 passed.
+
+
+## Live Stage 2 result: 2026-10-23
+
+GPU compute node `node2.cluster` successfully ran
+`bash scripts/run_polynomial_cuda_parity.sh` on the
+`dev/polynomial-search` host checkout
+(`ab5c36277ed44718c203bbfd33c5cfd146fc4e93`), using the
+immutable `pulsejet_dev.sif`. The runner linked the original production
+`/software/peasoup/obj/kernels.o` (2.0 MB in SIF) and compiled the test
+against it with container nvcc; **the production binary was not rebuilt**.
+
+- GPU: NVIDIA A40, compute capability 8.6; 2 detected.
+- Input: N=32768, sample interval 0.016 s; unique positive float sample data.
+- 13 scenarios passed: zero motion, ±acc, ±jerk, mixed sign combinations,
+  strong signs/zero padding.
+- **425,984 compared samples; exactly 0 mismatches.**
+- Zero padding was observed for positive and negative out-of-range
+  source indices, and a nearest-neighbor index that rounded beyond the end.
+- Every case reported `near-half=0`: this does **not yet explicitly
+  validate exact tie-to-even rounding boundary behavior**. Add an
+  intentional boundary/tie-focused test before marking Stage 2 exhaustive.
+- Run log:
+  `/home/rnag/PULSEJET_validation/stage2/polynomial_cuda_parity.log`.
+
+This proves pointwise CPU/GPU agreement for the tested configurations,
+not the full injection/search/folding chain, sensitivity, FFT recovery,
+candidate grouping, or candidate-parameter accuracy. Those still await
+Stages 3+.
