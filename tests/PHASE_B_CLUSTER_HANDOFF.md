@@ -950,3 +950,42 @@ nonzero a/j resampling.
 
 Preserve both distillers unchanged until explicit user approval.
 User requires one single HPC command/step at a time.
+
+
+## Stage 5 independent raw FFT of same noise baseline (2026-10-23)
+
+User independently analyzed the original 16-channel, 8-bit,
+1048576-sample, 250-us noise-only SIGPROC filterbank using
+NumPy rFFT of channel-mean series; PULSEJET NOT involved.
+Observed mean=127.9994465, std=1.5018625 (channel-mean
+8-bit counts). Band 20–100Hz; independent raw FFT power
+normalized by its band median:
+
+| target frequency (Hz) | nearby FFT peak (Hz) | FFT power/median | PULSEJET noise-only S/N |
+|---|---:|---:|---:|
+| 50 | 49.995422 | 5.03 | no candidate |
+| 69.461815 | 69.473267 | 3.58 | 33.76 |
+| 89.836113 | 89.824677 | 2.96 | 14.31 |
+| 92.615120 | 92.620850 | 3.73 | 49.19 |
+
+Strongest raw noise FFT power/median in band is 14.99
+at 74.363708Hz; several other unrelated raw spectral bins
+~11–14. These are not conspicuous peaks at the anomalous
+PULSEJET detection frequencies.
+
+Interpretation: noise-only PULSEJET high search S/N outputs
+are not simply matched to obviously strong STATIONARY raw
+FFT lines. This doesn't rule out chirping structures or
+effects from PULSEJET time resampling, spectral normalization,
+and harmonic summing. Neither raw FFT ratio nor FFT max is
+the same statistic as PULSEJET search S/N.
+
+**NEXT one-step control:** search unchanged noise baseline
+with a=0,j=0 single polynomial template using same other
+settings and inspect whether ~92.615 Hz remains a strong
+candidate without nonzero resampling. Keep algorithm
+and third-party distillers untouched until prior user
+approval. If stationary run shows high S/N noise artifacts,
+investigate spectrum/SNR normalization; if it disappears,
+compare polynomial resampling / number of templates and
+processing paths. One cluster step per assistant response.
