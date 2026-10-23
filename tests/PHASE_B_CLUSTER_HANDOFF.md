@@ -469,3 +469,40 @@ not yet scientifically verified archive morphology. Next step: list
 an archive-derived PNG using the INCEPTION-Lite plot helper if needed,
 and compare recovered profile against earlier truth-folded profile.
 No blind DM or orbital-parameter recovery yet.
+
+
+## Stage 3 stationary baseline recovery profile: PASSED (2026-10-23)
+
+User completed the recovered archive rendering successfully using
+`inception_lite.fold_plots.plot_folded_archive` in pinned INCEPTION SIF.
+Output:
+`/home/rnag/PULSEJET_validation/stage3/search_stationary_01/recovered_folded_profile.png`,
+44,299 bytes. Recovered PulsarX archive:
+`search_stationary_01/recovered_fold_60000.0000000000_cfbf00000_00001.ar`,
+95,040 bytes; truth archive also 95,040 bytes.
+
+The user uploaded both PNGs. Visual side-by-side comparison:
+- Recovered fold has a strong, narrow single peak at phase ~0.56,
+  matching the injection truth fold's peak phase and morphology;
+- recovered peak ~10,100 archive units vs truth ~11,500 units (visual
+  estimates, not directly comparable calibrated fluxes);
+- no substantial visual broadening; off-pulse baseline near -2,500
+  to -3,000 archive units in both;
+- recovered candidate f0=50.00018692016603 Hz, truth f0=50.0 Hz,
+  giving frequency offset 0.000186920166 Hz and phase drift ~0.049 cycles
+  across 262.144 s (a possible reason for modest recovered peak decrease,
+  *not* quantitatively proved).
+
+**STAGE 3 STATIONARY BASELINE RECOVERY PASSED**: real synthetic injection,
+independent NVIDIA A40 PULSEJET polynomial search (blind frequency
+discovery), XML-to-PulsarX conversion and independent `--nosearch`
+PulsarX fold produces a coherent near-truth pulse. User confirmed
+visual success. Do not claim rigorous numerical profile-match quality
+or blind DM/acceleration/jerk recovery; those are still untested.
+
+Next planned scientific test: isolated injected nonzero acceleration,
+zero jerk, perform a template search including but not fixed to injected
+acceleration, test detection and recovered candidate against truth.
+Preserve simple one-command-at-a-time cluster workflow; then progress
+to mixed acceleration plus jerk and study control cases. All development
+writes stay on `dev/polynomial-search` or `dev/pulsejet-injections`.
