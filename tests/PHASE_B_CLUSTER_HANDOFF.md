@@ -506,3 +506,42 @@ acceleration, test detection and recovered candidate against truth.
 Preserve simple one-command-at-a-time cluster workflow; then progress
 to mixed acceleration plus jerk and study control cases. All development
 writes stay on `dev/polynomial-search` or `dev/pulsejet-injections`.
+
+
+## Validation progression agreed after stationary success (2026-10-23)
+
+User approved step-by-step validation order:
+1. Controlled **nonzero acceleration, zero jerk** synthetic injection and
+   search across competing acceleration templates, compare recovered
+   candidates and truth folds.
+2. Controlled **nonzero jerk** injection, jointly varying acceleration
+   and jerk in the search bank, measure losses, aliases and grouping.
+3. Inject into actual telescope observational SIGPROC `.fil` files
+   (preserve originals; verify channelization, RFI, header, masks,
+   dedispersion, recovered folds).
+4. Full **template-bank-driven controlled tests**, with known injected
+   parameters, mismatch, S/N, sensitivity and distillation checks.
+5. Fully blind **template-bank search** over DM, acceleration and jerk
+   (spin frequency always unknown to PULSEJET), completeness,
+   contamination and performance studies.
+
+Explicit user query verified against immutable deployed PULSEJET image
+source commit `513e80d1ace21868fd3d3d37734bcd79782abce3`:
+`src/pipeline_multi.cu` routes `-P` through
+`run_polynomial_time_domain_resampler`, constructs
+`pulsejet::PolynomialTimeDomainResampler` (implemented in
+`include/transforms/polynomial_resampler.hpp`), calling
+`device_resample_acc_jerk` CUDA kernel. Per-DM polynomial candidate
+stage uses **`Template_Bank_Polynomial_DopplerDistiller`**;
+`Template_Bank_Polynomial_Distiller` also exists but is *not active*.
+Per-template harmonic distillation, cross-DM DMDistiller and final
+harmonic distiller are original Peasoup infrastructure. Stationary
+one-bank test does not establish cross-template distillation correctness.
+
+Next planned injection: use existing valid
+`stage3/noise_baseline_fixed.fil`, source `P0=0.02` s, DM=10,
+target S/N=80, a=+150 m/s², j=0, same base noise file and seed;
+write `stage3/accel_a150.json`, `output_dir` new
+`stage3/accel_run_a150`, source ID `PSR_ACCEL_150`, retaining fold
+settings. Do not reuse previously occupied output directories.
+Follow user's **one command/step at a time** preference.
