@@ -1053,3 +1053,37 @@ a DM0 difference does not by itself prove a dedispersion bug.
 Afterwards inspect harmonic/FFT statistic and normalization
 to understand high-SNR false alarms. NO source modifications,
 NO distiller changes without prior user discussion/approval.
+
+
+## Stage 5 DM-zero stationary noise control: 92.615Hz disappears (2026-10-23)
+
+User ran `-P polynomial_stationary.txt` (a=0,j=0) on the SAME
+noise-only `noise_baseline_fixed.fil`, but with one `DM=0`
+trial instead of the previous one `DM=10` trial.
+Output `search_noise_dm0_stationary/overview.xml`:
+**one candidate total**, f=78.014366Hz, S/N=8.37;
+**no reported candidate within 0.1Hz of 92.615Hz**.
+Previous DM=10 stationary output had four candidates including
+f=92.615601Hz, S/N=45.90.
+DM=0 vs 10 therefore strongly changes whether the 92.615Hz
+feature exceeds detection/report thresholds. Not proof that
+underlying raw spectral power is absent at DM0 and not
+proof of a dedispersion bug.
+
+Data known: nsamp=1048576, dt=250us, 16 channels 1400MHz
+down to 1385MHz, bandwidth ~16MHz. Dispersive differential
+delay at DM10 across band ≈0.45ms (~2 samples). A huge
+apparent search-SNR difference for a nominal white-noise
+input deserves investigation.
+
+Suggested next experiment: **DM sweep under stationary
+a=0,j=0 template**, using separate one-DM PULSEJET calls
+for trial DMs 5,8,9,11,12,15 (keep existing DM=0 and
+DM=10 runs), to avoid cross-DM distiller merging/masking
+per-DM candidates. Extract best reported candidate near
+92.6156 Hz for each. No software modifications.
+If feature turns on near certain DM(s), follow with
+independent NumPy dedispersed time-series FFT/harmonics
+and characterize pipeline normalization. Both third-party
+distillers unchanged unless explicit prior discussion and
+user approval. One conceptual cluster task per turn.
