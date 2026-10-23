@@ -353,3 +353,49 @@ Next user action: list and inspect output products, fold log/archive/
 profile, then independent PULSEJET search. No actual PULSEJET search
 or frequency/DM recovery measurement yet. Source code changes only on
 development branches; immutable SIFs unmodified.
+
+
+## Stage 3 first PULSEJET GPU full search: 2026-10-23
+
+The user ran the pinned PULSEJET SIF on node2 (one A40 via `-t 1`),
+searching the successfully injected stationary synthetic filterbank:
+
+    cd /home/rnag/PULSEJET_validation/stage3
+    singularity exec --nv "$HOME/PULSEJET_validation/images/pulsejet_dev.sif" peasoup \
+      -i "$PWD/baseline_run_clean/case_0001/noise_baseline_fixed_baseline_stationary_case_0001.fil" \
+      -o "$PWD/search_stationary_01" \
+      --dm_file "$PWD/dm_baseline.txt" \
+      -P "$PWD/polynomial_stationary.txt" \
+      -t 1 -n 4 -m 7 --min_freq 20 --max_freq 100 \
+      --candidate_diagnostics -v 2>&1 | tee search_stationary_01.log
+
+DM list: exactly `10`. Polynomial bank: exactly `0 0`.
+Injection truth is `P0=0.02 s` / `f0=50 Hz`, `DM=10`, a=j=0,
+target S/N 80. **Independent blind frequency recovery NOT YET checked.**
+
+**GPU execution completed successfully**, including dedispersion,
+preprocessing/rednoise, CUDA polynomial resampling, FFT, normalisation,
+harmonic summing, peak extraction, all distillation, output writing.
+Log ended `all done`.
+
+- Effective filterbank samples: 1,048,576, dt=0.00025 s; search FFT
+  size: 1,048,576.
+- Dedispersed samples transferred to GPU: 1,048,574; remaining 2
+  zero-padded. PULSEJET printed benign-looking input segment overrun
+  adjustment warning (`Segment end sample: 1048576`).
+- Actual printed worker DM processing time: 0.163024 seconds;
+  **not** a validated whole-program end-to-end benchmark.
+- 1 DM trial and 1 polynomial template trial.
+- Candidate diagnostics: 42 raw spectral detections, 3 after per-template
+  harmonic distillation, 3 before/after per-DM polynomial distillation,
+  3 after cross-DM and final harmonic distillation, 3 at output candidate
+  limit, 0 nested associated nodes.
+- Output root: `/home/rnag/PULSEJET_validation/stage3/search_stationary_01`.
+- Search stdout/stderr: `/home/rnag/PULSEJET_validation/stage3/search_stationary_01.log`.
+- **Next mandatory action:** inspect actual candidate records
+  (`overview.xml` and candidate files) to verify if one candidate
+  lies at ~50 Hz and contains correct DM/a/j. Do not claim pulsar
+  recovered solely from counts.
+- After candidate check, use XML-to-PulsarX converter, fold matching
+  searched segment and compare to truth fold. Preserve intermediate
+  files and avoid modifying production/main branches.
