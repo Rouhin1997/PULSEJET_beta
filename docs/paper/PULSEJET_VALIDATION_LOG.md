@@ -454,3 +454,33 @@ Read-only rerun of 2^20-sample (~63.16 s) M62 central-beam original via symlink 
 Source logic in `include/transforms/peakfinder.hpp` calculates the start bin using a `orig_size / pspec.get_nbins()` multiplier of ~2, effectively making a requested `[200,350]Hz` spectrum search into `[400,350]Hz` (negative iterator range); `[100,350]Hz` becomes approximately `[200,350]Hz` and succeeds. Controlled A/B behavior substantially corroborates [the open PeakFinder bug report](../../tests/PEAKFINDER_FREQUENCY_BOUND_ISSUE.md). This is an **unfixed code-level defect**; correct frequency bounds/empty-range safeguards and regression tests need explicit user approval before source changes. The successful `-P` search used an unmodified pinned image and its 2 final candidates have **not yet been physically checked** (XML frequencies, folded pulse). Absence/presence of pulsar J1701-3006B remains unconfirmed.
 
 Next suitable read-only HPC action: inspect `stage6_m62/baseline_1m_frequency_fix_test_01/overview.xml`, saving or printing the two candidate frequencies/DM/SNR and relevant processing stats. That does not require a new GPU run. Future valid benchmark: after a user-approved minimal fix and rebuilt immutable image, search exactly the requested full frequency band and time entire successful process with an ordinary runtime environment (not CUDA_LAUNCH_BLOCKING=1).
+
+
+### M62 first completed XML results: two low-S/N non-target candidates and stage timings (2026-10-23)
+
+**Status:** first complete real-filterbank stationary/single-DM pipeline search; frequency-bound workaround in place, source bug still unfixed.
+
+Input `/archive1/ridolfi/DATA/MeerKAT/ALL_TRAPUM_GC_CENTRAL_BEAMS/M62_18U-trapum-pgb_cfbf00001sub_CB.fil` through validated symlink. Source `J1701-3006B`. First 1,048,576 samples; `tsamp=60.2352941176 us`, segment midpoint MJD `59689.9682526108`. One DM 0 trial and single `(a,j)=(0,0)` polynomial bank template. `-t 1 -n 4 -m 7 --min_freq 100 --max_freq 350`; owing to confirmed PeakFinder bug this gives an effective start near 200 Hz, **not** the declared 100 Hz. `CUDA_LAUNCH_BLOCKING=1`, line-buffered output, SIF source commit `513e80d1ace21868fd3d3d37734bcd79782abce3`, GPU NVIDIA A40. Full XML:
+
+`/home/rnag/PULSEJET_validation/stage6_m62/baseline_1m_frequency_fix_test_01/overview.xml`.
+
+| Candidate XML id | Period (ms) | Derived f (Hz) | DM applied | a (m/s^2) | j (m/s^3) | Search S/N | Folded S/N |
+|---:|---:|---:|---:|---:|---:|---:|---|
+| 0 | 3.9310574956 | 254.384475708 | 0 | 0 | 0 | 9.076230 | not measured (`folded_snr=0` placeholder) |
+| 1 | 4.5856271907 | 218.072677612 | 0 | 0 | 0 | 8.016245 | not measured (`folded_snr=0` placeholder) |
+
+Both candidates have `nh=3`, `nassoc=0`, `is_physical=1` XML flags, which are **pipeline metadata, not independent astrophysical confirmation**. No candidates near published J1701-3006B f≈278.25 Hz; given DM/pre-dedispersion ambiguity, binary acceleration, short sample window and possible eclipses, **absence of the target in this limited search is not scientifically conclusive**. No independent PulsarX fold or RFI assessment has been carried out.
+
+| XML `execution_times` component | Time (seconds) |
+|---|---:|
+| Reading | 0.0064640003 |
+| Dedispersion | 0.0943040028 |
+| Searching | 0.1018850058 |
+| Folding | 0 |
+| **Internal pipeline total** | **4.0568690300** |
+
+These are measured internal instrumentation values from a **completed** run; the accompanying debug setup did **not** measure an outer process wall-clock time. `searching` != full execution time, and total internal time != end-to-end Singularity wall-clock. `CUDA_LAUNCH_BLOCKING=1` slows/synchronizes GPU execution and should be removed for formal performance benchmarks. Internal per-DM processing had been separately reported as 0.098978 s, not directly equivalent to wall-clock or XML total.
+
+Diagnostic candidate diagnostics: 3 raw spectral detections -> 2 after per-template harmonic distillation -> 2 after per-DM polynomial grouping -> 2 after cross-DM and final harmonics, 0 nested association nodes. This supports successful XML output but not calibrated astrophysical correctness.
+
+**Next:** preserve the existing issue/diagnostics; run the first ~253s baseline **without CUDA_LAUNCH_BLOCKING**, using the established `--min_freq 100 --max_freq 350` workaround and with independent Bash end-to-end elapsed timing; keep it designated *pre-fix provisional*. Then discuss and obtain explicit user approval for the minimal peakfinder lower-frequency computation correction and regression tests, build a new pinned SIF, and re-run the original true `[200,350]` request before treating benchmarks as paper grade.
