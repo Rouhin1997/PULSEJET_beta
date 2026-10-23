@@ -566,3 +566,7 @@ search; (2) nonzero acceleration/nonzero jerk injection and bank search;
 (3) evaluate unchanged active Doppler-distiller's before/after retention,
 merges, candidates and relevant S/N/parameter biases. Discuss outcomes
 with user before any modification.
+
+## Stage 4 acceleration candidate identified (23 Oct 2026)
+
+The +150 m/s2, zero-jerk synthetic injection was searched using nine polynomial templates with acceleration -300 through +300 m/s2 in steps of 75, DM fixed to 10. GPU search succeeded: 386 raw detections, 77 after harmonic distillation, 27 after Doppler distillation, 50 nested associations. Top surviving candidate (ID 0) recovers f = 50.000186920166 Hz, acceleration +150 m/s2, jerk 0, DM 10, S/N 75.44, nassoc 11. This is correct recovery on the tested grid, not a demonstration of free acceleration estimation. Critically, the deployed output_stats.hpp writes only nassoc for each representative; the XML does not serialize associated candidate parameter records, and candidate binary output is commented out in pipeline_multi.cu. Therefore the 11 associations cannot be identified from overview.xml alone; to characterize per-template S/N and grouping without modifying code, run single-template control searches on the same injected file and compare results. Do not modify either third-party distiller without prior user discussion and approval.
