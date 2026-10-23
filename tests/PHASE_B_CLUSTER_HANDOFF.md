@@ -231,3 +231,34 @@ This proves pointwise CPU/GPU agreement for the tested configurations,
 not the full injection/search/folding chain, sensitivity, FFT recovery,
 candidate grouping, or candidate-parameter accuracy. Those still await
 Stages 3+.
+
+
+## Stage 2 final A40 validation: 2026-10-23
+
+INCEPTION-Lite SIF successfully ran `python3 -m inception_lite --help`,
+and `which psrfold_fil` returned `/usr/local/bin/psrfold_fil` on
+`frontend2`.
+
+The user fast-forward pulled `dev/polynomial-search` to
+`10aa6fd0cab97246e830b5bb292733f1e16246d0` and reran
+`bash scripts/run_polynomial_cuda_parity.sh` on the A40 of
+`node2.cluster`, linking the *unchanged production CUDA* `kernels.o`
+from `pulsejet_dev.sif`. Results:
+
+- **PASS 15/15 cases; 491,520 sample comparisons, 0 mismatches.**
+- Includes zero motion; positive/negative acceleration and jerk;
+  mixed-sign combinations; underflow/overflow/rounded-out zero padding;
+  positive/negative exact nearest-even tie cases.
+- Exact half-sample cases: 16,384 per sign, 32,768 total
+  (`exact-half=16384` for each of the last two test cases).
+- The extreme `a=±299792458 m/s²` values in tie tests are mathematical
+  stress cases, not astrophysical parameter choices.
+- Log path: `/home/rnag/PULSEJET_validation/stage2/polynomial_cuda_parity.log`.
+- **Stage 2 sample-level kernel parity gate passed.** No scientific
+  inference about search sensitivity, recovered candidates, template
+  coverage, false grouping or full-chain precision is yet justified.
+
+Next Stage 3: start with a small, wholly synthetic SIGPROC noise
+filterbank and a bright stationary pulsar injection for baseline
+search/fold recovery, then +/- acceleration and jerk, then test a
+read-only copied/truncated segment of the M62 archive filterbank.
