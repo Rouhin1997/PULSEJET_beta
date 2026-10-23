@@ -45,3 +45,35 @@ In [`src/kernels.cu`](https://github.com/Rouhin1997/PULSEJET_beta/blob/dev/polyn
 ## Provenance
 
 Research ledger: [`docs/paper/PULSEJET_VALIDATION_LOG.md`](../docs/paper/PULSEJET_VALIDATION_LOG.md). HPC log: `$HOME/PULSEJET_validation/stage6_m62/baseline_1m_cuda_debug_01/debug.log`. Host: `node2`, pinned `pulsejet_dev.sif`, source commit `513e80d1ace21868fd3d3d37734bcd79782abce3`. No user data or original archive was modified.
+
+## Controlled M62 frequency-bound A/B test: passed workaround (2026-10-23)
+
+Exactly the same archival M62 symlink (`stage6_m62/m62_original.fil`), 1,048,576-sample segment, DM 0, a=j=0, one polynomial template, `-t 1 -n 4 -m 7`, upper bound 350 Hz, same pinned PULSEJET SIF; only lower search bound changed from `--min_freq 200` to `--min_freq 100`. The synchronized/line-buffered diagnostic completed with **exit status 0**; original with `--min_freq 200` consistently aborted with 134. This is strong A/B experimental evidence for the invalid `start_idx>max_bin` root cause. Diagnostic flags `CUDA_LAUNCH_BLOCKING=1`, `stdbuf -oL -eL`; this successful run did not measure whole-process wall-clock time.
+
+Reported end of successful log:
+
+```text
+Finding peaks
+Distilling harmonics
+Distilling polynomial (acc+jerk) candidates
+[DEBUG] poly post-distill count added=2
+DM processing took 0.098978 seconds
+[POLYNOMIAL_DIAGNOSTICS]
+DM trials processed: 1
+Polynomial template trials: 1
+Raw spectral detections: 3
+After per-template harmonic distillation: 2
+Before per-DM polynomial distillation: 2
+After per-DM polynomial distillation: 2
+Collected before cross-DM distillation: 2
+After cross-DM distillation: 2
+After final harmonic distillation: 2
+After output candidate limit: 2
+Nested associated nodes in final output: 0
+[END_POLYNOMIAL_DIAGNOSTICS]
+all done
+```
+
+The `0.098978 s` diagnostic is **not** an end-to-end wall-clock benchmark, and the candidate significance/physical identity has not yet been inspected. Outputs: `$HOME/PULSEJET_validation/stage6_m62/baseline_1m_frequency_fix_test_01/run.log`, likely `overview.xml` in the same output dir; require user verification before treating candidates as meaningful.
+
+**Source is still unmodified.** Before actual patching obtain user approval. Proposed minimal repair: compute the start bound in the same Fourier-bin units as the maximum, without `orig_size/size`; clamp both to valid spectrum indices, validate lower<=upper and any `count`/host-array bounds; test ordinary and harmonic-folded bin widths, valid `[200,350]` frequency range, and empty ranges. Do not change the polynomial resampler or third-party distillers. Then rebuild a *new pinned image* and rerun the original `[200,350]` search. Old pinned SIF stays available as a baseline for the A/B regression.
