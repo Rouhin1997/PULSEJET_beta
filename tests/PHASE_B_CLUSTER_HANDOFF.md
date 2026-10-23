@@ -788,3 +788,36 @@ a=150,j=0 and compare S/N; then archive-convert and PulsarX
 `--nosearch` folds with segment-midpoint epoch and compare
 truth/corrected/uncorrected profiles. Keep ALL distillers untouched
 until discussed with and explicitly approved by user.
+
+
+## Stage 5 zero-jerk control candidate table and count mismatch (2026-10-23)
+
+After the `a=150,j=0` only-template control search of the **same
+jerk-injected filterbank**, diagnostic STDOUT reported:
+one DM, one template, 65 raw spectral detections, seven after
+per-template harmonic distillation, seven final output, zero nested
+associations; `all done`.
+
+User then parsed `search_jerk_zero_control/overview.xml`, reporting
+**nine** top-level candidates (IDs 0 through 8), not seven:
+- ID 0 f=49.999233 Hz, a=150, j=0, S/N=49.92
+- ID 1 f=92.614647 Hz, a=150, j=0, S/N=22.60
+- remaining IDs 2..8 have S/N from 11.87 to 7.53
+
+Compare correctly recovered 30-template candidate ID0 f=50.000187 Hz,
+a=150,j=10,S/N=75.54; S/N rises by (75.54/49.92-1)*100=51.3% with
+jerk correction (same DM and synthetic input). This is *search S/N*,
+not fold S/N. The strong 92.615 Hz feature also appears in both
+searches; its origin unknown.
+
+**IMPORTANT integrity check next:** one-template terminal diagnostics
+count=7 versus subsequent XML extracted top-level count=9, so compare
+`search_jerk_zero_control.log` to `overview.xml` and their
+modification timestamps before treating all candidates as products
+of the same run. No assumption of software bug yet. Only one cluster
+command at a time.
+
+User wishes to archive-fold *multiple strong* full-bank candidates,
+particularly IDs 0,1,2,3,4, plus truth and zero-jerk controls.
+Do not edit distillers; discuss any proposed modifications and gain
+explicit approval first.
