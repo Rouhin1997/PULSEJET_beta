@@ -503,3 +503,34 @@ User prefers using the **entire M62 observational filterbank as INCEPTION-Lite i
 **Science gate:** the processed M62 original was likely incoherently dedispersed at DM114. The upstream INCEPTION `injector/propagation_effects.py:get_DM_delays` uses parameter `DM` as *across-channel delay* (it does not subtract `cDM` there); `cDM` appears in the *intrachannel smearing* expression (`DM-cDM`) instead. Consequently, on a pre-dedispersed observed input, simply passing `DM=114` to the injector will reintroduce a large DM sweep; passing `DM≈0` will model only residual across-channel delay and may underrepresent physical intrachannel smearing. Need a scientifically controlled, documented residual-dispersion and intra-channel pulse broadening treatment before claiming a validated real-data injection sensitivity result. Do not change injection/Peasoup code without user approval.
 
 **Engineering gate:** correct/test the known PeakFinder `start_idx` factor-of-two defect before science or performance runs to guarantee requested frequency coverage. Keep a pre-fix image for A/B comparison and build a separately pinned post-fix image. For 15-minute search, specify both `--nsamples` and an FFT size at least as large (usually next power of two) and verify padding. Record full external wall time for both original and injected, with same cached-I/O conditions, known CPU/GPU configuration. Disk/storage availability and INCEPTION 64-CPU scaling untested, so first full-injection dry-run/config validation with output on scratch, not archival path.
+
+
+### Stage 6 agreed pilot: single full-length M62 acc+jerk injection and independent PulsarX truth fold (2026-10-23)
+
+Research decision: user proposes **one injected accelerated+jerked pulsar added to full M62 UHF filterbank**, then independent **PulsarX confirmation fold and a proper diagnostic plot** *before* asking PULSEJET to recover it; once successful, sweep tailored `(DM,a,j)` grids, then generated polynomial-bank coverage tests and finally matched PRESTOzl comparison. Original natural signals remain in background; parallel DM coverage near M62B may later reveal the real pulsar, but **real source detection is secondary, not a precondition for injection**. User explicitly notes original header `J1701-3006B` may be only beam-pointing placeholder; specific beam's known pulsar presence is **unconfirmed**, among roughly 18 beams; don't equate filename/source_name with a detection.
+
+Scientific provenance uncertainty: M62 TRAPUM paper Vleeschower et al. 2024 (https://doi.org/10.1093/mnras/stae816) says stored 256-channel filterbanks were *incoherently* dedispersed at cluster DM114; coherent beamforming does not itself entail coherent dedispersion. Nevertheless the actual selected file's **specific processing chain** is not independently documented in its header (`refdm=0` or absent). Avoid claiming coherent or incoherent file provenance absolutely. Deliberate synthetic injection uses a known **additional dispersive DM** relative to file as received; it is not an astrophysical total DM or a search DM for M62B.
+
+**Pilot config committed to INCEPTION-Lite repo**, branch `dev/pulsejet-injections`: [`configs/m62_uhf_full_aj_truthfold_pilot.json`](https://github.com/Rouhin1997/inception_injection_test_tool/blob/dev/pulsejet-injections/configs/m62_uhf_full_aj_truthfold_pilot.json), commit `39b1db66ac3d246407e31fb79dd2d41027f06af2`. No injector or search algorithm source modified.
+
+| Config parameter | Pilot value |
+|---|---|
+| Background .fil | `stage6_m62/m62_original.fil` (read-only symlink, full 59.52 min) |
+| Output dir | `stage6_m62/injections_full_m62_aj_pilot_01` (new, original preserved) |
+| Source ID | `PULSEJET_M62_PILOT_AJ` |
+| P0 at full-file midpoint | 4.9 ms (f≈204.08163 Hz) |
+| Additional injected DM | +6.0 pc/cm3 measured relative to supplied processed file |
+| Acceleration a at midpoint | +120 m/s2 |
+| Jerk j at midpoint | +0.15 m/s3 |
+| Full-observation nominal injection S/N | 160, **not** predicted 15-min search S/N |
+| Intrinsic duty cycle | 5% |
+| Frame / epoch | topocentric, `ACCEPOCH=0.5`, no explicit `PEPOCH` |
+| Deterministic seed | 20261023 |
+| Injector CPUs | 8 (initially; 64 available), 0.02 GB gulp |
+| Folding | integrated `psrfold_fil` with template `/usr/local/share/pulsarx/meerkat_fold.template`, 128 bins, 32 subbands, enabled |
+
+One new full injected `.fil` is expected to be ~15.2 GB decimal (~14.14 GiB), plus fold archive/log/figures; check home/scratch filesystem free space and any account quotas **before** running. The pinned integrated image is `$HOME/PULSEJET_validation/images/inception_lite.sif` at commit `5a9cd1c9b252ffd1797575267c4528fa5b8e81c5`, subject to path/executable verification. The host `node2` has 64 CPU logical processors but not necessarily 64 free allocated cores. Use modest 8 initially.
+
+**Plot quality requirement:** PULSEJET/INCEPTION currently has a fallback plot `inception_lite/fold_plots.py` rendering only a phase-averaged profile from a **real PulsarX .ar** archive. For publication-style verification, create/show multi-panel **pulse phase profile + subintegration/time vs phase + frequency vs phase** and optional DM or acceleration curves only when a real archive supports them; don't fabricate search diagnostic curves or label the fallback 1D profile as complete. Generated `.ar` and PNG reside on cluster; user must provide/upload actual figure for assistant to display here.
+
+**Immediate next cluster step:** preflight exact integrated SIF, PulsarX executable, fold template, M62 symlink readability, and >~15GB free plus quotas. Then copy/paste pinned JSON config onto node2 (or git fetch) and perform INCEPTION `--dry-run`, then full injection with enabled PulsarX fold. Do NOT begin expensive CPU/GPU run or alter original file until preflight passes. Later search central ~15 min segment with a/j values calculated at selected segment midpoint, correct PeakFinder source bug as separately documented before any formal search grid, and compare against identical uninjected control search.
