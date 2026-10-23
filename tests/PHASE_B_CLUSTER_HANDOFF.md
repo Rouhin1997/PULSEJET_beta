@@ -1026,3 +1026,30 @@ NOT modify PULSEJET. Depending on results investigate
 harmonic-summing and normalization using diagnostic source,
 not speculatively edit code. Both third-party distillers remain
 untouched pending user approval.
+
+
+## Stage 5 raw FFT harmonic check of noise-only 92.615 Hz (2026-10-23)
+
+Independent NumPy FFT of original channel-averaged noise-only
+filterbank checked maxima in ±0.03Hz bands near harmonics
+of the strong stationary PULSEJET noise candidate
+f=92.615601Hz. Data (harmonic: peak power/local median):
+0.25:4.09; 0.5:7.07; 1:3.76; 2:3.61; 3:9.09;
+4:4.84; 8:4.56; 16:4.34. Local windows each cover ~16
+Fourier bins, so look-elsewhere effects elevate even
+random-noise local maxima; peaks sometimes offset many
+Fourier bins from exact expected harmonic frequencies.
+No compelling narrow fundamental plus harmonics comb
+to account for stationary noise PULSEJET search S/N 45.90.
+
+The raw FFT simply channel-averaged; PULSEJET searched
+with DM=10 dedispersion. NEXT controlled one-step test:
+same noise-only input, *one stationary a=0,j=0* template,
+DM changed to exactly 0 via separate `dm_noise_zero.txt`,
+save to `search_noise_dm0_stationary`; inspect candidates
+near 92.615Hz, compare to the stationary DM10 45.90.
+Changing DM can alter channel alignment and normalization;
+a DM0 difference does not by itself prove a dedispersion bug.
+Afterwards inspect harmonic/FFT statistic and normalization
+to understand high-SNR false alarms. NO source modifications,
+NO distiller changes without prior user discussion/approval.
