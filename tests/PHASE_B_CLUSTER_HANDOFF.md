@@ -712,3 +712,52 @@ multiple varying-jerk polynomial bank entries and compare against
 zero-jerk control. **Do not modify or rewire either distiller without
 first discussing exact proposed changes and obtaining explicit
 user approval.**
+
+
+## Stage 5 first 30-template jerk GPU search completed (2026-10-23)
+
+INCEPTION-Lite has successfully injected a source `PSR_JERK_10`
+with `P0=20ms` (f=50 Hz), `DM=10`, target SNR 80,
+`A0=+150 m/s²`, `A1=+10 m/s³` and produced an actual
+PulsarX truth folded .ar archive (95,040 bytes) and archive-derived
+PNG (49,541 bytes), in
+`stage3/jerk_run_a150_j10/case_0001/`.
+The source .fil is
+`stage3/jerk_run_a150_j10/case_0001/noise_baseline_fixed_jerk_a150_j10_case_0001.fil`.
+
+A 30-row controlled acceleration/jerk bank
+`stage3/polynomial_jerk_bank.txt` spans a=
+`[-150,0,75,150,225,300]` m/s² and j=
+`[-10,0,5,10,20]` m/s³, includes exact injected (150,10).
+User launched pinned PULSEJET dev SIF on one A40 GPU with one
+`DM=10` trial, `-n 4 -m 7`, frequency 20–100 Hz,
+`-P polynomial_jerk_bank.txt`,
+`--candidate_diagnostics -v`, output
+`stage3/search_jerk_bank_01/` and logfile
+`stage3/search_jerk_bank_01.log`.
+
+**GPU execution SUCCESS** (`all done`), all 30 individual polynomial
+resampling calls explicitly logged:
+- 1 DM trial, 30 polynomial template trials
+- 1536 raw spectral detections
+- 240 after per-template harmonic distillation
+- 240 before / 29 after per-DM polynomial Doppler distillation
+- 29 before / after cross-DM and final harmonic grouping
+- 29 final output candidates, 222 nested associated nodes
+- worker reported 0.085426 s DM-processing time; NOT full pipeline
+  benchmark.
+
+IMPORTANT: nested 222 > 240−29=211, so cannot equate nested count
+to unique detections eliminated by Doppler matching. Earlier harmonic
+nesting and/or repeated association may be involved; not proof of
+wrong grouping. XML records representative params and counts only,
+not individual associated candidate records.
+
+**Scientific jerk detection/recovery is STILL UNCONFIRMED until actual
+overview.xml candidate frequency, a, j, S/N and association counts
+are inspected.** Next user action: parse all 29 overview.xml records
+ranked by S/N, flag ~50 Hz, compare leading candidate to known
+injected (a=150,j=10). Then run correct-only and zero-jerk controls
+and truth-versus-recovery PulsarX no-search folds. User explicitly
+forbids changing either third-party distiller without first discussing
+a proposed change and obtaining approval.
