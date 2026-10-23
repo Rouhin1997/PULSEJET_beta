@@ -607,3 +607,18 @@ Next read-only check on frontend2: `scontrol show job 66449 | grep -E 'JobId=|Jo
 User stated they **cancelled** prior node2 Slurm allocation job 66449 (`alloc_manual`, 64 CPUs) to allow independently scheduled 5-source weekend injection jobs. Cancellation stated by user; pending independent `squeue` verification. Intended Slurm allocation: W1 and W2 each `--nodelist=node2 --cpus-per-task=30 --mem=64G`; W3 and W4 similarly on node3. Total **120 reserved CPUs**, leaving four unreserved CPUs per 64-core node (provided cluster does not impose whole-node exclusivity). Four Slurm jobs each with their own logs and outputs; not yet submitted as of this note.
 
 Updated guarded launcher [scripts/slurm_m62_weekend_single_window.sh](https://github.com/Rouhin1997/inception_injection_test_tool/blob/dev/pulsejet-injections/scripts/slurm_m62_weekend_single_window.sh) to read `SLURM_CPUS_PER_TASK` and write a reproducible per-job resolved JSON config with `ncpu=30`, preserving all original five-source parameters and original source JSON without modifications. Final pinned source commit `99d6318eab9960400fce3400734c064f19cbf29b`, after correcting generated JSON terminal newline representation. Launcher checks input SIF/config/file, fails if output exists, logs worker count, runs `singularity exec ... env PYTHONNOUSERSITE=1 python3 -m inception_lite --perform-folds yes`, prints product manifest/exit status and elapsed time. No scientific source code changed; no new jobs yet launched. Submission should prevent duplicate job names and ensure previous allocation exited before scheduling.
+
+### Weekend M62 20-source injection jobs submitted and RUNNING on two Slurm nodes (2026-10-23)
+
+User executed the pinned INCEPTION-Lite Slurm launcher from `node2` with `--partition=all --nodelist=node{2,3} --cpus-per-task=30 --mem=64G --ntasks=1` for each of four real-data 14.88-minute five-source injection experiments. **All four sbatch submissions succeeded and returned RUNNING states**, as copied from user's `squeue` output:
+
+| Job | Slurm ID | Node | Allocated CPUs | Status at submission |
+|---|---:|---|---:|---|
+| m62inj_W1 | 66450 | node2 | 30 | RUNNING |
+| m62inj_W2 | 66451 | node2 | 30 | RUNNING |
+| m62inj_W3 | 66452 | node3 | 30 | RUNNING |
+| m62inj_W4 | 66453 | node3 | 30 | RUNNING |
+
+Allocation totals **120 CPUs over two 64-CPU nodes**, with four CPUs not reserved by these jobs on each. Each window contains 5 known injected pulsars with distinct f, residual DM, a/j and nominal S/N (10–100); four independent real-background files already prepared and checked. `mode=together` with five injections per new `.fil`; Slurm wrapper writes unique per-job JSON with `ncpu=SLURM_CPUS_PER_TASK`, uses `PYTHONNOUSERSITE=1` to avoid pandas/NumPy user-site conflict, and invokes real `psrfold_fil` for five truth folds after injection. Output directories under `$HOME/PULSEJET_validation/stage6_m62/m62_15m_injections/W{1..4}` and separate scheduler logs under `$HOME/PULSEJET_validation/stage6_m62/weekend_slurm_logs/W{1..4}_JOBID.{out,err}`.
+
+**Important qualification:** RUNNING is scheduler state only. As of this checkpoint no completed `.fil`, validated PulsarX `.ar`, PNG profile, or measured search recovery has been verified. Next inexpensive check: inspect tail of all four Slurm stdout/stderr logs to confirm worker launch and absence of early errors; later verify via `sacct -j 66450,66451,66452,66453 --format=JobID,JobName,State,ExitCode,Elapsed,NodeList` and manifests/folds. Avoid reporting weekend completion before inspecting actual products. Original M62 file remains read-only and intact. Keep failed original single-injection attempt logs as provenance.
