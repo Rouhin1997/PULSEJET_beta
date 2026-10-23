@@ -989,3 +989,40 @@ approval. If stationary run shows high S/N noise artifacts,
 investigate spectrum/SNR normalization; if it disappears,
 compare polynomial resampling / number of templates and
 processing paths. One cluster step per assistant response.
+
+
+## Stage 5 stationary noise-only search retains strong 92.615Hz anomaly (2026-10-23)
+
+Using one `a=0,j=0` polynomial template against the original
+noise-only `stage3/noise_baseline_fixed.fil` with the same DM10,
+search band 20-100Hz, user inspected the
+`stage3/search_noise_stationary_control/overview.xml`:
+4 representatives total:
+- 92.615601Hz, a=0,j=0,S/N=45.90
+- 92.633720Hz, S/N=11.45
+- 92.563622Hz, S/N=10.09
+- 67.377083Hz, S/N=8.89
+No candidates within 0.1Hz of 50,69.462,89.836.
+
+Therefore strong 92.615Hz anomaly predates injection, survives
+stationary search, and does **not require** nonzero polynomial
+resampling or multi-template Doppler distillation.
+Comparison for ~92.615 Hz:
+noise-only stationary 45.90;
+noise-only 30-template bank 49.19;
+injected 30-template bank 36.92.
+
+Prior independent raw (unaccelerated) channel-mean rFFT over only
+20-100Hz showed no impressive power at fundamental near
+92.615Hz (~3.73x band median). This alone CANNOT exclude strong
+power at 2nd/4th/8th/16th harmonics elsewhere in the raw FFT,
+which harmonic summing may promote to high S/N.
+NEXT recommended independent test: calculate raw channel-mean rFFT
+and inspect local FFT power near 92.6156Hz times
+[1,2,3,4,8,16] and optionally subharmonics [0.5,0.25],
+using frequency-local median normalization. Frequency bin
+resolution 1/262.144s≈0.003815Hz, Nyquist 2000Hz. This test does
+NOT modify PULSEJET. Depending on results investigate
+harmonic-summing and normalization using diagnostic source,
+not speculatively edit code. Both third-party distillers remain
+untouched pending user approval.
