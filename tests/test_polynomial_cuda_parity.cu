@@ -33,6 +33,8 @@ struct Scenario {
     const char* name;
     double acceleration;
     double jerk;
+    double sample_interval = tsamp;
+    bool require_exact_half = false;
 };
 
 struct CpuRead {
@@ -44,17 +46,18 @@ struct CpuRead {
 };
 
 CpuRead cpu_read(const std::vector<float>& input,
-                 std::size_t i, double acceleration, double jerk) {
+                 std::size_t i, double acceleration, double jerk,
+                 double sample_interval) {
     // Independent arrival-time delay, evaluated in extended precision.
     const long double midpoint = static_cast<long double>(input.size()) / 2.0L;
     const long double tau = (static_cast<long double>(i) - midpoint) *
-                             static_cast<long double>(tsamp);
+                             static_cast<long double>(sample_interval);
     const long double arrival_delay =
         (0.5L * static_cast<long double>(acceleration) * tau * tau +
          (static_cast<long double>(jerk) / 6.0L) * tau * tau * tau) /
         c_light;
     const long double source =
-        static_cast<long double>(i) + arrival_delay / static_cast<long double>(tsamp);
+        static_cast<long double>(i) + arrival_delay / static_cast<long double>(sample_interval);
     if (source < 0.0L)
         return {0.0f, source, true, false, false};
     if (!(source < static_cast<long double>(input.size())))
@@ -74,7 +77,7 @@ bool check_case(const Scenario& test, const std::vector<float>& input,
     const std::size_t bytes = input.size() * sizeof(float);
     checked(cudaMemset(d_out, 0xCD, bytes), "cudaMemset output");
     device_resample_acc_jerk(d_in, d_out, input.size(), test.acceleration,
-                             test.jerk, tsamp, 256u, 4096u);
+                             test.jerk, test.sample_interval, 256u, 4096u);
     checked(cudaGetLastError(), "polynomial kernel launch");
     checked(cudaDeviceSynchronize(), "polynomial kernel synchronization");
     std::vector<float> actual(input.size(), -1.0f);
@@ -82,10 +85,10 @@ bool check_case(const Scenario& test, const std::vector<float>& input,
             "cudaMemcpy device to host");
 
     std::size_t mismatches = 0, below = 0, above = 0, rounded_out = 0;
-    std::size_t ambiguous_rounding = 0;
+    std::size_t ambiguous_rounding = 0, exact_half = 0;
     for (std::size_t i = 0; i < input.size(); ++i) {
         const CpuRead expected =
-            cpu_read(input, i, test.acceleration, test.jerk);
+            cpu_read(input, i, test.acceleration, test.jerk, test.sample_interval);
         below += expected.was_below;
         above += expected.was_above;
         rounded_out += expected.was_rounded_out;
@@ -95,6 +98,8 @@ bool check_case(const Scenario& test, const std::vector<float>& input,
             std::fabs((expected.source - std::floor(expected.source)) - 0.5L);
         if (near_half < 1e-10L)
             ++ambiguous_rounding;
+        if (near_half == 0.0L)
+            ++exact_half;
         if (actual[i] != expected.value) {
             if (mismatches < 8)
                 std::cerr << std::setprecision(19)
@@ -113,7 +118,12 @@ bool check_case(const Scenario& test, const std::vector<float>& input,
               << " below=" << below
               << " above=" << above
               << " rounded-out=" << rounded_out
-              << " near-half=" << ambiguous_rounding << "\n";
+              << " near-half=" << ambiguous_rounding
+              << " exact-half=" << exact_half << "\n";
+    if (test.require_exact_half && exact_half < 2) {
+        std::cerr << "  ERROR: intended exact half-sample cases did not occur\n";
+        return false;
+    }
     return mismatches == 0;
 }
 } // namespace
@@ -162,6 +172,12 @@ int main() {
             {"positive_pad",  18000.0,     0.0},
             {"strong_jerk_p",     0.0,  1800.0},
             {"strong_jerk_n",     0.0, -1800.0},
+            // At dt=1 s, a=±c m/s^2 and j=0, the midpoint-relative
+            // index correction is exactly ±(i-N/2)^2/2 samples.
+            // Odd offsets force representable half-integer source indices
+            // and exercise __double2ull_rn's nearest-even tie rule.
+            {"tie_to_even_positive",  299792458.0, 0.0, 1.0, true},
+            {"tie_to_even_negative", -299792458.0, 0.0, 1.0, true},
         };
         unsigned fails = 0;
         std::size_t passes = 0;
