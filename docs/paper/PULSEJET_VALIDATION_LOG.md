@@ -201,7 +201,7 @@ All relative paths below start at \`/home/rnag/PULSEJET_validation/stage3/\`.
 ## 9. Next phase — real MeerKAT M62 filterbank
 
 **Proposed observational input (not yet inspected on cluster):**
-\`/archive1/ridolfi/DATA/MeerKAT/ALL_TRAPUM_GC_CENTRAL_BEAM/M62_18U-trapum-pgb_cfbf00001sub_CB.fil\`.
+\`/archive1/ridolfi/DATA/MeerKAT/ALL_TRAPUM_GC_CENTRAL_BEAMS/M62_18U-trapum-pgb_cfbf00001sub_CB.fil\`.
 
 Immediate gates:
 1. Read-only \`stat/readlink/du\` and SIGPROC header verification of original M62 file (data size, sample format, actual channels, tsamp, frequency setup, tstart, source name, telescope ID, signedness, beam metadata; record if coherent dedispersion or downsampling already present).
@@ -209,6 +209,8 @@ Immediate gates:
 3. Uninjected M62 baseline search and independent validation of a known pulsar, if suitable. Then matched controlled injections at several DM, acceleration, jerk, spin-frequency, S/N and observation durations.
 4. Compare candidate sets, candidate ranks, coherent fold S/N/profile metrics, null behavior, GPU wall-clock and end-to-end throughput; record model assumptions and any RFI masks.
 5. Expand to longer segments and physically motivated binary orbits. Only after controlled observational recovery, quantify sensitivity/completeness as a function of mismatch, segmentation and trials.
+
+**Location update, 2026-10-23:** the user verified by shell listing that the actual directory is `ALL_TRAPUM_GC_CENTRAL_BEAMS` (plural); the initially supplied singular-directory path does not exist. The exact M62 filename appears in the plural-directory listing. File readability, stat data and header **remain unverified**. The next step is a read-only metadata check at the corrected path.
 
 **No observational header or file-size values have yet been verified**; do not infer them from the filename.
 
@@ -258,3 +260,12 @@ Future benchmark additions should be append-only, with reruns clearly identified
 ---
 
 **Working practice:** update this log after every major real-data experiment and comparative benchmark; keep figures, folded archives, XML candidate tables and command invocations together; keep the original observational data read-only. No algorithm or third-party distiller rewiring without explicit prior user agreement.
+
+
+## 12. How this living paper record is maintained
+
+This file is the **canonical, version-controlled development and paper-evidence ledger**. Add a dated subsection for each significant experiment from the synthetic validation onward. Keep only scientifically usable, well-provenanced results in main tables; uncertainties or unresolved control issues get an explicit companion issue record instead of being silently omitted. Record real data sources, immutable input files and checksums, parameters and injection truth, exact search settings, CPU/GPU and pinned image revisions, XML candidate outputs, raw/archive fold plot references, timing method, wall-clock measurements, repeated-run dispersions, candidate/false-positive diagnostics, interpretation and limits. Never mislabel worker-internal timing as process runtime or search S/N as folded S/N.
+
+Figures are currently indexed by exact HPC source paths in §8, and the user has a self-contained ZIP/PDF copy. **Actual PNG binaries have not yet been committed to the GitHub branch**, so the figure manifest is a reproducibility index, not an assertion that the images render inline on GitHub. Promote selected originals or re-rendered publication figures into a tracked `docs/paper/figures/` directory when feasible, with captions and original archive provenance. Do not treat the separately created PDF as the primary living document.
+
+For observational data, record the **unaltered archive path**, symlink or working copy arrangement, file header, original-pulsar/RFI context, and an observational no-injection control before any injection. The initial user-selected file is at `/archive1/ridolfi/DATA/MeerKAT/ALL_TRAPUM_GC_CENTRAL_BEAMS/M62_18U-trapum-pgb_cfbf00001sub_CB.fil` (pending file stat/header verification). Any injected outputs must live outside the archive and must never overwrite the original.
