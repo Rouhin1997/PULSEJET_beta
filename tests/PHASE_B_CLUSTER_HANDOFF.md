@@ -633,3 +633,34 @@ injected 262.144 s data; compare to independent truth fold.
 Also fold stationary a=0 control to visualize lost acceleration
 coherence. **Do not modify either third-party distiller without
 prior explicit user discussion and approval.**
+
+
+## Stage 4 acceleration recovered and uncorrected PulsarX folds produced (2026-10-23)
+
+For the 262.144-second +150 m/s², zero-jerk injected dataset, all
+three requested folds now exist:
+
+- INCEPTION-Lite truth fold:
+  `stage3/accel_run_a150/case_0001/folds/PSR_ACCEL_150/PSR_ACCEL_150_folded_profile.png`
+- Recovered acceleration search (`a=150`, search S/N 75.44):
+  `stage3/search_accel_bank_01/recovered_accel_folded_profile.png`
+  (PNG 44,090 bytes), generated from real PulsarX .ar using
+  `inception_lite.fold_plots.plot_folded_archive`.
+- Uncorrected stationary control (`a=0`, search S/N 52.76):
+  `stage3/search_accel_zero_control/recovered_zero_folded_profile.png`
+  (PNG 43,640 bytes), again from real PulsarX .ar using the same
+  plotting helper.
+
+Both search-candidate folds were run with PulsarX `psrfold_fil`
+`--nosearch`, with segment-midpoint
+`--pepoch 60000.0015170371` and same injected .fil, 64 phase bins,
+16 subbands. Native PlotX showed benign graphical warnings and the
+fallback profile renderer generated valid PNGs.
+**Visual inspection and quantitative archive comparison pending**;
+do not claim phase-coherence or shape agreement until user provides
+plots. User has been given precise local rsync commands to retrieve
+all three PNGs and upload them for comparison.
+
+Code/distiller behavior unchanged. The two distillers are authored by
+someone else; user explicitly requires discussing/approving any
+proposed algorithm or wiring changes beforehand.
