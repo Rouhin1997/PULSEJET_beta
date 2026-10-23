@@ -664,3 +664,51 @@ all three PNGs and upload them for comparison.
 Code/distiller behavior unchanged. The two distillers are authored by
 someone else; user explicitly requires discussing/approving any
 proposed algorithm or wiring changes beforehand.
+
+
+## Stage 4 three-profile visual comparison: acceleration correction PASSED (2026-10-23)
+
+The user uploaded all three actual PulsarX archive-derived pulse-profile
+PNGs for the controlled synthetic injection (`P0=20ms`, `DM=10`,
+`a=+150 m/s²`, `j=0`, `T=262.144s`):
+
+- `accel_run_a150/case_0001/folds/PSR_ACCEL_150/PSR_ACCEL_150_folded_profile.png` (truth fold)
+- `search_accel_bank_01/recovered_accel_folded_profile.png` (the highest-ranked PULSEJET candidate, `a=+150`, PulsarX `--nosearch`)
+- `search_accel_zero_control/recovered_zero_folded_profile.png` (the highest-ranked stationary `a=0` control, PulsarX `--nosearch`)
+
+Visual side-by-side observations: truth and corrected profiles show
+strong, narrow, single peaks at phase ≈0.56 with nearly the same
+morphology, recovered slightly lower peak (~9,700 arbitrary archive
+units vs truth ~11,400), no substantial obvious broadening.
+The uncorrected control has a broader, strongly asymmetric main peak
+centered near ≈0.59 with long trailing shoulder extending toward phase
+≈0.75; lower plot peak (~4,200 arbitrary archive units). These peak
+intensities are rough visual readings, **not calibrated flux or a
+statistical folding-SNR measurement**, and plotting has its own
+baseline subtraction/normalization limitations.
+
+Three way top candidate comparison already verified:
+- No correction a=0: f≈50.000186920 Hz, S/N 52.76, 0 nested associates.
+- Single true a=+150: same f, S/N 75.44, 0 associates.
+- Nine-template bank: same f, retained true a=+150, S/N 75.44,
+  11 associates.
+
+**STAGE 4 CONTROLLED ACCELERATION RECOVERY PASSED**: demonstrable
++43.0% PULSEJET search S/N correction, correct acceleration winner
+from nine templates, and near-truth coherent independent PulsarX
+no-search fold; uncorrected fold visibly degraded. No broad
+population-completeness, false-merge, per-template S/N surface
+or statistical folding-SNR quantification yet. Current third-party
+Doppler distiller preserved best candidate but astrophysical
+correctness of 11 associations remains unverified.
+
+Next user-requested experiment: synthetic nonzero jerk with nonzero
+acceleration, one cluster command at a time. Suggested
+`a=+150 m/s², j=+10 m/s³`, P0=20ms, DM=10, SNR target 80,
+same fixed validated noise input. Prepare fresh configuration by
+copying `accel_a150.json`, change unique case ID, output root,
+source ID and `pulsars[0].A1=10.0`; then inject, truth-fold, search
+multiple varying-jerk polynomial bank entries and compare against
+zero-jerk control. **Do not modify or rewire either distiller without
+first discussing exact proposed changes and obtaining explicit
+user approval.**
