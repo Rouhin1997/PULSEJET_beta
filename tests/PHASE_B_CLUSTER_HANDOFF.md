@@ -1099,5 +1099,5 @@ Stationary a=j=0 control on unchanged nominally Gaussian baseline at DM10 report
 **User decision:** defer more synthetic-noise-only diagnostics until a comparable symptom appears in real observations or the project reaches quantitative false-alarm/completeness characterization. Do not describe the noise-only false-alarm statistics as validated.
 
 **Real-data input proposed by user (not yet inspected on cluster):**
-`/archive1/ridolfi/DATA/MeerKAT/ALL_TRAPUM_GC_CENTRAL_BEAM/M62_18U-trapum-pgb_cfbf00001sub_CB.fil`.
+`/archive1/ridolfi/DATA/MeerKAT/ALL_TRAPUM_GC_CENTRAL_BEAMS/M62_18U-trapum-pgb_cfbf00001sub_CB.fil`.
 NEXT ACTION: one read-only cluster `ls -lh/stat/readlink` check to establish file exists, size, symlink status and access. Then inspect actual SIGPROC header and duration, and prefer a **local symlink** to immutable original for read-only searches and independent copied output for any injections. Do NOT assume source header parameters, raw data byte format or coherent-DM state from the filename. Begin end-to-end A40 wall-clock measurement on real-data baseline; no PRESTOzl numbers have yet been measured in this study. Keep one command per turn.
