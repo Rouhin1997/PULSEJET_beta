@@ -5,7 +5,7 @@
 **Development branch:** \`dev/polynomial-search\`, repository \`Rouhin1997/PULSEJET_beta\`.  
 **Companion documents:** [full cluster handoff](../../tests/PHASE_B_CLUSTER_HANDOFF.md), [synthetic-noise anomaly record](../../tests/DEFERRED_SYNTHETIC_NOISE_FALSE_ALARMS.md), [candidate-distiller characterization](../../tests/STEP2_FINDINGS.md).
 
-> **Integrity principle.** The pipeline's reported *search S/N*, a PulsarX archive plot's arbitrary y-axis values, a statistically calibrated folded S/N, and wall-clock computation time are **different measurements**. Do not exchange one for another. All numerical results below are controlled tests, not sky-sensitivity forecasts. The PDF companion \`PULSEJET_Synthetic_Validation_Dossier_2026-10-23.pdf\` contains the **actual ten uploaded archive-derived plots**; primary PNGs and \`.ar\` files remain on the cluster at the paths specified in §8. The PDF is a local report/evidence export, not yet a tracked binary in the repository.
+> **Integrity principle.** The pipeline's reported *search S/N*, a PulsarX archive plot's arbitrary y-axis values, a statistically calibrated folded S/N, and wall-clock computation time are **different measurements**. Do not exchange one for another. All numerical results below are controlled tests, not sky-sensitivity forecasts. The PDF companion \`PULSEJET_Synthetic_Validation_Dossier_2026-10-23.pdf\` contains the **actual twelve uploaded archive-derived plots**; primary PNGs and \`.ar\` files remain on the cluster at the paths specified in §8. The PDF is a local report/evidence export, not yet a tracked binary in the repository.
 
 ## 1. Provenance: executable, GPU, and algorithm
 
