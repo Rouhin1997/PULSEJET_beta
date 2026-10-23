@@ -437,3 +437,35 @@ NEXT: convert actual PULSEJET overview.xml using installed
 and manifest with `--min-snr 7 --limit 1`, inspect the 7-column
 candidate and its epoch. Then fold exactly matching observation and
 compare recovered fold to known-truth fold.
+
+
+## Stage 3 recovered-candidate fold execution: 2026-10-23
+
+The user successfully converted top candidate from
+`search_stationary_01/overview.xml` using the installed
+`pulsejet_xml_to_pulsarx` to:
+- `search_stationary_01/recovered_top.cands`
+- `search_stationary_01/recovered_top.json`
+The converter reported midpoint epoch MJD `60000.0015170370971`.
+7-column candidate:
+`0 10 0 50.00018692016603 -0 0 83.4094009399`.
+
+User invoked CPU PulsarX directly in `pulsejet_dev.sif`:
+
+    psrfold_fil --candfile "$PWD/search_stationary_01/recovered_top.cands" \
+      --pepoch 60000.0015170371 \
+      --template /usr/local/share/pulsarx/meerkat_fold.template \
+      --nosearch -b 64 --nsubband 16 \
+      -f "$PWD/baseline_run_clean/case_0001/noise_baseline_fixed_baseline_stationary_case_0001.fil" \
+      -o "$PWD/search_stationary_01/recovered_fold"
+
+`psrfold_fil` printed preprocessing, folding, candidate info, archive
+creation, PNG generation and `done!`. PGPLOT emitted:
+`foreground level = background level`,
+`invalid x limits in PGSWIN: X1 = X2`, same graphical warnings as
+truth fold. This establishes recovered-parameter folding **execution**,
+not yet scientifically verified archive morphology. Next step: list
+`search_stationary_01` outputs to locate the exact .ar path, produce
+an archive-derived PNG using the INCEPTION-Lite plot helper if needed,
+and compare recovered profile against earlier truth-folded profile.
+No blind DM or orbital-parameter recovery yet.
