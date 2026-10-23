@@ -309,3 +309,47 @@ Next: make `noise_baseline_fixed.fil`, parse it, adapt baseline JSON
 to new input path, then perform actual injection+truth fold. Do not
 confuse the software fault with PULSEJET GPU kernel parity, which
 previously passed 15/15.
+
+
+## Stage 3 first successful synthetic injection (2026-10-23)
+
+Initial 20 ms stationary test configuration:
+`/home/rnag/PULSEJET_validation/stage3/baseline_clean.json`.
+Noise input:
+`/home/rnag/PULSEJET_validation/stage3/noise_baseline_fixed.fil`
+(N=1048576, 16 channels, tsamp=0.00025 s, duration=262.144 s,
+SIGPROC tstart=60000.0, fch1=1400 MHz, foff=-1 MHz,
+nbits=8, header length=267 bytes).
+
+Parameters: `PSR_BASELINE`, `P0=0.02` s (50 Hz), DM=10,
+SNR target=80, A0=0, A1=0, duty cycle=0.06, `frame=topo`,
+`ACCEPOCH=0.5`, seed 20261023. `--dry-run` passed.
+
+The initial actual injection into the corrected filterbank failed
+after creating `baseline_run/case_0001`, because Singularity exposed
+user-installed `/home/rnag/.local/lib/python3.10/site-packages/pandas`
+which was incompatible with system NumPy 1.21.5; injector's
+`inject.log` documented the traceback. Verified that launching
+`singularity exec --cleanenv inception_lite.sif
+env PYTHONNOUSERSITE=1 python3 -c 'import numpy, pandas'`
+isolates the container site packages: NumPy 1.21.5 and pandas 1.3.5
+at `/usr/lib/python3/dist-packages`. Preserve both failed directories;
+do not overwrite.
+
+Created `baseline_clean.json` targeting a new output root
+`/home/rnag/PULSEJET_validation/stage3/baseline_run_clean`, then ran:
+
+    singularity exec --cleanenv \
+      "$HOME/PULSEJET_validation/images/inception_lite.sif" \
+      env PYTHONNOUSERSITE=1 python3 -m inception_lite \
+      --config "$HOME/PULSEJET_validation/stage3/baseline_clean.json" \
+      --perform-folds yes
+
+**Reported SUCCESS** and created
+`baseline_run_clean/case_0001/noise_baseline_fixed_baseline_stationary_case_0001.fil`.
+The wrapper's success is emitted *after* `fold_truth`, which checks
+PulsarX created an archive and, if necessary, generates a plot from it.
+Next user action: list and inspect output products, fold log/archive/
+profile, then independent PULSEJET search. No actual PULSEJET search
+or frequency/DM recovery measurement yet. Source code changes only on
+development branches; immutable SIFs unmodified.
