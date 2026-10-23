@@ -354,3 +354,26 @@ subtracted or simply used for DM-trial planning. Then run a
 time it with whole-process `/usr/bin/time`.
 No changes to immutable archive file, existing distillers,
 or search algorithm.
+
+
+### Related M62 beam header cross-check (different file) (2026-10-23)
+
+User separately supplied a detailed SIGPROC summary from **a different file**,
+`/archive1/ridolfi/DATA/MeerKAT/ALL_TRAPUM_GC_CENTRAL_BEAMS/M62_18U-trapum-pgb_cfbf00010sub_r1.fil`;
+do NOT conflate it with our selected `...00001sub_CB.fil` (291-byte header, `source_name=J1701-3006B`).
+
+| Field | Separate `...00010sub_r1.fil` |
+|---|---|
+| Header bytes | 287 |
+| Source name | M62_UHF |
+| Observation UTC | 2022-04-20 23:13:45.4912 |
+| MJD start | 59689.96788762954384 |
+| RA, Dec | 17:01:13.5500, -30:06:55.3000 |
+| Time sample | 60.2352941176 us |
+| Channels and 8-bit type | 256, 8-bit unsigned |
+| fch1/foff | 1086.87109375 MHz / -2.125 MHz |
+| Band centre and total bandwidth | 815.93359375 MHz, 544 MHz |
+| Samples / duration | 59,285,407 / 3571.07392753 s |
+
+Shared sample/channel/duration properties independently corroborate the observation setup. The source naming, coordinates, start time and header byte count differ, so they are **not interchangeable**.
+Published M62 TRAPUM processing records incoherent pre-dedispersion at DM 114.00 pc cm^-3, RFI cleaning and channel downsampling to 256 before storage (Vleeschower et al. 2024, MNRAS 530,1436, https://academic.oup.com/mnras/article/530/2/1436/7632774). This strengthens the need to verify what DM values the existing search software expects for this preprocessed observation. Neither file header itself explicitly records `refdm`.
