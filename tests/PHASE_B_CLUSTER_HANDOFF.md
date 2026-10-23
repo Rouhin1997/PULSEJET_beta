@@ -399,3 +399,41 @@ Log ended `all done`.
 - After candidate check, use XML-to-PulsarX converter, fold matching
   searched segment and compare to truth fold. Preserve intermediate
   files and avoid modifying production/main branches.
+
+
+## Stage 3 first blind frequency recovery: 2026-10-23
+
+User inspected `/home/rnag/PULSEJET_validation/stage3/search_stationary_01/overview.xml`,
+which lists candidate 0 with:
+
+- `period = 0.0199999252322131 s` (injected 0.0200000000000000 s,
+  discrepancy ≈74.77 ns; recovered frequency ≈50.000187 Hz);
+- `dm=10`, `acc=0`, `jerk=0`, `nh=3`;
+- **reported search S/N = 83.4094009399414**, injection input S/N target 80.
+  These definitions need not be numerically identical;
+- all 3 final candidates survived later distillation at this single
+  DM/template point; top candidate is the injected ~50 Hz source.
+- XML metadata `polynomial_reference_epoch=segment_midpoint`,
+  `polynomial_reference_velocity=zero`,
+  `polynomial_sampling=nearest_neighbour`,
+  `segment_start_sample=0`,
+  `segment_nsamples=1048576`,
+  `segment_pepoch=60000.0015170371` (full 262.144-second midpoint).
+  One DM `10`, bank one row `0 0`, GPU NVIDIA A40, CUDA 12.3.
+
+**FIRST INDEPENDENT BLIND SPIN-FREQUENCY RECOVERY ACHIEVED** from the
+synthetic INCEPTION-Lite injection through actual PULSEJET GPU search.
+Important scientific qualification: DM, acceleration and jerk
+were fixed to injected truth by trial files; do not claim these
+parameters were blindly recovered or sensitivity/false alarm calibrated.
+
+The user's PulsarX truth profile PNG (user inspected/uploaded) shows
+a clear single narrow pulse at phase ~0.56; baseline ~-2600 archive
+units, peak ~11500 (approx); integrated pulse morphology coherent.
+Truth fold is separate from recovery fold, yet to compare.
+
+NEXT: convert actual PULSEJET overview.xml using installed
+`pulsejet_xml_to_pulsarx` to `search_stationary_01/recovered_top.cands`
+and manifest with `--min-snr 7 --limit 1`, inspect the 7-column
+candidate and its epoch. Then fold exactly matching observation and
+compare recovered fold to known-truth fold.
