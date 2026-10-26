@@ -650,3 +650,23 @@ On `frontend2`, user checked the actual per-case INCEPTION-Lite logs for all fou
 | W4 | 128.0676625 | 1.8196374347275746 | 30 | node3 RUNNING (66453) |
 
 No Python traceback in the user-shared tails; logs show the injector's worker pool is initialized. **No chunk-progress messages were present yet**, and success must not be inferred. User may safely disconnect, since Slurm batch jobs are independent of their interactive login session. On return (Monday), query `sacct -j 66450,66451,66452,66453 --format=JobID,JobName,State,ExitCode,Elapsed,NodeList`, inspect latest Slurm logs + per-case `inject.log`, verify exactly four final `.fil` outputs and up to twenty `.ar` PulsarX truth archives before plotting or attempting search. In particular the source has only a 1D pulse-profile fallback; user requested full authentic PulsarX folded pulse/time/frequency diagnostic, so create one from actual .ar archive as a separate validation step. Don't claim a 20/20 fold success without product checks.
+
+
+### M62 20-source weekend campaign successfully completed (results checked 2026-10-26)
+
+**Confirmed actual execution results (user `sacct -X` and file/log verification on frontend1).** Four jobs submitted 2026-10-23; finished Slurm state **COMPLETED, ExitCode `0:0`** on node2/node3:
+
+| Window | Slurm ID | Node | Slurm elapsed | Launcher elapsed | Injected filterbank | PulsarX `.ar` | PNG | Manifest |
+|---|---:|---|---|---:|---|---:|---:|---|
+| W1 | 66450 | node2 | 01:36:44 | 5803 s | 3,794,266,147 bytes | 5 | 5 | present |
+| W2 | 66451 | node2 | 01:35:23 | 5721 s | ~3.6 GB | 5 | 5 | present |
+| W3 | 66452 | node3 | 01:45:36 | 6334 s | ~3.6 GB | 5 | 5 | present |
+| W4 | 66453 | node3 | 01:42:54 | 6171 s | ~3.6 GB | 5 | 5 | present |
+
+Four runs overlapped; makespan roughly 1h45m36s (6336s) measured as slowest Slurm elapsed, not sum of job times. Total verified output 4 injected ~3.6G .fil, 20 PulsarX `.ar`, 20 PNG, 4 `run_manifest.json`; full signed manifests and fold logs remain for detailed inspection. Filename convention `m62_15m_injections/W#/case_0001/W#_M62_background_m62_w#_five_injections_20261023_case_0001.fil`. The `.fil` output is separate from background and archive read-only input.
+
+At completion `inject.log` prints `bits flipped: <count>/<total> (<fraction>)` per window, reflecting numeric values altered by injection in upstream code (despite wording 'bits'): W1 **8,506,432/3,794,265,856 = 0.224%**; W2 **7,775,472/3,794,266,112 = 0.205%**; W3 **7,395,029/3,794,266,112 = 0.195%**; W4 **4,733,987/3,794,266,112 = 0.125%**. These aren't a recovery metric. W1 displayed output file size 3,794,266,147 bytes = 291-byte SIGPROC header plus 3,794,265,856 data bytes.
+
+**Scientific status:** all four jobs ended zero and outputs exist, meaning INCEPTION and PulsarX orchestrated successfully; the archives' correctness, pulse coherence, S/N, dispersion correction, profile diagnostics, phase/time/frequency behavior remain to be validated. There is still the known PULSEJET PeakFinder lower frequency-bound bug, and **no recovery searches of these injected filterbanks have occurred yet**. Existing fallback PNG from `inception_lite/fold_plots.py` is phase-profile-only, not full 3-panel pulsar plot; user wants authentic time-phase and frequency-phase plots from PulsarX `.ar` archives.
+
+**Immediate next step:** inspect W1/I01 (stationary, high S/N control) `.ar` FITS SUBINT dimensions, data shape, and `fold.log`, without modifying; then construct honest full multi-panel diagnostic from PulsarX archive including polarization/scaling/weights as necessary. If this verifies, inspect lower-S/N and nonzero-jerk truth folds across windows and adjust scientific validation plan before editing search code.
