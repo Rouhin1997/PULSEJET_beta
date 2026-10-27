@@ -817,3 +817,51 @@ optional stationary-only control before interpreting motion recovery.
 User executed `bash scripts/run_m62_w1_i02_acceleration_pilot.sh` on `node3` after clean fast-forward pull to `d3e0ceb`. Pinned pre-fix PULSEJET A40 SIF enumerated two A40 GPUs and completed **exit status 0, outer wall time 14 s**. Read existing injected M62 W1 `.fil`; centered segment `--start_sample 5313523 --nsamples 4194304 --fft_size 4194304` (actual dedispersed samples transferred: `4193609`), near full-window injection midpoint. One DM=4 trial; a/j bank = `(0,0),(20,0),(40,0),(60,0),(80,0)`; requested `--min_freq 128 --max_freq 270` (unpatched PeakFinder effective start ~256 Hz) contains injected I02 f=263 Hz. All five polynomial resampling/FFT/harmonic stages ran and finished. Candidate diagnostics: 29 raw spectral detections, 8 after per-template harmonic grouping, 8 before and **3 after polynomial Doppler distillation**, 3 final candidates, **5 nested associations**, 1 DM and 5 template trials, reported internal per-DM processing 0.072171s (not outer wall time). Log `$HOME/PULSEJET_validation/stage7_m62_recovery/w1_i02_dm4_acc_bank_center4m_v1.log`; XML `.../w1_i02_dm4_acc_bank_center4m_v1/overview.xml`.
 
 **Not yet demonstrated:** candidate frequency near 263 Hz and candidate acceleration +40 m/s²; no candidate `<period>`, `<acc>`, or `<snr>` records were pasted yet. The presence of 5 nested nodes does not identify which templates generated them because `overview.xml` only stores association counts. Next action is a read-only parse of all 3 XML candidate records, listing id, frequency=1/period, acceleration, jerk, harmonic number, S/N and number of associations. Do not claim acceleration recovery until those fields are checked.
+
+
+### Stage 7 W1/I02 accelerated injection successfully recovered (2026-10-27)
+
+User parsed the three output candidates from the completed centered `2^22`-sample W1/I02 real-background GPU acceleration-bank search:
+
+| ID | Frequency (Hz) | DM (pc/cc) | Acc (m/s²) | Jerk (m/s³) | Search S/N | Harmonic level `nh` | Associations |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| **0** | **263.000305** | **4** | **+40** | **0** | **29.89** | 3 | 4 |
+| 1 | 261.626343 | 4 | 0 | 0 | 8.61 | 3 | 1 |
+| 2 | 264.936340 | 4 | +40 | 0 | 8.08 | 4 | 0 |
+
+Injection truth `M62_W1_I02`: **f=263.000000 Hz**, DM=4, a=+40 m/s², j=0, full-window target S/N=60. Leading candidate frequency error **+0.000305 Hz** = approximately **0.077 Fourier bins** at the 252.645-s controlled center segment. Correct acceleration template +40 m/s² was selected from bank `0,20,40,60,80` at fixed DM=4 and j=0; best candidate search S/N **29.89**, four nested associations. These do not expose per-template S/N records, so we cannot yet tell whether neighboring acceleration templates were almost as strong without individual-template control searches. The full-window injected S/N target versus segment search S/N is not a directly calibrated comparison.
+
+**Conclusion:** Stage 7 W1/I02 controlled frequency discovery and discrete acceleration-template selection **PASSED**, alongside Stage 7 stationary W1/I01. Not yet unconstrained acceleration estimation, blind DM/jerk recovery, full-window completeness or search false-alarm calibration. Original polynomial resampler, PeakFinder (including known bug), and distillers unchanged.
+
+### Stage 7 W3/I13 jerk-template selection pilot staged, not run (2026-10-27)
+
+New guarded launcher:
+`scripts/run_m62_w3_i13_jerk_pilot.sh`, commit
+`711990715c33e1fc1e5a3bd6cb72e97135f34a47`.
+Target W3/I13 truth `f=317 Hz, DM=20 pc/cc, a=0 m/s²,
+j=+0.18 m/s³`, target injected S/N=50. A 4-minute segment is too
+short to separate this jerk strongly from zero because the phase
+perturbation at the segment edge is `f*j*T^3/(48*c)`, roughly
+0.064 cycles for T=253 s. Instead read an exactly **centered
+8,388,608 (2^23)-sample**, roughly **505.19-second** segment from
+`W3/case_0001/*.fil`, start sample **3,216,372** (full W3 samples
+14,821,352), with `--nsamples == --fft_size == 8388608`.
+This makes the polynomial kernel midpoint and reported epoch coincide
+with the INCEPTION injection's full-window midpoint, without an
+extra 2^24 FFT padding shift. Edge jerk phase is then ~0.51 cycles.
+Dedispersion itself can still trim/pad some samples; do not call this
+a perfect 100%-filled FFT.
+
+One fixed DM=20 trial, 15 two-dimensional (a,j) templates:
+a={-20,0,+20} m/s² × j={-0.18,0,+0.09,+0.18,+0.27} m/s³.
+Truth included; neighboring/wrong-sign/stationary controls included.
+Requested frequency limits `154–325 Hz`, corresponding to effective
+roughly `308–325 Hz` in the old unpatched PeakFinder SIF, enclosing
+317 Hz. Uses `-t 1 -n 4 -m 7 --candidate_diagnostics -v`. 
+Unique output/log/provenance under
+`$HOME/PULSEJET_validation/stage7_m62_recovery/w3_i13_dm20_aj_bank_center8m_v1`;
+refuses overwrite. No GPU run performed yet. After output, inspect
+candidate f, DM, acceleration, jerk, S/N, harmonic number, associations;
+follow with matched single-template j=0 versus j=+0.18 controls to
+demonstrate a real jerk sensitivity gain, rather than relying solely
+on the distiller's bank winner.
