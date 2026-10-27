@@ -763,3 +763,31 @@ Candidate diagnostics: **12 raw spectral detections**, 5 after per-template harm
 
 
 **Candidate-list continuation provided (2026-10-27):** W1/I01 4-minute pilot `overview.xml` yielded candidate 0 search S/N `52.2926330566406`, DM=0, a=j=0, nh=3, `folded_snr=0` because no independent fold was run in this search step. Its period was **not included** in the user's `tail -n 110` excerpt; therefore do **not** yet claim 247-Hz frequency agreement. Other survivors (computed as reciprocal of XML period) are approximately 222.1535034 Hz (S/N 10.48), 256.1626587 Hz (10.10), 254.7298279 Hz (9.60), 228.1084900 Hz (8.73). GPU-reported times: dedispersion 3.9924s, reading 0.1013s, searching 0.1457s, total internal 8.2136s, compared with outer measured wall time 14s. Injected I01 target S/N 100 on the full 892.768-s file; a naive square-root time adjustment for 252.645s gives ~53.2, close to candidate 0 S/N 52.29, **but injection target and FFT search S/N are different definitions, so this is contextual rather than calibrated confirmation**. Next query: show XML period and DM for candidate id=0, verify 1/period near 247 Hz and offset in Fourier bins (1/252.645 Hz); only then mark the first frequency recovery.
+
+
+### Stage 7 W1/I01 first independent stationary frequency recovery PASSED (2026-10-27)
+
+The previously missing candidate-0 XML fields have now been supplied by the user:
+`<period>0.0040485812452019</period>`, `<dm>0</dm>`, `<acc>0</acc>`,
+`<jerk>0</jerk>`, `<nh>3</nh>`, search `<snr>52.2926330566406</snr>`.
+This corresponds to **247.00010681152344 Hz** versus injection truth
+**247.00000000000000 Hz**, frequency error **+0.00010681152344 Hz**,
+period error **−1.75075 ns**, approximately **0.02699 Fourier frequency bins**
+for the 4,194,304-sample, 252.645135-s segment. Candidate 0 is the
+strongest of five final candidates; other survivor S/N values
+10.48, 10.10, 9.60 and 8.73. Successful executed pipeline with
+outer wall time **14 s** and reported internal total **8.214 s**.
+
+**Interpretation:** controlled *independent search-frequency* recovery of
+the real-background W1/I01 injection at the correct spin frequency, with
+DM=0 and polynomial template (a,j)=(0,0) supplied as trial inputs. This
+does NOT establish blind DM/a/j estimation, full-window completeness,
+calibrated detection sensitivity, or correctness of the known unpatched
+PeakFinder lower-frequency bound. The 247-Hz signal is in the provisional
+effective 220–260-Hz search band; old source remains unmodified.
+No independent recovered-candidate PulsarX fold has yet been completed
+for this Stage 7 search. Next validation is a controlled centered
+multi-template acceleration search for W1/I02 (263 Hz, DM=4, a=+40 m/s²,
+j=0), including neighboring templates, followed by jerk-bearing cases.
+Avoid comparing segment-midpoint parameters against full-window midpoint
+without time propagation.
