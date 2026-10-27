@@ -3,6 +3,7 @@
 #include <thrust/system/cuda/execution_policy.h>
 #include <thrust/device_vector.h>
 #include <map>
+#include <cstddef>
 
 class cached_allocator
 {
