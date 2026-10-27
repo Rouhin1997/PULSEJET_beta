@@ -77,3 +77,70 @@ all done
 The `0.098978 s` diagnostic is **not** an end-to-end wall-clock benchmark, and the candidate significance/physical identity has not yet been inspected. Outputs: `$HOME/PULSEJET_validation/stage6_m62/baseline_1m_frequency_fix_test_01/run.log`, likely `overview.xml` in the same output dir; require user verification before treating candidates as meaningful.
 
 **Source is still unmodified.** Before actual patching obtain user approval. Proposed minimal repair: compute the start bound in the same Fourier-bin units as the maximum, without `orig_size/size`; clamp both to valid spectrum indices, validate lower<=upper and any `count`/host-array bounds; test ordinary and harmonic-folded bin widths, valid `[200,350]` frequency range, and empty ranges. Do not change the polynomial resampler or third-party distillers. Then rebuild a *new pinned image* and rerun the original `[200,350]` search. Old pinned SIF stays available as a baseline for the A/B regression.
+
+
+## 2026-10-27 — Source repair committed, CPU regression passes; new GPU image acceptance pending
+
+Following the user's approval to fix the bug, the correction was implemented
+**only on `dev/polynomial-search`**, not on master and not in the
+previously pinned `/home/rnag/PULSEJET_validation/images/pulsejet_dev.sif`.
+
+The new pure C++17 header
+`include/transforms/peakfinder_bounds.hpp` calculates the search interval:
+
+```text
+harmonic_scale = 2^nh
+first = ceil(min_freq / frequency_bin_width * harmonic_scale)
+stop  = floor(max_freq / frequency_bin_width * harmonic_scale) + 1
+clamp first and stop to [0, spectrum_nbins]
+```
+
+`[first,stop)` is an ordinary half-open integer interval and both user
+frequency edges are inclusive. No `orig_size / spectrum_size` factor
+appears. The returned candidate frequency uses the same transform in
+reverse: `f_peak = peak_bin * frequency_bin_width / 2^nh`.
+Empty ranges are returned without touching CUDA/Thrust. Invalid user
+frequency windows and non-finite coordinates are rejected.
+
+This fixes the earlier approximately **2× incorrect minimum
+frequency** and handles Nyquist and harmonic-level limits consistently.
+Before any host copy, the peak extraction wrapper also verifies that
+its returned candidate count fits the existing bounded host arrays.
+This is specifically a safety check for RFI-heavy scans; it does not
+change the detection threshold or distillation.
+
+New isolated CPU test `tests/test_peakfinder_bounds.cpp` is integrated
+into `tests/run_cpu_tests.sh` (through `test_peakfinder_bounds`) and
+automatically run by `.github/workflows/cpu-tests.yml`. It reproduces
+the originally failing `[200,350]` Hz setup with the actual M62
+8,388,608-sample FFT bin spacing, checks harmonic search stages nh0..4,
+frequency reporting, clipped/empty windows, invalid arguments and
+host buffer capacity.
+
+**Independent CI evidence:** https://github.com/Rouhin1997/PULSEJET_beta/actions/runs/40520331689
+— completed **success**, all CPU C++17 and Python wiring tests
+passed. No CUDA/Peasoup binary was built or executed in that CPU
+workflow.
+
+**Explicit remaining acceptance gates:**
+
+1. Build a new, independently version-pinned `dev-polynomial-` container
+   from the revised code and verify the NVCC build succeeded.
+2. Pull it to a **new filename** on the HPC; retain the old
+   `pulsejet_dev.sif` unchanged.
+3. Run `scripts/run_m62_w1_peakfinder_fixed_band_regression.sh`
+   with the new SIF and `--min_freq 200 --max_freq 350` to confirm
+   W1/I01 at 247 Hz and W1/I02 at 263 Hz are both recovered at
+   their known DM and acceleration, with no old half-frequency workaround.
+4. Optionally rerun the previous W3/I15 off-grid bank with the *true*
+   lower band limit ~374 Hz and compare identical-source S/N and
+   candidates with the prior pinned image.
+5. Document container digest, A40 driver and real end-to-end wall
+   times before treating this as production-ready for a 100-source
+   population recovery test.
+
+**IMPORTANT:** the present GitHub code may be fixed while an older HPC
+SIF still contains the old bug. The two executables must not be
+interchanged in experiment logs. An older script passing
+`--min_freq 187` to *approximate* 374 Hz must not be assumed to have
+its old effective frequency limits in the new image.
