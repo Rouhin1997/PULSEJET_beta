@@ -1069,3 +1069,37 @@ User explicitly approved correcting the long-known factor-of-two **minimum frequ
 **Deployment gate:** publish a separately tagged dev CUDA/PulsarX image from latest correction, pull to new HPC SIF path, run new 200–350Hz fixed-band regression, and archive compiler/container provenance, recovered candidates and timing before using corrected peak search for blind-frequency recovery statistics. Do not use old `--min_freq = desired/2` workaround with the corrected binary.
 
 **Bank sizing context for planned wider tests:** our metric rectangular grid, f_design=400Hz, T=505.2902701172523s, jerk [−0.30,+0.30]m/s³, predicts `a=±230m/s²`: 144 templates at mu=0.30, 415 at mu=0.10, 1350 at mu=0.03; `a=±250m/s²`: 156,450,1467 respectively. These are **per DM** baseline counts in the quadratic coherent-power metric, not total DM trials nor calibrated harmonic-sum S/N. Large f/T or harmonic-aware constraints can raise counts substantially.
+
+
+### 2026-10-27 — PeakFinder repaired-source image build requested
+
+A new **version-pinned CUDA 12.3.2 / A40 sm_86 development container build**
+was explicitly triggered using the dev-branch workflow's existing marker
+`ci/build-dev-request.txt`, source commit
+`fa2dfdcd2573d41f4751fce6d429c63a34344d05`.
+
+- [GitHub Actions development image run](https://github.com/Rouhin1997/PULSEJET_beta/actions/runs/40521035662).
+- [GitHub Actions CPU test run](https://github.com/Rouhin1997/PULSEJET_beta/actions/runs/40521035415).
+- On build success, the Docker Hub tag is
+  `rouhin1997/pulsejet:dev-polynomial-fa2dfdcd2573d41f4751fce6d429c63a34344d05`
+  (in addition to a mutable `dev-polynomial-latest` convenience tag).
+  For science, **always pull the immutable commit-specific tag**.
+- At log-writing time, image build and A40 functional regression were
+  **in progress / not completed**. Do not infer success from the
+  source-level CPU test alone.
+- New HPC image filename should be
+  `/home/rnag/PULSEJET_validation/images/pulsejet_peakfinder_fixed_fa2dfdcd.sif`,
+  leaving `images/pulsejet_dev.sif` as an immutable old-bug baseline.
+- Pull via Singularity only after the build succeeds:
+
+```bash
+cd /home/rnag/PULSEJET_validation
+singularity pull images/pulsejet_peakfinder_fixed_fa2dfdcd.sif \
+  docker://rouhin1997/pulsejet:dev-polynomial-fa2dfdcd2573d41f4751fce6d429c63a34344d05
+PULSEJET_PATCHED_SIF=/home/rnag/PULSEJET_validation/images/pulsejet_peakfinder_fixed_fa2dfdcd.sif \
+  bash PULSEJET_dev_source/scripts/run_m62_w1_peakfinder_fixed_band_regression.sh
+```
+
+Verify the new GPU run actually finds W1/I01 at 247 Hz and W1/I02 at
+263 Hz with user band `[200,350]` Hz, and record fresh SIF digest.
+No detection-completeness claims should precede those results.
