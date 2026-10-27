@@ -18,6 +18,7 @@
 #include <kernels/defaults.h>
 #include <kernels/kernels.h>
 #include <transforms/polynomial_timing.hpp>
+#include <transforms/peakfinder_bounds.hpp>
 #include <utils/exceptions.hpp>
 #include <utils/utils.hpp>
 #include <thrust/adjacent_difference.h>
@@ -932,8 +933,15 @@ int device_find_peaks(int n, int start_index, float * d_dat,
 		      float thresh, int * indexes, float * snrs,
 		      thrust::device_vector<int>& d_index,
 		      thrust::device_vector<float>& d_snrs,
-		      cached_allocator& policy)
+		      cached_allocator& policy,
+              std::size_t host_capacity)
 {
+  if (start_index < 0 || n < start_index)
+    throw std::invalid_argument("PeakFinder invalid or inverted Fourier-bin range");
+  if (static_cast<std::size_t>(n - start_index) > d_index.size() ||
+      static_cast<std::size_t>(n - start_index) > d_snrs.size())
+    throw std::runtime_error("PeakFinder device scratch capacity too small");
+  if (n == start_index) return 0;
 
   using thrust::tuple;
   using thrust::counting_iterator;
@@ -949,6 +957,9 @@ int device_find_peaks(int n, int start_index, float * d_dat,
   //apply execution policy to get some speed up
   int num_copied = thrust::copy_if(thrust::cuda::par(policy), zipped_iter, zipped_iter+n-start_index,
 				   zipped_out_iter,greater_than_threshold(thresh)) - zipped_out_iter;
+  // Critical for RFI-heavy wide-DM searches: host arrays are bounded.
+  // Reject excess peaks BEFORE copying into the host-side fixed buffers.
+  pulsejet::peakfinder::validate_host_peak_count(num_copied, host_capacity);
   thrust::copy(d_index.begin(),d_index.begin()+num_copied,indexes);
   thrust::copy(d_snrs.begin(),d_snrs.begin()+num_copied,snrs);
   ErrorChecker::check_cuda_error("Error from device_find_peaks;");
