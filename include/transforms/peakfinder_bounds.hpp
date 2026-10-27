@@ -28,6 +28,15 @@ struct BinRange {
   int count() const { return end - begin; }
 };
 
+// Copying more candidates than the host scratch buffers can hold used
+// to overwrite PeakFinder's fixed-size arrays on a high-occupancy/RFI trial.
+inline void validate_host_peak_count(int found, std::size_t capacity) {
+  if (found < 0 || static_cast<std::size_t>(found) > capacity) {
+    throw std::runtime_error(
+        "PeakFinder detected more peaks than its host scratch buffers can hold");
+  }
+}
+
 inline double fundamental_frequency_for_bin(
     int bin, double bin_width_hz, unsigned int harmonic_level) {
   if (bin < 0 || !std::isfinite(bin_width_hz) || bin_width_hz <= 0.0
