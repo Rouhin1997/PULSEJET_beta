@@ -731,3 +731,20 @@ The user executed `scripts/batch_m62_pulsarx_diagnostics.py` from updated INCEPT
 **Next stage (not yet executed): actual GPU candidate recovery from injected observational `.fil`.** Distinguish a controlled fixed-DM/fixed-template frequency recovery from an independently blind search in DM, acceleration and jerk. Current pinned PULSEJET SIF still has documented `PeakFinder` lower-band indexing error; reported `--min_freq` effectively behaves approximately as `2 × min_freq`, and an invalid internal range can crash CUDA/Thrust. A **provisional pilot** can use `--min_freq 110 --max_freq 260` to cover W1/I01's expected 247 Hz with effective ~220–260 Hz and stationary DM0 polynomial template, at 2^22 samples (252.65 s, `--nsamples == --fft_size`). PULSEJET source fix/regression/new pinned SIF still required before claiming complete frequency coverage or survey sensitivity.
 
 For longer tests, full 14,821,351/352-sample windows (892.768 s) need `--fft_size 16777216` with explicit `--nsamples`, care with padding vs physical midpoint, and bank mismatch design. The acceleration/jerk truth parameters are defined at the *full window midpoint*, so shorter or off-center segments require transforming reference acceleration and frequency (`a(t)=a_0+j_0\,\Delta t`) before comparing search peaks. Do not assume the stationary 4m pilot verifies jerk recovery. All `.fil` inputs remain read-only; search outputs and logs must use new unique directories. Existing observational M62 background may contain natural pulsars/RFI, so candidate IDs must be cross-matched with injected frequency and DM and checked against uninjected controls. Do not change existing third-party polynomial Doppler distiller without a specific discussion.
+
+
+**Stage 7 W1/I01 pilot launcher staged (not executed on HPC):**
+`scripts/run_m62_w1_stationary_recovery_pilot.sh`, commit
+`036fcc402f07c541012aa18bf285b66916cc09dd`. This guarded script
+requires an allocated GPU with visible A40, reads existing
+`W1/case_0001/*.fil`, writes a fresh
+`$HOME/PULSEJET_validation/stage7_m62_recovery/w1_i01_dm0_a0j0_4m_v1/`
+search plus separate terminal log and provenance, and refuses output overwrite.
+It runs one DM=0, one (a,j)=(0,0) template, `--start_sample 0
+--nsamples 4194304 --fft_size 4194304 -t 1 -n 4 -m 7
+--min_freq 110 --max_freq 260 --candidate_diagnostics -v`.
+The known old PeakFinder bug makes the effective search band approximately
+220–260 Hz, encompassing 247 Hz I01 but not the M62 natural ~278 Hz pulsar.
+This is a **restricted-band frequency discovery at fixed known DM and motion**,
+and is not a full-parameter blind recovery. Check `overview.xml` and candidate
+frequency/S/N before declaring success; user must explicitly run it on cluster.
