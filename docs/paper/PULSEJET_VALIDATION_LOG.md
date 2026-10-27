@@ -810,3 +810,10 @@ four dimensions. Guarded launcher records log/provenance and refuses
 overwrite; user must execute on allocated GPU node. Inspect candidates
 near 263 Hz, their a/j and S/N; compare competing templates and
 optional stationary-only control before interpreting motion recovery.
+
+
+### Stage 7 centered W1/I02 acceleration-bank GPU execution: operationally passed; candidate parameters pending (2026-10-27)
+
+User executed `bash scripts/run_m62_w1_i02_acceleration_pilot.sh` on `node3` after clean fast-forward pull to `d3e0ceb`. Pinned pre-fix PULSEJET A40 SIF enumerated two A40 GPUs and completed **exit status 0, outer wall time 14 s**. Read existing injected M62 W1 `.fil`; centered segment `--start_sample 5313523 --nsamples 4194304 --fft_size 4194304` (actual dedispersed samples transferred: `4193609`), near full-window injection midpoint. One DM=4 trial; a/j bank = `(0,0),(20,0),(40,0),(60,0),(80,0)`; requested `--min_freq 128 --max_freq 270` (unpatched PeakFinder effective start ~256 Hz) contains injected I02 f=263 Hz. All five polynomial resampling/FFT/harmonic stages ran and finished. Candidate diagnostics: 29 raw spectral detections, 8 after per-template harmonic grouping, 8 before and **3 after polynomial Doppler distillation**, 3 final candidates, **5 nested associations**, 1 DM and 5 template trials, reported internal per-DM processing 0.072171s (not outer wall time). Log `$HOME/PULSEJET_validation/stage7_m62_recovery/w1_i02_dm4_acc_bank_center4m_v1.log`; XML `.../w1_i02_dm4_acc_bank_center4m_v1/overview.xml`.
+
+**Not yet demonstrated:** candidate frequency near 263 Hz and candidate acceleration +40 m/s²; no candidate `<period>`, `<acc>`, or `<snr>` records were pasted yet. The presence of 5 nested nodes does not identify which templates generated them because `overview.xml` only stores association counts. Next action is a read-only parse of all 3 XML candidate records, listing id, frequency=1/period, acceleration, jerk, harmonic number, S/N and number of associations. Do not claim acceleration recovery until those fields are checked.
