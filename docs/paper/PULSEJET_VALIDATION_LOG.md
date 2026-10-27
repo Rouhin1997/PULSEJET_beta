@@ -971,3 +971,29 @@ Uses existing W3 injected `.fil`, centered segment `start_sample=3216372,nsample
 This is the first actual test of external bank *interface + template placement + GPU recovery*. It does **not** change the code or source, distiller or injector.
 
 **Interpretation policy:** `1 - (SNR_generated/SNR_truth)` is an empirical change in **PULSEJET's harmonic-summed spectral statistic** on this fixed observation, *not* the same as `μ_pred` (fractional coherent **power** loss at small mismatch). True recovery depends on candidate near 383 Hz and correct SNR/DM validation, not merely GPU exit0. Further tests need a realistic shared DM and a/j bank and recovered candidate folding.
+
+
+### Stage 8 W3/I15 FIRST GENERATED OFF-GRID BANK GPU RECOVERY: PASS, metric–S/N distinction observed (2026-10-27)
+
+User ran `bash scripts/run_m62_w3_i15_generated_bank_integration.sh` on node3 from PULSEJET dev source after `git pull --ff-only` fast-forward to `75fa019`. **SHA-checked actual externally generated bank** from `PULSEJET_templatebank_source/outputs/w3_i15_reference.txt`:
+`969af3da3f5a271d36af4ed98808a6d68337592eaa1d127a5159faf95a02a29f`.
+Passed independent preflight: 12 two-column rows, source excluded, correct JSON design, same 505.2902701172523-s segment and bank metric, two equal-distance nearest templates `(-240,-0.2916666667)` and `(-230,-0.2916666667)`, each **μ_metric=0.164314011022** for I15 `a=-235, j=-0.25`.
+
+**Exactly previous injection/search setup**: existing `stage6_m62/m62_15m_injections/W3/case_0001/W3_M62_background_m62_w3_five_injections_20261023_case_0001.fil`, DM=8 fixed, `start_sample=3216372`, `nsamples=fft_size=8388608`, `-t 1 -n 4 -m 7 --min_freq 187 --max_freq 395` (explicit workaround for old image's PeakFinder bug), image `images/pulsejet_dev.sif`; 8,387,219 samples transferred after DM8 dedispersion/padding. All 12 GPU polynomial templates executed, search exit=0, **outer wall 18s**.
+
+**Candidate diagnostics:** 1 DM; 12 polynomial templates; **244 raw spectral detections → 47 after per-template harmonic distillation → 4 after per-DM polynomial distillation → 4 final**, with **44 nested associations**.
+
+| ID | f (Hz) | delta f vs. 383 (Hz) | DM | a (m/s²) | j (m/s³) | Spectral search S/N | nh stage | nassoc | mu_metric vs. I15 |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| **0** | **383.000153** | **+0.000153** | **8** | **−230** | **−0.2916666567** | **25.15** | **3** | **11** | **0.1643** |
+| 1 | 379.436371 | −3.563629 | 8 | −250 | −0.0750 | 19.60 | 2 | 12 | 1.6384 |
+| 2 | 379.504150 | −3.495850 | 8 | −240 | −0.0750 | 12.61 | 2 | 11 | 0.4717 |
+| 3 | 379.377472 | −3.622528 | 8 | −220 | +0.1417 | 9.37 | 2 | 10 | 2.9446 |
+
+XML `/home/rnag/PULSEJET_validation/stage8_m62_generated_bank/w3_i15_dm8_generated_grid12_center8m_v1/overview.xml`, same-base `.log`, `_provenance.txt`. **First standalone metric-generator → external two-column bank → GPU jerk/acceleration resampling → polynomial distiller → blind-frequency injection recovery PASS.** I15 injection top candidate found within 0.000153 Hz of injected 383 Hz (~0.077 Fourier bins). This is still one fixed-DM, known-range injection with known PeakFinder workaround, not survey completeness.
+
+**Differential versus Stage7 independent matched-truth single-template control:** exact injected a=−235, j=−0.25 search S/N **36.15**, f=382.999908Hz; generated-bank selected template a=−230, j≈−0.29167, S/N **25.15**, f=383.000153Hz; **S/N ratio 0.6956; 30.44% reduction**. Predicted μ=0.1643 is small-offset **fundamental coherent-power** mismatch, NOT the harmonic-summed spectral `snr` statistic, so the 30.44% difference is not by itself a metric-generation failure.
+
+**Source-code finding worth preserving:** `include/data_types/fourierseries.hpp` constructs harmonic-sum spectra with `nh=ii+1`; `src/kernels.cu` `harmonic_sum_kernel` stage 1 sums 2 harmonics, stage 2 sums 4, stage 3 sums **8 harmonics**, not the 3rd harmonic. The W3/I15 matched and off-grid candidates both report `nh=3` = 8-harmonic stage. The single fundamental-f metric can underrepresent power loss at harmonic k, whose leading-order phase mismatch is ~`k²*μ`. A numerical continuous-phase calculation for I15 nearest-template offsets `Δa=+5 m/s²`, `Δj≈−0.0416667 m/s³`, `f=383Hz`, `T=505.29s`, after projecting out a best-fitting linear frequency, gives coherent-power losses approximately **0.1518 (fundamental), 0.4836 (second harmonic), 0.7708 (third), 0.9155 (fourth)**. These are illustrative phase-model values, **not** GPU harmonic-sum S/N; at larger harmonic mismatch the quadratic approximation breaks down. Need decide later whether a harmonic-sensitive design frequency or explicit harmonic-integrated mismatch objective is required, with compute cost benchmarked.
+
+**Next isolated test advised:** search each of the two equally close off-grid templates **alone**, with same pinned filterbank, DM, segment, frequency band and hardware, comparing per-template S/N near 383Hz against 25.15 bank survivor and 36.15 matched-truth control. This distinguishes per-template response from polynomial-bank candidate selection, and tests whether the two equal quadratic distances give equal actual spectral S/N (not guaranteed due to finite-sample, higher-order, noise). No alteration to third-party distiller yet. Later injection campaigns should vary known mismatch at fixed truth/harmonic level, not treat one observed point as an empirical mismatch law.
