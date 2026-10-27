@@ -1025,3 +1025,28 @@ Read-only run outputs: `stage8_m62_generated_bank/w3_i15_dm8_nearest_grid_pair_c
 
 
 **Next controlled harmonic-stage comparison STAGED, not executed:** `scripts/run_m62_w3_i15_harmonic_mismatch_controls.sh`, first commit `b1d4a600ea3eb535098922bc20a71efe8327bb6a`. This read-only integration helper verifies the original 12-row generated bank SHA256 and extracts off-grid nearest-B (a=−230, j≈−0.2916667). It then executes four independent one-template searches on the same pinned W3 injected observation, segment and DM8: `a/j=truth` versus `a/j=off-grid B`, each using **`-n 1`** (unsummed fundamental + 2-harmonic sum) and **`-n 4`** (fundamental + 2/4/8/16-harmonic sums). The latter should reproduce prior S/N=36.15 exact and S/N=25.15 off-grid (subject to deterministic repeatability). By comparing the **relative off-grid/truth search-statistic ratios** separately at the two harmonic ranges, the test can distinguish a harmonic-sensitive mismatch penalty without changing Peasoup's pipeline, distillers, or injection data. These are still maximum detection-statistic values within each set, **not direct measurements of individual harmonic coherent power**. Output paths `stage8_m62_generated_bank/w3_i15_dm8_harmonic_sensitivity_pairs_center8m_v1*`, guarded against overwrite. Read-only provenance and parsed candidate table generated automatically.
+
+
+### Stage 8 W3/I15 harmonic-stage controlled comparison: PASS — strong harmonic dependence (2026-10-27)
+
+The user ran `bash scripts/run_m62_w3_i15_harmonic_mismatch_controls.sh` on node3, using the same W3 injected filterbank, fixed DM=8, centered `--start_sample 3216372 --nsamples 8388608 --fft_size 8388608`, pinned PULSEJET SIF and the same old PeakFinder workaround frequency band as earlier. All four standalone, one-motion-template experiments returned a candidate within 0.05Hz of I15 truth f=383Hz:
+
+| Motion model | CLI harmonic sum stages | Recovered frequency (Hz) | Δf (Hz) | Search S/N | Winning `nh` | Interpretation |
+|---|---:|---:|---:|---:|---:|---|
+| True (a,j)=(-235,-0.25) | `-n 1` | 382.999664 | −0.000336 | **18.93** | **1** | 2-harmonic stage |
+| True (a,j)=(-235,-0.25) | `-n 4` | 382.999908 | −0.000092 | **36.15** | **3** | 8-harmonic stage |
+| Off-grid B=(-230,-0.2916666667) | `-n 1` | 382.999664 | −0.000336 | **18.31** | **1** | 2-harmonic stage |
+| Off-grid B=(-230,-0.2916666667) | `-n 4` | 383.000153 | +0.000153 | **25.15** | **3** | 8-harmonic stage |
+
+Reported comparison:
+- `-n 1`: off-grid/truth spectral search S/N = **0.9671**, **3.29% reduction**.
+- `-n 4`: off-grid/truth spectral search S/N = **0.6956**, **30.44% reduction**.
+- Thus the practical S/N reduction increases dramatically when the eight-harmonic summed stage becomes available/selected. Both configurations return the injected spin frequency close to truth.
+- At matched motion, extending harmonic stages from `-n 1` to `-n 4` raises S/N from 18.93 to 36.15; at off-grid motion it raises S/N from 18.31 to 25.15. The per-stage statistics have different noise behavior and normalization; they are not independent coherent power measurements.
+- Both `-n 4` runs chose **`nh=3` (8 harmonics)** despite 16-harmonic being enabled; both `-n 1` chose **`nh=1` (2 harmonics)**. Avoid labeling `-n 4` winner as 16 harmonic.
+
+**Interpretation:** the comparison strongly supports the predicted additional vulnerability of higher-harmonic detection to imperfect acceleration–jerk templates. It does not establish a measured 16.43% fundamental power loss or independently validate the full harmonic response function. Changes in peak-bin selection, Fourier interpolation, noise, harmonic weighting and normalized detector statistics also enter. Consequently the bank's fundamental `mu=0.164314` is NOT calibrated as a bound on the **harmonic-summed spectral search S/N**; broad survey sensitivity and mismatch budget must be investigated through further controlled injections or harmonically resolved tests.
+
+Provenance from node3: `/home/rnag/PULSEJET_validation/stage8_m62_generated_bank/w3_i15_dm8_harmonic_sensitivity_pairs_center8m_v1_provenance.txt`. The same-prefix four XML/logs correspond to `truth_n1`, `truth_n4`, `offgrid_n1`, `offgrid_n4`. Scripts and prior experiments are unchanged.
+
+**Proposed next science gate:** vary deliberate motion mismatch at the same pulse shape, DM and observation (including `-n 1,2,3,4` subsets) to measure the harmonic-stage search response before choosing a practical maximum-mismatch tolerance for a broad generated bank. Do not automatically multiply f-design by 8 or 16, which may inflate a two-dimensional bank by roughly the square of that harmonic factor and should first be weighed against actual detection performance.
