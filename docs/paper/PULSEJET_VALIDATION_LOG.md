@@ -1103,3 +1103,37 @@ PULSEJET_PATCHED_SIF=/home/rnag/PULSEJET_validation/images/pulsejet_peakfinder_f
 Verify the new GPU run actually finds W1/I01 at 247 Hz and W1/I02 at
 263 Hz with user band `[200,350]` Hz, and record fresh SIF digest.
 No detection-completeness claims should precede those results.
+
+
+### 2026-10-27 — PeakFinder patched image publish confirmed; HPC pull initially attempted before publication
+
+After source commit `fa2dfdcd2573d41f4751fce6d429c63a34344d05` triggered build
+[run 40521035662](https://github.com/Rouhin1997/PULSEJET_beta/actions/runs/40521035662),
+the **CUDA image build and Docker Hub push completed successfully**.
+The Docker Buildx job log shows the immutable commit-specific tag
+`rouhin1997/pulsejet:dev-polynomial-fa2dfdcd2573d41f4751fce6d429c63a34344d05`
+pushed at **2026-10-27T14:32:48Z**; OCI manifest digest
+`sha256:104de49e88eb49f01ba91310f3691fda28c162eed7a493522504471f1926028e`.
+Workflow concluded `success` at **2026-10-27T14:33:12Z**.
+The same commit's [CPU CI run 40521035415](https://github.com/Rouhin1997/PULSEJET_beta/actions/runs/40521035415)
+also succeeded.
+
+The user initially attempted `singularity pull` before this publish completed,
+receiving `manifest unknown`; the follow-up regression script then correctly
+reported that the new SIF file was missing. **This is not a regression-test
+failure** and has no bearing on the patched source's GPU behavior.
+
+User instructed to retry the commit-specific tag, or, if unavailable,
+pull the exact OCI digest:
+
+```bash
+cd /home/rnag/PULSEJET_validation
+singularity pull images/pulsejet_peakfinder_fixed_fa2dfdcd.sif \
+  docker://rouhin1997/pulsejet@sha256:104de49e88eb49f01ba91310f3691fda28c162eed7a493522504471f1926028e
+
+PULSEJET_PATCHED_SIF=/home/rnag/PULSEJET_validation/images/pulsejet_peakfinder_fixed_fa2dfdcd.sif \
+  bash PULSEJET_dev_source/scripts/run_m62_w1_peakfinder_fixed_band_regression.sh
+```
+
+**Status:** built and published; HPC image pull and actual 200–350Hz
+A40 regression **not yet verified**. Retain original SIF unchanged.
