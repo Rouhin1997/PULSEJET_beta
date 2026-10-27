@@ -6,3 +6,14 @@ CPU characterization complete; NVCC build and image publishing are the next gate
 
 Build request: add PulsarX psrfold_fil/psrfold_fil2, PlotX, XLibs, and Python scientific tooling.
 Pinned upstream source hashes and converter test included; verify CLI tool availability.
+
+---
+Build request: 2026-10-27 PeakFinder frequency-bound regression repair.
+Source changes on dev/polynomial-search include:
+- transform/peakfinder_bounds.hpp same-unit start/end indexes for all harmonics
+- guarded skip of empty ranges and strict numeric validity checks
+- cuda device_find_peaks host output-count guard
+- C++17 tests for [200,350] Hz previous CUDA abort
+- real-data W1/I01 and W1/I02 A40 acceptance launcher
+All CPU CI checks passed before this build request.
+Publish *new* dev-polynomial-<commit-sha> tag and leave old pinned SIF untouched.
