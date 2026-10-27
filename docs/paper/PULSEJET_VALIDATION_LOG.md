@@ -1050,3 +1050,22 @@ Reported comparison:
 Provenance from node3: `/home/rnag/PULSEJET_validation/stage8_m62_generated_bank/w3_i15_dm8_harmonic_sensitivity_pairs_center8m_v1_provenance.txt`. The same-prefix four XML/logs correspond to `truth_n1`, `truth_n4`, `offgrid_n1`, `offgrid_n4`. Scripts and prior experiments are unchanged.
 
 **Proposed next science gate:** vary deliberate motion mismatch at the same pulse shape, DM and observation (including `-n 1,2,3,4` subsets) to measure the harmonic-stage search response before choosing a practical maximum-mismatch tolerance for a broad generated bank. Do not automatically multiply f-design by 8 or 16, which may inflate a two-dimensional bank by roughly the square of that harmonic factor and should first be weighed against actual detection performance.
+
+
+### Stage 9 PeakFinder frequency bound repaired in source; A40 acceptance pending (2026-10-27)
+
+User explicitly approved correcting the long-known factor-of-two **minimum frequency** error before the forthcoming hundred-source recovery campaign. Work is confined to branch `dev/polynomial-search`; original main, previously deployed `images/pulsejet_dev.sif`, INCEPTION and bank generator were **not changed**.
+
+**Root-cause correction:**
+- `include/transforms/peakfinder_bounds.hpp`: pure C++17 conversion of inclusive user frequency bounds to half-open Fourier-bin indices `[ceil(fmin/df*2^nh),floor(fmax/df*2^nh)+1)`, clamped to `[0,nbins]`, with deterministic empty-range and invalid-input handling. The previous lower-bound `orig_size*(fmin/nyquist)*2^nh` produced ~`2*fmin`.
+- `include/transforms/peakfinder.hpp`: wired to this shared function for all harmonic-sum spectra, skips empty intervals before CUDA, and uses inverse bin-to-frequency mapping for candidate output.
+- `src/kernels.cu` and `include/kernels/kernels.h`: reject inverted/empty ranges and verify host scratch candidate-count capacity **before** Thrust copies to bounded `idxs/snrs`. The cap remains 100,000; exceptionally dense RFI conditions now fail explicitly rather than overrun buffers.
+- `tests/test_peakfinder_bounds.cpp`: CPU-only test of the actual old crash band **[200,350] Hz** at levels nh=0..4 with 505.29-second Fourier spacing, plus old workaround band, frequency output, bounds/empty ranges, extreme numerical inputs and peak-array capacity.
+- `tests/run_cpu_tests.sh`: now executes `test_peakfinder_bounds` in addition to all previous polynomial/candidate tests. Documentation in `tests/README.md` and `tests/PEAKFINDER_FREQUENCY_BOUND_ISSUE.md` updated.
+- `scripts/run_m62_w1_peakfinder_fixed_band_regression.sh`: **staged but unexecuted** A40 acceptance checks using the existing W1 injected SIGPROC filterbank, *new* image supplied as `PULSEJET_PATCHED_SIF`, and exact requested `--min_freq 200 --max_freq 350`. Independent one-template runs with W1/I01 f247 DM0 a=j0, start=0, N=2^22 and W1/I02 f263 DM4 a40 j0, centered start=5313523, N=2^22. The script refuses to reuse old `pulsejet_dev.sif` or overwrite existing runs; prints SIF SHA, recovered frequency, S/N, nh and wall time. The prior image aborted for this search band, so detection of both targets would be strong GPU evidence for correction.
+
+**Passing CPU validation:** https://github.com/Rouhin1997/PULSEJET_beta/actions/runs/40520331689 `success` (all standalone C++ and Python source-wiring tests passed at code revision `1f31a833d77a489457442a793fb5b7232aa3df92`; prior CI also green). **Not an NVCC build or a GPU run.**
+
+**Deployment gate:** publish a separately tagged dev CUDA/PulsarX image from latest correction, pull to new HPC SIF path, run new 200–350Hz fixed-band regression, and archive compiler/container provenance, recovered candidates and timing before using corrected peak search for blind-frequency recovery statistics. Do not use old `--min_freq = desired/2` workaround with the corrected binary.
+
+**Bank sizing context for planned wider tests:** our metric rectangular grid, f_design=400Hz, T=505.2902701172523s, jerk [−0.30,+0.30]m/s³, predicts `a=±230m/s²`: 144 templates at mu=0.30, 415 at mu=0.10, 1350 at mu=0.03; `a=±250m/s²`: 156,450,1467 respectively. These are **per DM** baseline counts in the quadratic coherent-power metric, not total DM trials nor calibrated harmonic-sum S/N. Large f/T or harmonic-aware constraints can raise counts substantially.
