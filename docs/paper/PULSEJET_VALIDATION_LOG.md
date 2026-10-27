@@ -881,3 +881,16 @@ Candidate XML:
 `$HOME/PULSEJET_validation/stage7_m62_recovery/w3_i13_dm20_aj_bank_center8m_v1/overview.xml`.
 
 **Status: successful GPU/algorithmic execution, NOT YET jerk recovery.** The user has not yet posted candidate `period`, `acc`, `jerk`, `snr` fields, and 88 associations do not provide those values for linked templates; do not infer the winner. Next step is read-only summary of the ten final XML candidates, including f=1/P, delta f from 317 Hz, DM, a, j, S/N, nh and nassoc, then fixed-template zero-jerk vs matched-jerk controls to quantify whether jerk increases recovery significance. Do not modify third-party distillers without explicit discussion.
+
+
+### Stage 7 W3/I13 jerk injection recovered at correct 2-D template (2026-10-27)
+
+User parsed all **10** final candidate records from the completed 15-template, centered ~505-s W3 observational-injection run. The leading survivor is:
+
+| Candidate | Frequency (Hz) | Delta f from injected (Hz) | DM | a (m/s²) | j (m/s³) | S/N | nh | nassoc |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| **0** | **316.999969** | **−0.000031** | **20** | **0** | **+0.180** | **39.96** | 3 | **14** |
+
+Truth W3/I13: **f=317.000000 Hz, DM=20, a=0, j=+0.18 m/s³** (injection P0=0.0031545741324921135 s, total-observation target S/N 50). The selected candidate is the highest S/N across the 15-grid search, and the **frequency difference −3.1e−5 Hz is ≈−0.016 Fourier bins** for the 505.19-s segment. This is a controlled two-dimensional **acceleration–jerk template-selection success**, not an unconstrained blind estimate; DM fixed to 20, and exact truth included among templates. High background/other survivor candidates at 309.581207 Hz (S/N 30.24, a=j=0) and 313.448059 Hz (S/N 27.92, a=j=0), also 313.207092 Hz (S/N 17.34, a=20, j=-0.18), cannot currently be classified as astrophysical or RFI without uninjected controls.
+
+**Next discriminating experiment staged, not yet run:** `scripts/run_m62_w3_i13_jerk_control_pair.sh`, commit `2afe3b421b152fe2097d870e8dbbfc99d02d68b3`. Run two **separate single-template** PULSEJET GPU searches of the exact same W3 injection and sample range `start=3216372, nsamples=fft_size=8388608`, one with (a=0,j=0) and one with (a=0,j=+0.18). DM20 and min/max search band workaround 154–325 Hz held constant; report whether/how much candidate S/N near 317 Hz improves for matching jerk without any polynomial-bank distillation confound. A missing thresholded control candidate does not mean zero signal. Only after this paired control should we claim quantified jerk-sensitivity improvement. No search source or distiller modifications.
