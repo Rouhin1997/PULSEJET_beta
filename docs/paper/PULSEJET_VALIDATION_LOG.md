@@ -1137,3 +1137,29 @@ PULSEJET_PATCHED_SIF=/home/rnag/PULSEJET_validation/images/pulsejet_peakfinder_f
 
 **Status:** built and published; HPC image pull and actual 200–350Hz
 A40 regression **not yet verified**. Retain original SIF unchanged.
+
+
+### 2026-10-27 — Stage 9 PeakFinder PATCHED IMAGE A40 acceptance: PASS (two independent injected sources)
+
+The user successfully pulled a new immutable PULSEJET dev Singularity image, preserving the old `pulsejet_dev.sif`, and ran `scripts/run_m62_w1_peakfinder_fixed_band_regression.sh` on node3 with two NVIDIA A40 GPUs visible. **The old crashing 200–350 Hz requested search range was used verbatim, without any half-frequency workaround.** Both GPU runs finished successfully and recovered the expected sources.
+
+**Immutable image and provenance:**
+- SIF: `/home/rnag/PULSEJET_validation/images/pulsejet_peakfinder_fixed_fa2dfdcd.sif`
+- **SIF SHA256:** `7ee88af84805e8434943df79af9d8e20dd62a52e0a6cb4c0ca2d9fc2df1410a3`
+- Docker source SHA: `fa2dfdcd2573d41f4751fce6d429c63a34344d05`, OCI manifest digest `sha256:104de49e88eb49f01ba91310f3691fda28c162eed7a493522504471f1926028e`.
+- Input: **existing** W1 five-source injected M62 filterbank `stage6_m62/m62_15m_injections/W1/case_0001/W1_M62_background_m62_w1_five_injections_20261023_case_0001.fil`. DM and a/j fixed to each injection's known truth; frequency searched within **[200,350] Hz**, `-t 1 -n 4 -m 7`, one template, `N=fft_size=4194304`. No new injections, no changes to original .fil or other outputs.
+
+| Controlled target | Segment start | DM | a (m/s²) | j (m/s³) | Recovered f (Hz) | f error (Hz) | Search S/N | nh (8 harmonics) | Raw → final | External wall |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| **W1/I01**, truth 247 Hz | 0 | 0 | 0 | 0 | **247.000107** | +0.000107 | **52.29** | 3 | **27→8** | **14 s** |
+| **W1/I02**, truth 263 Hz | 5313523 | 4 | +40 | 0 | **263.000305** | +0.000305 | **29.89** | 3 | **34→13** | **13 s** |
+
+Both Peasoup runs exited 0, successfully found peaks and completed all distillation/output stages; candidate XML parsed correctly with each expected injection within 0.05 Hz and S/N above 7. The two source S/N values **exactly match earlier old-SIF controlled pilot detections**, supporting non-regression in these cases. The DM4 run transferred 4,193,609 dedispersed samples then padded to 4,194,304. The DM0 run transferred all 4,194,304 samples.
+
+Logs and per-run provenance:
+`/home/rnag/PULSEJET_validation/stage9_peakfinder_regression/w1_fixed_min200_max350_v1_w1_i01_dm0_stationary{.log,_provenance.txt}`
+and
+`.../w1_fixed_min200_max350_v1_w1_i02_dm4_acc40{.log,_provenance.txt}`,
+with respective `overview.xml` directories.
+
+**Conclusion:** source correction, CI tests, new CUDA build and **actual corrected-frequency-window A40 functional regression PASSED**. The original [200,350] failure is resolved in this tested binary, allowing the forthcoming 100-source campaign to use true user frequency bounds. Scope: two fixed-DM/fixed-motion cases, not yet blind DM/a/j or population completeness; additional edge and RFI stress tests remain useful. Critically, **old scripts using half-min-frequency workarounds must NOT be reused unchanged with the corrected SIF**. Keep the old image as historical comparison and preserve the current SIF SHA as the campaign baseline.
