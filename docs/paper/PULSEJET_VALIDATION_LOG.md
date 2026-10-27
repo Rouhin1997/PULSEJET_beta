@@ -950,3 +950,24 @@ Outputs: `$HOME/PULSEJET_validation/stage7_m62_recovery/w3_i15_dm8_center8m_jerk
 **Stage 7 scientific checkpoint:** W1/I01 frequency/stationary, W1/I02 frequency/+40 m/s² acceleration-bank selection, W3/I13 +0.18 m/s³ jerk-bank selection and matched-jerk +49.55% spectral-S/N A/B gain, and W3/I15 joint a=−235 m/s², j=−0.25 m/s³ bank selection with matched negative-jerk +97.54% spectral-S/N A/B gain all verified on injected M62 backgrounds.
 
 **Next-stage strategy:** controlled per-window joint searches over a shared additional-DM trial grid and a two-dimensional acceleration/jerk bank, followed by candidate-to-truth matching, uninjected-background controls and matched recovered-candidate folds. Before running a large search, verify GPU costs and template-bank mismatch/coverage, and fix the open `PeakFinder` lower-frequency-bound defect with tests/new pinned image for truthful broad frequency coverage. Center physical windows when using `fft_size > nsamples`, as the current polynomial kernel's midpoint follows the FFT array length rather than automatically following the unpadded data length. Avoid advertising all-20 complete or independent a/j estimation based on truth-included discrete template runs.
+
+
+### Stage 8 first generator-to-GPU off-grid template bank prepared; awaiting HPC execution (2026-10-27)
+
+The bank generator `Rouhin1997/Template_bank_generator_codes_for_PULSEJET_beta`, branch `dev/midpoint-metric-bank`, passed **18/18 unit and numerical tests on node3 Python 3.12**. On node3 the user generated **exactly 12** midpoint-referenced templates at
+`/home/rnag/PULSEJET_validation/PULSEJET_templatebank_source/outputs/w3_i15_reference.txt`
+with design `f=383 Hz, T=505.2902701172523 s, a∈[-255,-215] m/s², j∈[-0.4,+0.25] m/s³, μ_target=0.30`.
+Generated-bank SHA256 pinned to
+`969af3da3f5a271d36af4ed98808a6d68337592eaa1d127a5159faf95a02a29f`.
+Report `outputs/w3_i15_reference.json`: quadratic metric g_aa=`0.005833740739556459`, g_aj=0, g_jj=`10.639003698942455`; **global quadratic bound 0.2707040480112222**; 1000/1000 sample challenge points covered, not an S/N completeness claim. Bank rows a={−250,−240,−230,−220}, j={−0.29166666666666669,−0.075000000000000011,+0.14166666666666672}, all 12 Cartesian pairs.
+Injection truth W3/I15 (a,j)=(−235,−0.25) is deliberately not in bank. Two nearest templates (−240,−0.2916667) and (−230,−0.2916667) each have **predicted local coherent-power quadratic mismatch μ=0.164314**.
+
+New reproducible script **staged, not yet executed**:
+`scripts/run_m62_w3_i15_generated_bank_integration.sh`, first committed
+`ef35ba41d9f2e0404f6d22f6f4ee81dc19a1237a`.
+It reads/validates **the user's actual generated file**, matching SHA256, JSON design, 12 numeric rows, excluding truth; writes immutable output under
+`stage8_m62_generated_bank/w3_i15_dm8_generated_grid12_center8m_v1*`.
+Uses existing W3 injected `.fil`, centered segment `start_sample=3216372,nsamples=fft_size=8388608`, fixed DM8, pinned SIF with known PeakFinder frequency bug workaround `--min_freq 187 --max_freq 395`, and precisely the same runtime flags as prior Stage7 W3/I15 baseline. Shows all final candidates and their metric separations from known injected truth, compares winning candidate near 383 Hz against independent matched-template baseline search S/N 36.15, records generator and PULSEJET git SHAs and input/output paths.
+This is the first actual test of external bank *interface + template placement + GPU recovery*. It does **not** change the code or source, distiller or injector.
+
+**Interpretation policy:** `1 - (SNR_generated/SNR_truth)` is an empirical change in **PULSEJET's harmonic-summed spectral statistic** on this fixed observation, *not* the same as `μ_pred` (fractional coherent **power** loss at small mismatch). True recovery depends on candidate near 383 Hz and correct SNR/DM validation, not merely GPU exit0. Further tests need a realistic shared DM and a/j bank and recovered candidate folding.
