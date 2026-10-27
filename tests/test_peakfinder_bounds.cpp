@@ -94,6 +94,20 @@ int main() {
     t.expect(first>=187.0 && first<187+df,
              "Corrected frequency band starts near 187 rather than 374");
   }
+  {
+    bool threw = false;
+    try { pf::validate_host_peak_count(100001,100000); }
+    catch (const std::runtime_error&) { threw = true; }
+    t.expect(threw, "Oversized RFI peak population rejected before host-buffer copy");
+    threw = false;
+    try { pf::validate_host_peak_count(-1,100000); }
+    catch (const std::runtime_error&) { threw = true; }
+    t.expect(threw, "Negative peak count rejected");
+    threw = false;
+    try { pf::validate_host_peak_count(100000,100000); }
+    catch (const std::runtime_error&) { threw = true; }
+    t.expect(!threw, "Exactly full host result capacity is valid");
+  }
   t.expect(rejected(350,200,df,bins,0), "Reversed frequency bounds rejected");
   t.expect(rejected(200,200,df,bins,0), "Degenerate frequency bounds rejected");
   t.expect(rejected(-1,350,df,bins,0), "Negative frequency rejected");
