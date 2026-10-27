@@ -90,7 +90,7 @@ public:
     const int count = device_find_peaks(
         range.end, range.begin, pspec.get_data(),
         threshold, &idxs[0], &snrs[0],
-        d_idxs, d_snrs, allocator);
+        d_idxs, d_snrs, allocator, max_cands);
     const int npeaks = identify_unique_peaks(count);
     for (int ii=0;ii<npeaks;ii++){
       peakfreqs[ii] = static_cast<float>(
