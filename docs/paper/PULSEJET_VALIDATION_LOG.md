@@ -748,3 +748,15 @@ The known old PeakFinder bug makes the effective search band approximately
 This is a **restricted-band frequency discovery at fixed known DM and motion**,
 and is not a full-parameter blind recovery. Check `overview.xml` and candidate
 frequency/S/N before declaring success; user must explicitly run it on cluster.
+
+
+### Stage 7 W1/I01 controlled GPU pilot executed on node3 (2026-10-27 11:05 cluster local)
+
+User ran `scripts/run_m62_w1_stationary_recovery_pilot.sh` on the existing injected M62 W1 real-data filterbank. The pinned pre-fix PULSEJET SIF completed with **exit 0** and `all done` in **14 s external wall clock**. Input `W1/case_0001/W1_M62_background_m62_w1_five_injections_20261023_case_0001.fil`; `--start_sample 0 --nsamples 4194304 --fft_size 4194304`, MJD start `59689.9678870941`, computed/recorded search segment midpoint `59689.9693491609`. Requested frequency range `110–260 Hz`; existing PeakFinder bug means effective lower limit approximately `220 Hz`. One DM=0 trial and one a=j=0 stationary polynomial template; candidate S/N threshold in XML `7`. Search log:
+`/home/rnag/PULSEJET_validation/stage7_m62_recovery/w1_i01_dm0_a0j0_4m_v1.log`.
+Output XML:
+`/home/rnag/PULSEJET_validation/stage7_m62_recovery/w1_i01_dm0_a0j0_4m_v1/overview.xml`.
+Provenance:
+`/home/rnag/PULSEJET_validation/stage7_m62_recovery/w1_i01_dm0_a0j0_4m_v1_provenance.txt`.
+
+Candidate diagnostics: **12 raw spectral detections**, 5 after per-template harmonic distillation, 5 after per-DM polynomial, 5 after cross-DM and final harmonics, 5 final, 0 nested associated nodes. Search's `overview.xml` is 6.1 KB, but the user has only supplied its first 80 configuration lines; **no candidate frequencies or S/N have yet been read**, so **do not yet claim recovery of I01 at injected 247 Hz**. Next read-only check: inspect XML candidate records and identify any near 247 Hz, including possible harmonic relationships. No additional expensive GPU runs before evaluating first candidate list.
