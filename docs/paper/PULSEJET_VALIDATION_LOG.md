@@ -1000,3 +1000,25 @@ XML `/home/rnag/PULSEJET_validation/stage8_m62_generated_bank/w3_i15_dm8_generat
 
 
 **Next GPU diagnostic staged, NOT yet executed:** `scripts/run_m62_w3_i15_generated_bank_nearest_controls.sh` (commit `1083f27a0534070a31825ca6eb37d7f42b273ac2`, CPU workflow completed **success**, https://github.com/Rouhin1997/PULSEJET_beta/actions/runs/40507627163). Reads actual existing generated bank and JSON, verifies exact SHA256 and 12 source rows, programmatically selects both *equally close* `(-240,-0.2916667)` and `(-230,-0.2916667)`, writes two individually controlled one-row template banks, and runs **separate GPU searches** with identical W3 injected filterbank/segment/DM8/CLI. Output paths `stage8_m62_generated_bank/w3_i15_dm8_nearest_grid_pair_center8m_v1_*`, non-overwriting; prints detected I15 source f, a, j, S/N, nh and predicted local μ. This will check whether multi-template distillation or differing (a,j) signs/noise cause the difference and whether equal quadratic metric distance actually yields equal practical search S/N. The script does not modify original generated bank, INCEPTION or PULSEJET engine/container.
+
+
+### Stage 8 W3/I15 two equal-metric nearest-template single-template controls: PASS (2026-10-27)
+
+The user executed `bash scripts/run_m62_w3_i15_generated_bank_nearest_controls.sh` on GPU node3. Both searches used the same existing injected W3 observational filterbank, DM8, pinned `pulsejet_dev.sif`, centered segment `start_sample=3216372`, `nsamples=fft_size=8388608`, and the existing PeakFinder `--min_freq 187 --max_freq 395` workaround. Each executed **exactly one row chosen directly from the SHA-pinned generated 12-template bank**. The controls completed with exit status 0, external **10 s** each; **20→4** raw-to-final candidates for nearest A and **19→4** for nearest B, zero nested associations in these single-template runs.
+
+| Search / template | Recovered f (Hz) | f-383 (Hz) | a (m/s²) | j (m/s³) | Nearest quadratic metric μ | Search S/N | nh | Relative search S/N loss vs exact 36.15 |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| Matched truth Stage7 standalone | 382.999908 | −0.000092 | −235 | −0.25 | 0 | **36.15** | 3 | 0 |
+| Single template A | 383.000153 | +0.000153 | −240 | −0.2916667 | **0.164314** | **24.98** | **3** | **30.9087%** |
+| Single template B | 383.000153 | +0.000153 | −230 | −0.2916667 | **0.164314** | **25.15** | **3** | **30.4354%** |
+| Full 12-template generated bank | 383.000153 | +0.000153 | −230 | −0.2916667 | **0.164314** | **25.15** | **3** | **30.4354%** |
+
+**Conclusions limited to this controlled injected signal/noise realization:**
+1. The generator places the two equally closest *off-grid* metric templates correctly; both individually recover the injected 383 Hz signal, and their resulting spectral S/N values differ by only 0.17 (about 0.68% of 25.15). Consistent with local metric symmetry, **not a calibration of metric over the full box**.
+2. **No evidence that polynomial cross-template distillation caused the ~30.4% loss:** the full bank's survivor is exactly the B-template single-run response, including frequency, nh and S/N.
+3. The gap versus μ=0.164314 is **not necessarily a metric failure**: μ predicts leading-order fundamental coherent power reduction, while `nh=3` corresponds to an eight-harmonic accumulated search statistic with different harmonic residual dephasing, normalization and background noise. Two equally metric-distant templates do not have to produce equal S/N in a noisy harmonic search.
+4. Frequency recovered by both ~+0.000153 Hz from truth (~+0.077 of a 505 s Fourier bin), despite nonzero motion mismatch. Exact-motion baseline ~−0.000092 Hz.
+
+Read-only run outputs: `stage8_m62_generated_bank/w3_i15_dm8_nearest_grid_pair_center8m_v1_nearest_{a,b}/overview.xml` and respective logs, `..._provenance.txt`. Generator bank original, injection data, PULSEJET GPU source, legacy distillers, and container were unchanged.
+
+**Next proposed scientific test, not yet executed:** controlled fixed-observation *mismatch response curve* using multiple deliberately offset a/j rows plus per-harmonic diagnostics/fixed summation levels. Compare predicted fundamental coherent-power μ with independently measured loss of fundamental Fourier power and of the harmonic-summed S/N; this can distinguish metric approximation, harmonic broadening, FFT-grid effects, and noise before choosing a global mismatch budget or a harmonic-aware metric. Broader multi-DM recovery still requires PeakFinder frequency-range bug correction/regression testing; no source changes made without approval.
