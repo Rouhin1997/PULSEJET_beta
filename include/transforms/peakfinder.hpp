@@ -2,6 +2,7 @@
 #include <iostream>
 #include "data_types/candidates.hpp"
 #include "data_types/fourierseries.hpp"
+#include "transforms/peakfinder_bounds.hpp"
 #include "kernels/kernels.h"
 #include <thrust/device_vector.h>
 #include "utils/utils.hpp"
@@ -75,20 +76,26 @@ public:
   }
   
   void find_candidates(DevicePowerSpectrum<float>& pspec, SpectrumCandidates& cands){
-    int size = pspec.get_nbins();
-    float nyquist = pspec.get_bin_width()*size;
-    int orig_size = 2.0*(size-1.0);
-    int nh = pspec.get_nh();
-    int max_bin = (int)((max_freq/pspec.get_bin_width())*pow(2.0,nh));
-    int start_idx = (int)(orig_size*(min_freq/nyquist)*pow(2.0,nh));
-    int count = device_find_peaks(std::min(size,max_bin),
-                                  start_idx, pspec.get_data(),
-                                  threshold, &idxs[0], &snrs[0],
-				  d_idxs,d_snrs,allocator);
-    int npeaks = identify_unique_peaks(count);
-    float factor = 1.0/size*nyquist/pow(2.0,(float)nh);
+    // Convert both limits to the SAME harmonic-scaled Fourier-bin units.
+    // The previous start_idx formula multiplied the lower limit by ~2,
+    // potentially creating start_idx > max_bin (invalid Thrust range).
+    // frequency_bin_range() gives [begin,end) and safely clamps to the
+    // spectrum size, including when the requested range has no bins.
+    const unsigned int nh = pspec.get_nh();
+    const auto range = pulsejet::peakfinder::frequency_bin_range(
+        static_cast<double>(min_freq), static_cast<double>(max_freq),
+        pspec.get_bin_width(), pspec.get_nbins(), nh);
+    if (range.empty()) return;
+
+    const int count = device_find_peaks(
+        range.end, range.begin, pspec.get_data(),
+        threshold, &idxs[0], &snrs[0],
+        d_idxs, d_snrs, allocator);
+    const int npeaks = identify_unique_peaks(count);
     for (int ii=0;ii<npeaks;ii++){
-      peakfreqs[ii] = peakidxs[ii]*factor;
+      peakfreqs[ii] = static_cast<float>(
+          pulsejet::peakfinder::fundamental_frequency_for_bin(
+              peakidxs[ii], pspec.get_bin_width(), nh));
     }
     cands.append(&peaksnrs[0],&peakfreqs[0],nh,npeaks);
   }
