@@ -52,7 +52,7 @@ int main() {
 
   // An exactly integral frequency bin at either bound should be included.
   for (unsigned nh : {0u,1u,2u,3u,4u}) {
-    const auto b=pf::frequency_bin_range(20,28,1.0,65,nh);
+    const auto b=pf::frequency_bin_range(20,28,1.0,1025,nh);
     const int factor=1<<nh;
     t.expect(b.begin==20*factor && b.end==28*factor+1,
              "Integral inclusive limits for harmonic level "+std::to_string(nh));
