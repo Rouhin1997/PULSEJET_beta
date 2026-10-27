@@ -171,7 +171,8 @@ int device_find_peaks(int n,
 		      float * snrs,
 		      thrust::device_vector<int>&,
 		      thrust::device_vector<float>&,
-		      cached_allocator&);
+		      cached_allocator&,
+              std::size_t host_capacity);
 
 void device_normalise(float* d_powers,
                       float mean,
