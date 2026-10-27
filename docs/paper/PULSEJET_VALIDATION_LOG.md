@@ -865,3 +865,19 @@ candidate f, DM, acceleration, jerk, S/N, harmonic number, associations;
 follow with matched single-template j=0 versus j=+0.18 controls to
 demonstrate a real jerk sensitivity gain, rather than relying solely
 on the distiller's bank winner.
+
+
+### Stage 7 W3/I13 first 2-D acceleration–jerk GPU search completed; recovered candidate parameters pending (2026-10-27)
+
+The user ran `bash scripts/run_m62_w3_i13_jerk_pilot.sh` on `node3` after a clean fast-forward of development branch to `4755a31`. Pinned pre-fix PULSEJET Singularity image enumerated two NVIDIA A40 GPUs and successfully completed **exit 0** / `all done`; **outer wall time 17 s**. Existing injected observational input:
+`stage6_m62/m62_15m_injections/W3/case_0001/W3_M62_background_m62_w3_five_injections_20261023_case_0001.fil`.
+Centered 8,388,608-sample (roughly 505.19-s) segment **start=3,216,372; end=11,604,980**, with matching FFT size (`8388608`), so no padding-induced shift of the polynomial model's reference epoch. Following dedispersion, **8,385,135** samples were transferred to device before internal padding. The chosen data segment is centered on the source's injected full-window epoch to within sampling precision.
+
+**Parameters**: one fixed DM=20 pc/cm³; 15 polynomial bank rows from a={-20,0,+20} m/s² × j={-0.18,0,+0.09,+0.18,+0.27} m/s³. Truth W3/I13: frequency **317 Hz**, a=0 and j=+0.18 m/s³. Requested `--min_freq 154 --max_freq 325` knowingly exploits the existing unpatched PeakFinder lower-bound bug, for approximate effective 308–325 Hz coverage. Both acceleration and jerk vary in templates, but DM is fixed and the bank explicitly contains the true a/j.
+
+**Reported diagnostic counts:** 1 DM trial; 15 polynomial templates all completed resampling, FFT, peak finding and harmonic distillation; **335 raw spectral detections → 93 after harmonic distillation → 10 after polynomial Doppler distillation → 10 final representatives**, **88 nested associated nodes**. Per-DM processing diagnostic `0.133199 s` is not whole-run runtime. Search log:
+`$HOME/PULSEJET_validation/stage7_m62_recovery/w3_i13_dm20_aj_bank_center8m_v1.log`.
+Candidate XML:
+`$HOME/PULSEJET_validation/stage7_m62_recovery/w3_i13_dm20_aj_bank_center8m_v1/overview.xml`.
+
+**Status: successful GPU/algorithmic execution, NOT YET jerk recovery.** The user has not yet posted candidate `period`, `acc`, `jerk`, `snr` fields, and 88 associations do not provide those values for linked templates; do not infer the winner. Next step is read-only summary of the ten final XML candidates, including f=1/P, delta f from 317 Hz, DM, a, j, S/N, nh and nassoc, then fixed-template zero-jerk vs matched-jerk controls to quantify whether jerk increases recovery significance. Do not modify third-party distillers without explicit discussion.
