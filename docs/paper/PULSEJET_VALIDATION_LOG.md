@@ -914,3 +914,21 @@ Control outputs:
 
 
 **Next experiment staged (not yet executed):** `scripts/run_m62_w3_i15_mixed_aj_pilot.sh`, commit `26d93254a44f5ff83a6b8d414714b691094e5261`, uses existing injected W3 real-background filterbank with the same centered 2^23-sample (~505s) segment as I13 and the unmodified pinned PULSEJET SIF. Source `M62_W3_I15` has **f=383 Hz, additional DM=8, acceleration a=−235 m/s², jerk j=−0.25 m/s³**, injected full-observation target S/N=65. One DM8 trial, 15 motion templates a={−255,−235,−215} m/s² × j={−0.40,−0.25,−0.10,0,+0.25} m/s³ (truth included), requested frequency band 187–395 Hz (effective approximately 374–395 Hz in pre-fix PeakFinder). Guarded unique search/log/provenance paths `stage7_m62_recovery/w3_i15_dm8_mixed_aj_center8m_v1*`; script auto-prints final XML candidate f, a, j, S/N and association counts after successful GPU run. This will exercise **mixed negative acceleration and negative jerk** rather than another pure jerk injection. Assess the candidate near 383 Hz and, if correct, follow with independent wrong-jerk controls. No change to scientific search engine or distillers.
+
+
+### Stage 7 W3/I15 strong negative acceleration + negative jerk recovered (2026-10-27)
+
+The user executed `bash scripts/run_m62_w3_i15_mixed_aj_pilot.sh` on GPU node3 against the existing real-background W3 multi-source injected `.fil` with the pinned **unmodified** PULSEJET image. Centered `start_sample=3216372`, `nsamples=fft_size=8388608` (~505.19 s); **8,387,219** samples transferred after dedispersion (internal zero-pad), one additional DM **8**, 15 motion templates a={−255,−235,−215} m/s² × j={−0.40,−0.25,−0.10,0,+0.25} m/s³, requested band 187–395 Hz (effective lower ~374 Hz with unpatched PeakFinder). **All 15 templates completed, exit 0, measured external wall 10 s**. Candidate diagnostics **287 raw → 59 after per-template harmonic distillation → 4 after per-DM polynomial Doppler distillation → 4 final**, with **61 nested associations** (association counts are not independently inspectable from XML).
+
+The final candidates from `stage7_m62_recovery/w3_i15_dm8_mixed_aj_center8m_v1/overview.xml` were:
+
+| ID | Recovered f (Hz) | Δf vs. 383 (Hz) | DM | a (m/s²) | j (m/s³) | Search S/N | nh | nassoc |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| **0** | **382.999908** | **−0.000092** | **8** | **−235** | **−0.250** | **36.15** | 3 | 14 |
+| 1 | 379.435852 | −3.564148 | 8 | −255 | −0.400 | 20.10 | 2 | 20 |
+| 2 | 379.510071 | −3.489929 | 8 | −255 | 0.000 | 12.87 | 2 | 14 |
+| 3 | 379.376007 | −3.623993 | 8 | −235 | +0.250 | 10.00 | 2 | 13 |
+
+Truth W3/I15 f=383 Hz, DM8, a=−235 m/s², j=−0.25 m/s³, injection target S/N 65 on the full ~893-s dataset. Leading candidate is strongest and matches both discrete motion template coordinates and DM; frequency error is ~**0.0465 Fourier bins** over 505 s. **Controlled mixed negative acceleration–jerk template selection PASSED** in real MeerKAT background. This is not unconstrained parameter estimation; true DM and true motion row were included, and the old frequency-bound workaround persists. The other ~379.4-Hz candidates are not identified as RFI, noise or astrophysical without comparing uninjected background.
+
+**Next controlled experiment staged (not yet executed):** `scripts/run_m62_w3_i15_jerk_control_pair.sh` (commit `d8fcec259dcf982779de8b3cd80a3cd47bda9863`) searches the identical W3 input/segment and DM8 with **fixed a=−235 m/s²**, comparing a single template at j=0 against a single template at **j=−0.25 m/s³**. It uses exactly the same old-image frequency-band workaround, outputs distinct logs and XML, checks for surviving candidates within ±0.05 Hz of 383 Hz and prints S/N for matched comparison. This separates negative-jerk benefit from the 15-template distiller. No code or third-party distiller modifications.
