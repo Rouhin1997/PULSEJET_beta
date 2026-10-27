@@ -141,3 +141,50 @@ connections and container build configuration.
 **Scope boundary:** Passing CPU/static checks does not prove NVCC compilation
 or GPU parity. The manual container build and SIF runtime testing remain the
 required next gate before observations.
+
+
+## PeakFinder min-frequency regression (2026-10-27)
+
+`test_peakfinder_bounds.cpp` is now compiled and run with the other
+**CPU-only** tests by `bash tests/run_cpu_tests.sh`. It tests the
+production `include/transforms/peakfinder_bounds.hpp` function
+actually used by `PeakFinder::find_candidates` in
+`include/transforms/peakfinder.hpp`. No CUDA is needed to verify the
+time-to-Fourier-bin conversion.
+
+The original bug calculated start indices using
+`orig_size * min_freq / (bin_width * spectrum_size)`, which is
+approximately **twice** the requested minimum frequency. For the
+real M62 bin spacing, the requested **[200,350] Hz** interval
+started internally at ~400 Hz, so Thrust received an inverted iterator
+range. The new conversion uses the same bin-width/harmonic multiplier
+for **both** bounds, with an inclusive frequency endpoint translated
+to an exclusive end-bin index.
+
+CPU regression cases cover the previously failing [200,350] Hz range
+at harmonic levels 0..4, the old [187,395] workaround, exact frequency
+boundaries, fractional bins, lower/upper Nyquist clamping, intervals
+containing no valid Fourier bins, huge user frequencies, invalid
+frequency units and harmonic levels, and host-buffer overflow checks.
+No invalid or empty range reaches CUDA peak extraction.
+
+**Additional memory guard:** the `device_find_peaks` wrapper checks
+the returned number of peaks against the fixed host scratch-buffer
+capacity *before* copying into `idxs/snrs`. This intentionally
+raises an explicit exception for an unusually dense/RFI-heavy result
+instead of risking a host buffer overwrite. It is **not** a new
+peak-finder algorithm or candidate-selection change.
+
+The CPU workflow passing does **not** certify NVCC compilation or
+the newly compiled GPU executable. The follow-up is a freshly built
+version-pinned PULSEJET SIF, followed by the **original 200–350 Hz
+M62 band** on A40: `scripts/run_m62_w1_peakfinder_fixed_band_regression.sh`
+performs W1/I01 f247 DM0 a0j0 and W1/I02 f263 DM4 a40 j0
+tests, each a frequency-blind search within [200,350] Hz. The old
+pinned `images/pulsejet_dev.sif` is deliberately preserved and
+must not be used for this corrected-band regression. Do not reuse
+prior commands that set `--min_freq` to half the desired value when
+running a corrected image.
+
+Original bug background and exact reproduction:
+[`PEAKFINDER_FREQUENCY_BOUND_ISSUE.md`](PEAKFINDER_FREQUENCY_BOUND_ISSUE.md).
