@@ -791,3 +791,22 @@ multi-template acceleration search for W1/I02 (263 Hz, DM=4, a=+40 m/s²,
 j=0), including neighboring templates, followed by jerk-bearing cases.
 Avoid comparing segment-midpoint parameters against full-window midpoint
 without time propagation.
+
+
+**Next Stage 7 controlled acceleration pilot (staged, not run):**
+`scripts/run_m62_w1_i02_acceleration_pilot.sh` (commit
+`36557aaf2778373f6524c608e297829096d69b96`). It reuses the
+already-injected W1 observation and pinned immutable image, reads a
+centered 4,194,304-sample (252.645-s) segment from start sample
+**5,313,523**, fixing the segment reference epoch to essentially the
+full-window injection midpoint. I02 truth: **f=263 Hz, DM=4, a=+40 m/s²,
+j=0**, target injection S/N 60 over the full window. One DM=4 trial,
+five polynomial templates `(a,j)=(0,0),(20,0),(40,0),(60,0),(80,0)`,
+and the old PeakFinder bug workaround requesting band `128–270 Hz`
+(effective approximately 256–270 Hz). This is **frequency discovery
+and discrete acceleration-template selection** with DM and jerk fixed,
+and known truth included in the grid; not a blind search over all
+four dimensions. Guarded launcher records log/provenance and refuses
+overwrite; user must execute on allocated GPU node. Inspect candidates
+near 263 Hz, their a/j and S/N; compare competing templates and
+optional stationary-only control before interpreting motion recovery.
