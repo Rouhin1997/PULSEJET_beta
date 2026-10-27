@@ -144,3 +144,20 @@ SIF still contains the old bug. The two executables must not be
 interchanged in experiment logs. An older script passing
 `--min_freq 187` to *approximate* 374 Hz must not be assumed to have
 its old effective frequency limits in the new image.
+
+
+## 2026-10-27 — A40 end-to-end regression PASS; issue fixed in pinned image
+
+The new CUDA image was published by GitHub Actions build 40521035662 and installed as:
+`/home/rnag/PULSEJET_validation/images/pulsejet_peakfinder_fixed_fa2dfdcd.sif`.
+HPC-computed SHA256: **`7ee88af84805e8434943df79af9d8e20dd62a52e0a6cb4c0ca2d9fc2df1410a3`**.
+The image embeds source revision `fa2dfdcd2573d41f4751fce6d429c63a34344d05`. The old SIF was preserved.
+
+The user ran `scripts/run_m62_w1_peakfinder_fixed_band_regression.sh` on A40 node3 with **literal requested [200,350] Hz** and without the old half-min-frequency workaround. The previously problematic band completed cleanly in both cases:
+
+- W1/I01 fixed DM=0, a=j=0, start sample 0, N=4194304: **f=247.000107 Hz, S/N=52.29, nh=3**, 27 raw / 8 final candidates, 14 s wall, exit 0.
+- W1/I02 fixed DM=4, a=40 m/s², j=0, start sample 5313523, N=4194304: **f=263.000305 Hz, S/N=29.89, nh=3**, 34 raw / 13 final candidates, 13 s wall, exit 0.
+
+Both S/Ns match prior old-image pilot responses under a diagnostic frequency workaround. This confirms the original invalid peak-finding range is now functional in the new image and did not alter these established source recoveries. Source-level CPU regression and full image build also passed. The result is **not** yet a claim that all frequency bounds and heavy-RFI conditions are comprehensively GPU-tested, or that broad parameter-space recovery is complete.
+
+**Status:** FIXED, CPU-validated, CUDA built and A40 functional regression accepted. Use the newly pinned image and correct frequency bounds for the new multi-DM, generated-bank campaign. **Never carry the old `--min_freq = desired/2` workaround into new results**. The old `pulsejet_dev.sif` remains a reproducibility baseline.
