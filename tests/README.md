@@ -226,3 +226,14 @@ targets only already-completed Stage 6 W1–W4 five-source cases and writes
 results to `m62_filterbank_validation_20261029`, never the active
 Stage 10 UCB100 injection outputs. Independent signal-model/phase checks
 (Stage 2B) and pipeline-paper S/N/RFI characterization remain separate.
+
+**Stage 2B pilot** (independent physical phase-track check): code committed at
+[`scripts/verify_m62_injection_phase_tracks.py`](../scripts/verify_m62_injection_phase_tracks.py),
+[`tests/test_verify_m62_injection_phase_tracks.py`](test_verify_m62_injection_phase_tracks.py),
+[`scripts/prepare_m62_injection_phase_tracks.sh`](../scripts/prepare_m62_injection_phase_tracks.sh),
+and [`scripts/run_m62_injection_phase_tracks.slurm`](../scripts/run_m62_injection_phase_tracks.slurm).
+The first test should inspect W1 *changed-pixel phase concentration* under
+the exact extra DM, period, midpoint A0/A1 values versus deliberately
+incorrect frequency, DM and sign controls. **Not yet run on real data.**
+Synthetic tests and real-data results must be recorded separately; this
+is not a calibrated injected S/N or blind-search recovery measurement.
