@@ -131,3 +131,73 @@ Do **not** alter the working original, the W1–W4 backgrounds, active injection
 - Consider an independently supported library extraction path for future observational campaigns after the M62 audit.
 - If the splitter is revised later, create new tests for byte-level identity, unusual header layouts, multiple IFs, missing `nsamples`, all boundary samples, and recovery of payload by concatenation.
 - This document is an implementation/provenance checkpoint, **not** a certification of the M62 science results or any current 100-injection processing.
+
+
+## Concurrent read-only audit job: node11 or node12 (added 2026-10-29)
+
+This is an **extraction-only** integrity audit of existing completed W1–W4 **background** filterbanks; it does not fold, inject, reformat, search, or read partially written 100-injection outputs. The injection-engine/model audit is a separate gate and is not claimed complete here. A PASS means byte-exact reconstruction of the original payload intervals and the expected limited header edits; independent third-party SIGPROC parsing remains to be done.
+
+Files on branch:
+- [`scripts/verify_m62_filterbank_integrity.py`](../scripts/verify_m62_filterbank_integrity.py): streams a **complete, exact** byte comparison of each segment against its section of the original, verifies manifest geometry and full raw header bytes (only `tstart` and optional `nsamples` may differ), and checks for files changing during the audit. Outputs one JSON result **outside** all input directories. Default approximate aggregate read cap: 64 MiB/s.
+- [`scripts/run_m62_filterbank_integrity.slurm`](../scripts/run_m62_filterbank_integrity.slurm): single-node CPU Slurm job. Reserve 4 CPUs and 16 GiB RAM for this I/O-bound stage, even though up to 8–10 CPUs were available. Up to two hours requested; actual time is not yet measured.
+- [`tests/test_verify_m62_filterbank_integrity.py`](test_verify_m62_filterbank_integrity.py): synthetic regression for a clean pass plus detection of an interior byte corruption that the original first/middle/last sample spot checks would not catch. **New tests must be executed before claiming a green result.**
+
+Suggested independent working directory on cluster:
+
+```text
+/home/rnag/PULSEJET_validation/m62_filterbank_validation_20261029/
+    verify_m62_filterbank_integrity.py
+    run_m62_filterbank_integrity.slurm
+    logs/
+    results/<slurm-job-id>/extraction_audit_result.json
+```
+
+**Deployment (frontend, no checkout/pull or modifications to the running injection pipeline):**
+
+```bash
+WD=/home/rnag/PULSEJET_validation/m62_filterbank_validation_20261029
+REPO=/home/rnag/PULSEJET_beta
+mkdir -p "$WD"/logs "$WD"/results
+git -C "$REPO" fetch origin dev/polynomial-search
+git -C "$REPO" show origin/dev/polynomial-search:scripts/verify_m62_filterbank_integrity.py > "$WD/verify_m62_filterbank_integrity.py"
+git -C "$REPO" show origin/dev/polynomial-search:scripts/run_m62_filterbank_integrity.slurm > "$WD/run_m62_filterbank_integrity.slurm"
+
+# Identify the one correct existing extraction manifest; do NOT regenerate files.
+find /home/rnag/PULSEJET_validation/stage6_m62 \
+     /home/rnag/PULSEJET_validation/inception_injection_test_tool \
+     -name windows_manifest.json -type f -print
+```
+
+Inspect the returned manifest and confirm `source` points to the **original immutable M62 filterbank** and each `segments[].path` points to the **existing W1–W4 background .fil**, not the injected .fil. These paths cannot be safely inferred from the repository.
+
+**Local CPU-only synthetic regressions** (optional, in the existing repo without checkout):
+
+```bash
+cd /home/rnag/PULSEJET_beta
+# Run from a workspace containing the new test and script, after preparing code;
+# do NOT switch the active pipeline's checkout just to execute these tests.
+python3 -m unittest tests/test_verify_m62_filterbank_integrity.py -v
+```
+
+**Submit (after setting the manifest from the `find` output):**
+
+```bash
+WD=/home/rnag/PULSEJET_validation/m62_filterbank_validation_20261029
+MANIFEST=/absolute/path/to/existing/windows_manifest.json
+sinfo -N -n node11,node12 -o '%N %T %C %m'
+squeue -w node11,node12
+sbatch --nodelist=node11 \
+  --export=ALL,AUDIT_WD="$WD",AUDIT_MANIFEST="$MANIFEST" \
+  "$WD/run_m62_filterbank_integrity.slurm"
+# If node11 is unavailable, instead submit with --nodelist=node12.
+```
+
+**Monitor** using the actual job ID returned by `sbatch`:
+
+```bash
+squeue -j <job-id>
+tail -f /home/rnag/PULSEJET_validation/m62_filterbank_validation_20261029/logs/m62_fil_integrity_<job-id>.out
+cat /home/rnag/PULSEJET_validation/m62_filterbank_validation_20261029/results/<job-id>/extraction_audit_result.json
+```
+
+A failure or an aborted attempt should remain **FAIL_OR_INCOMPLETE** pending inspection; never convert it into a PASS from the mere presence of folded pulses. Logs/results remain in the new working directory. Source and background `.fil` are opened only for reading. Follow-up injection-geometry and model tests should be designed after reviewing the exact INCEPTION-Lite output manifests and injection quantization/scaling implementation; they should run only against **completed** outputs.
