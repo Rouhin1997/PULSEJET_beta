@@ -276,3 +276,40 @@ The reported `elapsed_seconds` is **452.847 s** (7 min 32.847 s). The audit star
 - `/home/rnag/PULSEJET_validation/m62_filterbank_validation_20261029/logs/m62_fil_integrity_66707.out`
 
 **Next gate:** inception_lite injection integrity and modeled signal truth on completed outputs; do not disturb the active 100-injection batch. The S/N-versus-RFI study is reserved for the subsequent pipeline-paper analysis.
+
+
+## Full Stage 1 code archive and cluster provenance check
+
+The **complete** Stage 1 implementation is version-controlled in the repository, not merely described in this document. Each link resolves to the full source file on `dev/polynomial-search`, and each Git blob SHA was verified by reading the file from GitHub:
+
+| Full tracked source path | Purpose | Git blob SHA |
+|---|---|---|
+| [`scripts/extract_sigproc_windows.py`](../scripts/extract_sigproc_windows.py) | Original SIGPROC W1–W4 extractor | `8e3e1421f863fcc55ce5872333a396aaf99c338b` |
+| [`tests/test_extract_sigproc_windows.py`](test_extract_sigproc_windows.py) | Original extractor synthetic tests | `31edf38d37931517c7b6c7b19f9b6c62a4af605f` |
+| [`scripts/verify_m62_filterbank_integrity.py`](../scripts/verify_m62_filterbank_integrity.py) | Independent full-payload, read-only verifier | `2788df2a3e1e1a553bc490109d8a9b8e20a09eae` |
+| [`tests/test_verify_m62_filterbank_integrity.py`](test_verify_m62_filterbank_integrity.py) | Verifier's pass/corruption regression | `e9c90c6c1d606905352ec78411a766c37386676c` |
+| [`scripts/run_m62_filterbank_integrity.slurm`](../scripts/run_m62_filterbank_integrity.slurm) | Actual Slurm job source used for node11 job 66707 | `5849291d14f2d3a43538067cce95ba66ec878c40` |
+| [`scripts/prepare_m62_filterbank_integrity.sh`](../scripts/prepare_m62_filterbank_integrity.sh) | Isolated workspace preparation and test runner | `c021e33f1cf487299374d71182a7f3332fd55991` |
+
+The successful cluster preparation obtained the verifier, tests, and Slurm launcher using `git show origin/dev/polynomial-search:<path>`; these were therefore copies of the tracked GitHub sources at preparation time. The source checkout on the cluster is `/home/rnag/PULSEJET_validation/PULSEJET_dev_source`, and the read-only Stage 1 workspace is `/home/rnag/PULSEJET_validation/m62_filterbank_validation_20261029`.
+
+**One remaining exact-source-provenance check:** the original extractor was reconstructed in GitHub earlier from a terminal source listing, rather than uploaded directly from the cluster. The independent full-payload audit proves that its *output files* were reconstructed correctly, but does not itself prove that the GitHub original extractor is byte-identical to the exact historical cluster file. Before Stage 2, compare both cluster copies to the archived source, without modifying anything:
+
+```bash
+WD=/home/rnag/PULSEJET_validation/m62_filterbank_validation_20261029
+ORIGINAL=/home/rnag/PULSEJET_validation/stage6_m62/extract_sigproc_windows.py
+TOOL_COPY=/home/rnag/PULSEJET_validation/inception_injection_test_tool/scripts/extract_sigproc_windows.py
+ARCHIVED="$WD/scripts/extract_sigproc_windows.py"
+
+for src in "$ORIGINAL" "$TOOL_COPY"; do
+  if cmp -s "$src" "$ARCHIVED"; then
+    echo "EXACT MATCH: $src"
+  else
+    echo "DIFFERENT OR MISSING: $src"
+    diff -u "$src" "$ARCHIVED" | head -n 100
+  fi
+done
+sha256sum "$ORIGINAL" "$TOOL_COPY" "$ARCHIVED"
+```
+
+If both print `EXACT MATCH`, then the actual cluster extractor source is also archived byte-for-byte. If not, retain both versions and inspect their differences before claiming exact-source archival. The independent verifier, its tests, and job code have already been committed and exercised in the successful Stage 1 run. **The inception_lite injection engine and its cluster-local runtime configuration are a separate Stage 2 provenance audit**; do not presume they are identical to GitHub without checking.
