@@ -234,3 +234,20 @@ sbatch --nodelist=node11 \
 ```
 
 **Stage 2A status: COMPLETE for executed existing-case metadata, filterbank geometry and two recorded runtime source hashes.** **Stage 2B not yet passed:** signal-phase/sign/epoch model fidelity, quantization physics and representative known-parameter folding must be checked separately before asserting scientific injection correctness. The full Keplerian UCB100 binaries require a distinct subsequent validation set after completion.
+
+
+## Stage 2A sampled payload difference statistics — Slurm 66715
+
+After the Stage 2A `PASS_METADATA_AND_GEOMETRY` result, the operator read the `data_sample_comparison` fields from the four JSON reports. Each window was sampled at 32 distributed 4096-time-sample blocks; for this 256-channel unsigned 8-bit file that is 33,554,432 compared bytes per window (per input/output file).
+
+| Window | Observed changed bytes | Changed fraction | Positive differences | Negative differences | Maximum absolute byte difference |
+|:--|--:|--:|--:|--:|--:|
+| W1 | 75,228 | 0.224% | 75,228 | 0 | 1 |
+| W2 | 68,469 | 0.204% | 68,469 | 0 | 1 |
+| W3 | 65,834 | 0.196% | 65,834 | 0 | 1 |
+| W4 | 42,295 | 0.126% | 42,295 | 0 | 1 |
+| **Total** | **251,826** | **approx. 0.188% across 134,217,728 sampled bytes** | **251,826** | **0** | **1** |
+
+All sampled changed pixels show `output = background + 1`; no sampled pixel decreased or changed by more than one ADC count. This is **consistent** with positive, low-amplitude Gaussian pulse profiles and the real-observation injector's truncated-normal de-digitization and integer rounding. A `0.1–0.2%` sampled-byte change fraction **is not** itself equivalent to 0.1–0.2% pulsar flux, calibrated S/N, sensitivity loss, or fractional pulse duty cycle. The four windows have intentionally different groups of five injected pulsars and input parameters; differing percentages are not evidence of a bug.
+
+**Scientific follow-up:** independently phase-tag the changed input-versus-output pixels using the five truth models per window (including DM delays, midpoint A0/A1 acceleration and jerk), and compare coherence to deliberately incorrect frequency, acceleration/jerk signs and DM reference controls. This tests that the pixel changes occur along the prescribed dispersed pulse tracks, rather than merely matching file geometry. Pulse amplitude and folded S/N calibration remain separate.
