@@ -160,8 +160,9 @@ Suggested independent working directory on cluster:
 **Recommended one-time preparation** (frontend; creates only this new working directory, copies pinned scripts with `git show`, runs tiny synthetic tests, and checks the exact known M62 manifest; no local branch checkout, no Slurm submission):
 
 ```bash
-REPO=/home/rnag/PULSEJET_beta
-(cd "$REPO" && git fetch origin dev/polynomial-search:refs/remotes/origin/dev/polynomial-search)
+REPO=/home/rnag/PULSEJET_validation/PULSEJET_dev_source
+(cd "$REPO" && git fetch origin)
+set -o pipefail
 (cd "$REPO" && git show origin/dev/polynomial-search:scripts/prepare_m62_filterbank_integrity.sh) | bash
 ```
 
@@ -171,9 +172,9 @@ The original observation was recorded at `/archive1/ridolfi/DATA/MeerKAT/ALL_TRA
 
 ```bash
 WD=/home/rnag/PULSEJET_validation/m62_filterbank_validation_20261029
-REPO=/home/rnag/PULSEJET_beta
+REPO=/home/rnag/PULSEJET_validation/PULSEJET_dev_source
 mkdir -p "$WD"/scripts "$WD"/tests "$WD"/logs "$WD"/results
-git -C "$REPO" fetch origin dev/polynomial-search
+(cd "$REPO" && git fetch origin)
 (cd "$REPO" && git show origin/dev/polynomial-search:scripts/verify_m62_filterbank_integrity.py) > "$WD/scripts/verify_m62_filterbank_integrity.py"
 (cd "$REPO" && git show origin/dev/polynomial-search:scripts/extract_sigproc_windows.py) > "$WD/scripts/extract_sigproc_windows.py"
 (cd "$REPO" && git show origin/dev/polynomial-search:tests/test_verify_m62_filterbank_integrity.py) > "$WD/tests/test_verify_m62_filterbank_integrity.py"
