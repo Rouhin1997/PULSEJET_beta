@@ -4,7 +4,7 @@
 set -euo pipefail
 umask 077
 
-REPO="${PULSEJET_REPO:-/home/rnag/PULSEJET_beta}"
+REPO="${PULSEJET_REPO:-/home/rnag/PULSEJET_validation/PULSEJET_dev_source}"
 WD="${AUDIT_WD:-/home/rnag/PULSEJET_validation/m62_filterbank_validation_20261029}"
 MANIFEST="${AUDIT_MANIFEST:-/home/rnag/PULSEJET_validation/stage6_m62/m62_15m_windows/windows_manifest.json}"
 REF="origin/dev/polynomial-search"
