@@ -18,7 +18,7 @@ writes only to the existing separate validation working directory:
 
 Use 4 CPUs, 16 GB RAM, no GPU, node11 (node12 fallback). The case comparison
 reads 32 × 4096 samples per window from the background and injection output
-(32 MiB per complete four-window comparison, per side, for 256 8-bit channels);
+(32 MiB per window per side, or 128 MiB across four windows per side, for 256 8-bit channels);
 the metadata and headers require negligible additional I/O.
 
 ## Source-code provenance
