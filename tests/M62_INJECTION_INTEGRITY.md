@@ -402,3 +402,45 @@ diagnostic.
 may be located without guessing its ID using
 `/home/rnag/PULSEJET_validation/m62_filterbank_validation_20261029/results/injection_phase_*/W1/phase_track_result.json`.
 Work remains read-only and separate from Stage 10 UCB100.
+
+
+## Stage 2B W1 counterfactual physics controls — Slurm 66727
+
+**Confirmed operator-provided JSON excerpt, 2026-10-29:**
+`/home/rnag/PULSEJET_validation/m62_filterbank_validation_20261029/results/injection_phase_66727/W1/phase_track_result.json`
+
+```text
+STATUS: DIAGNOSTIC_COMPLETE_NOT_SCIENCE_PASS
+EVENT CLOUD: 32 distributed blocks × 4096 time samples
+bytes_compared_per_file: 33,554,432
+changed_bytes: 75,228
+increased: 75,228
+decreased: 0
+max_abs_delta: 1
+```
+
+The following table faithfully records the full **reported counterfactual phase coherence**, with all other injected parameters held at their truth values for each individual alternate model. `truth/control` is a normalized-coherence ratio, **not** a sigma significance, a likelihood ratio, or a fold S/N ratio.
+
+| Source | Truth coherence | Alternate model | Alternate coherence | Truth/control |
+|---|---:|---|---:|---:|
+| W1 I01 | 0.36111 | No acceleration/jerk/DM sign controls applicable: all zero | — | — |
+| W1 I02 | 0.21270 | Acceleration sign reversed | 0.04340 | 4.90× |
+| W1 I02 | 0.21270 | No acceleration or jerk | 0.03415 | 6.23× |
+| W1 I02 | 0.21270 | DM sign reversed | 0.00521 | 40.84× |
+| W1 I03 | 0.08546 | Jerk sign reversed | 0.03554 | 2.40× |
+| W1 I03 | 0.08546 | No acceleration or jerk | 0.03540 | 2.41× |
+| W1 I03 | 0.08546 | DM sign reversed | 0.00505 | 16.92× |
+| W1 I04 | 0.26713 | Acceleration sign reversed | 0.08032 | 3.33× |
+| W1 I04 | 0.26713 | Jerk sign reversed | 0.09498 | 2.81× |
+| W1 I04 | 0.26713 | No acceleration or jerk | 0.04752 | 5.62× |
+| W1 I04 | 0.26713 | DM sign reversed | 0.00165 | 162.30× |
+| W1 I05 | 0.06358 | Acceleration sign reversed | 0.00871 | 7.30× |
+| W1 I05 | 0.06358 | Jerk sign reversed | 0.01128 | 5.64× |
+| W1 I05 | 0.06358 | No acceleration or jerk | 0.00068 | 93.65× |
+| W1 I05 | 0.06358 | DM sign reversed | 0.00204 | 31.19× |
+
+**Interpretation:** in W1 the intended source models outperform all **14 tested** counterfactual sign/no-motion/DM controls. The weakest relative preference is the I03 jerk reversal (2.40×) and the strongest is I04 DM reversal (162.30×). These results, combined with the previous correct-versus-shifted-frequency comparisons (6.91×–10.28×), provide strong qualitative evidence that the altered input samples follow the intended **combined** period, additional dispersion, acceleration and jerk phase tracks, and evidence favoring the prescribed signs under the *specific* tested alternatives. Because five injected sources are superposed, and because no null distribution or systematic error budget was calibrated, this remains a differential-pixel diagnostic, not definitive model-parameter identifiability or independent S/N calibration.
+
+**Status:** Stage 2A COMPLETE; Stage 2B W1 pilot OBSERVED / DIAGNOSTIC-COMPLETE, all five source tracks match their expected model preferentially over tested alternatives. Extend to W2–W4, and subsequently validate representative truth-fold coherence, before considering the 20-source polynomial pilot fully validated. Preserve the exact JSON results on the cluster; they contain richer precision and metadata than these copied summary values.
+
+**Reproducibility note:** the W1 changed-byte count of 75,228 agrees with the independent Stage 2A W1 sampled-difference result, including strictly positive +1-count differences. The Stage 2B source and test code are already committed alongside this document.
