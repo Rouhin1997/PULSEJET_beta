@@ -16,7 +16,7 @@ set -euo pipefail
 umask 077
 
 AUDIT_WD="${AUDIT_WD:-/home/rnag/PULSEJET_validation/m62_filterbank_validation_20261029}"
-: "${AUDIT_MANIFEST:?Set AUDIT_MANIFEST to the existing windows_manifest.json}"
+AUDIT_MANIFEST="${AUDIT_MANIFEST:-/home/rnag/PULSEJET_validation/stage6_m62/m62_15m_windows/windows_manifest.json}"
 AUDIT_CODE="${AUDIT_WD}/scripts/verify_m62_filterbank_integrity.py"
 REPORT_DIR="${AUDIT_WD}/results/${SLURM_JOB_ID:-manual}"
 
