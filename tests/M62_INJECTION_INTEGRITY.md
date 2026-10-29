@@ -335,3 +335,30 @@ expand to W2–W4 on separate job IDs, then move to full quantitative
 known-truth folding and, separately, the completed full-Keplerian UCB100
 cases. Do not declare Stage 2B complete merely from the synthetic tests,
 the existence of a JSON file, or positive one-count pixel changes.
+
+
+## Stage 2B cluster preflight — synthetic regressions passed
+
+**Operator-observed run on frontend2 (2026-10-29):** the cluster fetched the
+`dev/polynomial-search` branch through commit `1f7b28a` and executed the
+committed `scripts/prepare_m62_injection_phase_tracks.sh` using
+`git show origin/dev/polynomial-search:... | bash`.
+
+Both regressions ran inside the existing INCEPTION-Lite Singularity image and
+**passed**:
+
+```text
+test_polynomial_derivatives_have_intended_sign ... ok
+test_truth_beats_wrong_motion_dispersion_and_frequency ... ok
+Ran 2 tests in 0.014s
+OK
+== Stage 2B PILOT READY (no Slurm job submitted) ==
+```
+
+The separate Stage 2B W1 scientific audit **has not yet been run** at this
+checkpoint. The regression only checks independently constructed synthetic
+pulse events and the expected sign convention. It does not establish that
+the real W1 injection is phase coherent. Submit the dedicated
+`scripts/run_m62_injection_phase_tracks.slurm 1` on node11 to test W1
+read-only, then inspect its truth-vs-control coherence report before
+extending to W2–W4.
