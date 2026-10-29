@@ -161,8 +161,8 @@ Suggested independent working directory on cluster:
 
 ```bash
 REPO=/home/rnag/PULSEJET_beta
-git -C "$REPO" fetch origin dev/polynomial-search
-git -C "$REPO" show origin/dev/polynomial-search:scripts/prepare_m62_filterbank_integrity.sh | bash
+(cd "$REPO" && git fetch origin dev/polynomial-search:refs/remotes/origin/dev/polynomial-search)
+(cd "$REPO" && git show origin/dev/polynomial-search:scripts/prepare_m62_filterbank_integrity.sh) | bash
 ```
 
 The original observation was recorded at `/archive1/ridolfi/DATA/MeerKAT/ALL_TRAPUM_GC_CENTRAL_BEAMS/M62_18U-trapum-pgb_cfbf00001sub_CB.fil`, and the existing manifest was recorded at `/home/rnag/PULSEJET_validation/stage6_m62/m62_15m_windows/windows_manifest.json`. The preparation script checks that the manifest and its referenced inputs exist, but cannot guarantee that no other process is writing to them; the auditor checks file metadata during its read. The 100-injection output directory is not accessed.
@@ -174,11 +174,11 @@ WD=/home/rnag/PULSEJET_validation/m62_filterbank_validation_20261029
 REPO=/home/rnag/PULSEJET_beta
 mkdir -p "$WD"/scripts "$WD"/tests "$WD"/logs "$WD"/results
 git -C "$REPO" fetch origin dev/polynomial-search
-git -C "$REPO" show origin/dev/polynomial-search:scripts/verify_m62_filterbank_integrity.py > "$WD/scripts/verify_m62_filterbank_integrity.py"
-git -C "$REPO" show origin/dev/polynomial-search:scripts/extract_sigproc_windows.py > "$WD/scripts/extract_sigproc_windows.py"
-git -C "$REPO" show origin/dev/polynomial-search:tests/test_verify_m62_filterbank_integrity.py > "$WD/tests/test_verify_m62_filterbank_integrity.py"
-git -C "$REPO" show origin/dev/polynomial-search:tests/test_extract_sigproc_windows.py > "$WD/tests/test_extract_sigproc_windows.py"
-git -C "$REPO" show origin/dev/polynomial-search:scripts/run_m62_filterbank_integrity.slurm > "$WD/run_m62_filterbank_integrity.slurm"
+(cd "$REPO" && git show origin/dev/polynomial-search:scripts/verify_m62_filterbank_integrity.py) > "$WD/scripts/verify_m62_filterbank_integrity.py"
+(cd "$REPO" && git show origin/dev/polynomial-search:scripts/extract_sigproc_windows.py) > "$WD/scripts/extract_sigproc_windows.py"
+(cd "$REPO" && git show origin/dev/polynomial-search:tests/test_verify_m62_filterbank_integrity.py) > "$WD/tests/test_verify_m62_filterbank_integrity.py"
+(cd "$REPO" && git show origin/dev/polynomial-search:tests/test_extract_sigproc_windows.py) > "$WD/tests/test_extract_sigproc_windows.py"
+(cd "$REPO" && git show origin/dev/polynomial-search:scripts/run_m62_filterbank_integrity.slurm) > "$WD/run_m62_filterbank_integrity.slurm"
 
 # Identify the one correct existing extraction manifest; do NOT regenerate files.
 find /home/rnag/PULSEJET_validation/stage6_m62 \
