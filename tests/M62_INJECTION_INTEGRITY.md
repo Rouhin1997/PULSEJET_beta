@@ -208,3 +208,29 @@ Next cluster action:
 sbatch --nodelist=node11 \
   /home/rnag/PULSEJET_validation/m62_filterbank_validation_20261029/scripts/run_m62_injection_integrity.slurm
 ```
+
+
+## Stage 2A real-data result — 2026-10-29, Slurm 66715
+
+**Final result from the actual node11 cluster run: PASS_METADATA_AND_GEOMETRY for W1–W4.** This documents the operator-provided Slurm stdout and empty stderr; it is not a claim of independent access to the cluster.
+
+- Slurm job: `66715`, host `node11.cluster`; start `2026-10-29T14:47:43+0100`; final log marker `STAGE2A FINISHED 2026-10-29T14:48:13+0100` (30 s wall-clock difference).
+- Scope: existing five-source injections in completed Stage 6 `W1`–`W4` only, **20 injected pulsars total**; ongoing `stage10_ucb100` not accessed.
+- All four case checks printed `RESULT PASS_METADATA_AND_GEOMETRY` and corresponding `Wk METADATA AND GEOMETRY PASS`.
+- Source provenance from the executed INCEPTION-Lite SIF: `injector_script_sha256 MATCH` **4/4** and `pulsar_model_sha256 MATCH` **4/4** against the saved run manifests. This supports that these two key injector sources in the current SIF are byte-identical to those recorded during the completed Stage 6 injections; the runner does not yet attest the full transitive code dependency tree.
+- The operator's `m62_inj_integrity_66715.err` output was empty.
+- The underlying auditor checks exact SIGPROC header bytes and observation sample geometry, configuration/resolved-truth/report/manifest consistency, and deterministic spread-out **sampled** original-versus-injected payload differences. Acceptance does not require a nonzero change fraction; it is a metadata/geometry gate, not a proof of injected signal detection.
+- The four individual JSON result bodies (including changed-byte fractions) have **not** been inspected in this report; their contents must be read before quoting any numerical injection-difference metrics.
+
+**Preserved cluster results:**
+
+```text
+/home/rnag/PULSEJET_validation/m62_filterbank_validation_20261029/results/injection_integrity_66715/inception_sif_source_sha256.json
+/home/rnag/PULSEJET_validation/m62_filterbank_validation_20261029/results/injection_integrity_66715/W1/injection_integrity_result.json
+/home/rnag/PULSEJET_validation/m62_filterbank_validation_20261029/results/injection_integrity_66715/W2/injection_integrity_result.json
+/home/rnag/PULSEJET_validation/m62_filterbank_validation_20261029/results/injection_integrity_66715/W3/injection_integrity_result.json
+/home/rnag/PULSEJET_validation/m62_filterbank_validation_20261029/results/injection_integrity_66715/W4/injection_integrity_result.json
+/home/rnag/PULSEJET_validation/m62_filterbank_validation_20261029/logs/m62_inj_integrity_66715.out
+```
+
+**Stage 2A status: COMPLETE for executed existing-case metadata, filterbank geometry and two recorded runtime source hashes.** **Stage 2B not yet passed:** signal-phase/sign/epoch model fidelity, quantization physics and representative known-parameter folding must be checked separately before asserting scientific injection correctness. The full Keplerian UCB100 binaries require a distinct subsequent validation set after completion.
