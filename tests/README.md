@@ -188,3 +188,20 @@ running a corrected image.
 
 Original bug background and exact reproduction:
 [`PEAKFINDER_FREQUENCY_BOUND_ISSUE.md`](PEAKFINDER_FREQUENCY_BOUND_ISSUE.md).
+
+
+## M62 real-background filterbank extraction: archived implementation (2026-10-29)
+
+See [M62_FILTERBANK_EXTRACTION.md](M62_FILTERBANK_EXTRACTION.md) for the
+**custom SIGPROC W1–W4 extractor**, its exact sample-boundary and `tstart`
+calculations, copied source in [`scripts/extract_sigproc_windows.py`](../scripts/extract_sigproc_windows.py),
+and original tiny synthetic fixture tests in
+[`tests/test_extract_sigproc_windows.py`](test_extract_sigproc_windows.py).
+The original M62 background is real observational data (including RFI),
+not a synthetic Gaussian-noise filterbank; injected pulsar signals are simulated.
+
+**Status:** Code/test archived; the extraction of the *existing real M62 files*
+is **not yet independently verified lossless**. Only three sample locations
+per output are checked internally. Full payload byte comparison and independent
+SIGPROC-header/time audit are explicitly deferred until after the ongoing
+100-injection run. Do not change, regenerate or overwrite active files.
