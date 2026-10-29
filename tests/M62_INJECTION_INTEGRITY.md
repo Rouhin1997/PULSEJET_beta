@@ -251,3 +251,87 @@ After the Stage 2A `PASS_METADATA_AND_GEOMETRY` result, the operator read the `d
 All sampled changed pixels show `output = background + 1`; no sampled pixel decreased or changed by more than one ADC count. This is **consistent** with positive, low-amplitude Gaussian pulse profiles and the real-observation injector's truncated-normal de-digitization and integer rounding. A `0.1–0.2%` sampled-byte change fraction **is not** itself equivalent to 0.1–0.2% pulsar flux, calibrated S/N, sensitivity loss, or fractional pulse duty cycle. The four windows have intentionally different groups of five injected pulsars and input parameters; differing percentages are not evidence of a bug.
 
 **Scientific follow-up:** independently phase-tag the changed input-versus-output pixels using the five truth models per window (including DM delays, midpoint A0/A1 acceleration and jerk), and compare coherence to deliberately incorrect frequency, acceleration/jerk signs and DM reference controls. This tests that the pixel changes occur along the prescribed dispersed pulse tracks, rather than merely matching file geometry. Pulse amplitude and folded S/N calibration remain separate.
+
+
+## Stage 2B independent differential-pixel phase-track pilot
+
+**Status: implementation committed; no actual M62 phase-track results yet.** The
+Stage 2A `0.126–0.224%` changed-pixel fractions, all positive +1-count
+changes, are consistent with the positive, low-amplitude default Gaussian
+pulse model used in the completed pilot. The source implementation
+(`injector/pulsar_emission.py`, `injector/signal_injector.py`) generates
+nonnegative default profiles, re-digitizes active 8-bit pixels, adds pulse
+amplitudes, rounds and clips; the exact change fraction is **not** S/N.
+
+The independent model prediction for the **topocentric five-source pilot**
+with `DM_ref=inf`, `ACCEPOCH=0.5`, and default `DM_const=exact` is:
+
+```text
+t_eff = t - DM*K_DM/f_channel^2 - (ACCEPOCH * T_obs)
+phase(t, f_channel) = (1/P0) * [ t_eff - A0*t_eff^2/(2*c) - A1*t_eff^3/(6*c) ]
+```
+
+Here `A0` is in m/s², `A1` in m/s³; the injected clock convention gives
+`d f_inst/dt = -(1/P0)*A0/c` at midpoint and
+`d² f_inst/dt² = -(1/P0)*A1/c`.
+The default `DM` is **additional synthetic DM**, not the total original M62
+cluster DM. Absolute phase-origin offsets do not affect first-harmonic
+coherence.
+
+The new read-only
+[`scripts/verify_m62_injection_phase_tracks.py`](../scripts/verify_m62_injection_phase_tracks.py)
+builds a sparse event list of the pixels changed between the corresponding
+background and injected filterbank. It independently calculates each truth
+phase track (rather than calling the injector's model, PulsarX folds, or the
+PULSEJET search code) and tests weighted circular first-harmonic coherence.
+It reports comparisons to deliberately incorrect frequency values and,
+where applicable, inverted acceleration, jerk, and DM signs and a
+zero-motion model. The unit regression
+[`tests/test_verify_m62_injection_phase_tracks.py`](test_verify_m62_injection_phase_tracks.py)
+contains synthetic narrow-pulse events and analytically tests the
+midpoint frequency derivative signs. The actual real-data scientific check
+still requires running this code against completed observational injections.
+
+This test samples 32 × 4096 time samples per window from **both** file
+versions, i.e. 33.6 MB per file with 256 8-bit channels. It is a
+**differential phase-concentration diagnostic**, not a blind search, formal
+false-alarm p-value, folded S/N, nor a measurement of completeness.
+A correct phase track should show preferential coherence against
+off-frequency and physically wrong-model controls; strong coherence can
+nevertheless appear for some incorrect signs over short baselines, or be
+diluted by five simultaneous sources. Hence the output status is expressly
+`DIAGNOSTIC_COMPLETE_NOT_SCIENCE_PASS`, not a blanket physics `PASS`.
+
+**Deploy once on frontend2**, avoiding active Stage 10 files and GPUs:
+
+```bash
+cd /home/rnag/PULSEJET_validation/PULSEJET_dev_source
+git fetch origin
+set -o pipefail
+git show origin/dev/polynomial-search:scripts/prepare_m62_injection_phase_tracks.sh | bash
+```
+
+The bootstrap exports three committed source/test/job files into the
+independent working directory and executes **only synthetic regression
+tests** with NumPy from the pinned INCEPTION SIF. It refuses overwrite on
+repeated execution. Synthetic test success is a *preflight*, not the
+real-data result.
+
+After a green preflight, submit **W1 only** initially:
+
+```bash
+WD=/home/rnag/PULSEJET_validation/m62_filterbank_validation_20261029
+sbatch --nodelist=node11 "$WD/scripts/run_m62_injection_phase_tracks.slurm" 1
+```
+
+The Slurm launcher requests 4 CPUs, 16 GB RAM and 30 minutes; reads only
+the existing completed Stage 6 W1 case and the verified W1 background;
+writes a fresh per-job JSON report outside their directories. It uses the
+real INCEPTION-Lite SIF only as a NumPy Python environment, **not**
+for injection or scientific phase prediction.
+
+After inspecting W1 truth/control coherence and exact source epochs,
+expand to W2–W4 on separate job IDs, then move to full quantitative
+known-truth folding and, separately, the completed full-Keplerian UCB100
+cases. Do not declare Stage 2B complete merely from the synthetic tests,
+the existence of a JSON file, or positive one-count pixel changes.
