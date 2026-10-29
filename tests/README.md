@@ -200,8 +200,29 @@ and original tiny synthetic fixture tests in
 The original M62 background is real observational data (including RFI),
 not a synthetic Gaussian-noise filterbank; injected pulsar signals are simulated.
 
-**Status:** Code/test archived; the extraction of the *existing real M62 files*
-is **not yet independently verified lossless**. Only three sample locations
-per output are checked internally. Full payload byte comparison and independent
-SIGPROC-header/time audit are explicitly deferred until after the ongoing
-100-injection run. Do not change, regenerate or overwrite active files.
+**Updated status (2026-10-29): Stage 1 complete.** The independent
+read-only verifier (`scripts/verify_m62_filterbank_integrity.py`) compared all
+15,177,064,192 payload bytes of the original M62 observational data against
+the existing W1–W4 backgrounds on node11 (Slurm job 66707); the final JSON
+report status was `PASS`. Header edits and sample boundaries were checked.
+The GitHub original splitter was also verified byte-identical (`cmp`) to
+both archived cluster source copies. See the document above for final
+evidence and source hashes. No active injections were altered.
+
+## M62 real-background injection integrity: Stage 2 (2026-10-29)
+
+See [M62_INJECTION_INTEGRITY.md](M62_INJECTION_INTEGRITY.md) for the
+original INCEPTION-Lite injector code, the actual 8-bit add/de-digitize/clip
+mechanics, and the isolated read-only Stage 2A verification plan. All new
+validation source and scripts are committed on this branch:
+[`scripts/verify_m62_injection_case.py`](../scripts/verify_m62_injection_case.py),
+[`scripts/inspect_inception_runtime.py`](../scripts/inspect_inception_runtime.py),
+[`scripts/run_m62_injection_integrity.slurm`](../scripts/run_m62_injection_integrity.slurm),
+[`scripts/prepare_m62_injection_integrity.sh`](../scripts/prepare_m62_injection_integrity.sh)
+and [`tests/test_verify_m62_injection_case.py`](test_verify_m62_injection_case.py).
+
+**Stage 2 status: prepared, not executed on observational outputs.** It
+targets only already-completed Stage 6 W1–W4 five-source cases and writes
+results to `m62_filterbank_validation_20261029`, never the active
+Stage 10 UCB100 injection outputs. Independent signal-model/phase checks
+(Stage 2B) and pipeline-paper S/N/RFI characterization remain separate.
