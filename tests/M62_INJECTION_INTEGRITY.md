@@ -444,3 +444,31 @@ The following table faithfully records the full **reported counterfactual phase 
 **Status:** Stage 2A COMPLETE; Stage 2B W1 pilot OBSERVED / DIAGNOSTIC-COMPLETE, all five source tracks match their expected model preferentially over tested alternatives. Extend to W2–W4, and subsequently validate representative truth-fold coherence, before considering the 20-source polynomial pilot fully validated. Preserve the exact JSON results on the cluster; they contain richer precision and metadata than these copied summary values.
 
 **Reproducibility note:** the W1 changed-byte count of 75,228 agrees with the independent Stage 2A W1 sampled-difference result, including strictly positive +1-count differences. The Stage 2B source and test code are already committed alongside this document.
+
+
+## Stage 2B W2 submission — Slurm 66787
+
+**Submission recorded (2026-10-29):** the operator submitted the existing
+read-only W2 independent changed-pixel phase-track job with
+
+```bash
+sbatch --nodelist=node11 \
+  /home/rnag/PULSEJET_validation/m62_filterbank_validation_20261029/scripts/run_m62_injection_phase_tracks.slurm 2
+```
+
+Slurm responded `Submitted batch job 66787`. This establishes **submission
+only**, not runtime success, completion, or a W2 scientific pass.
+Expected stdout/stderr:
+```text
+/home/rnag/PULSEJET_validation/m62_filterbank_validation_20261029/logs/m62_phase_track_66787.out
+/home/rnag/PULSEJET_validation/m62_filterbank_validation_20261029/logs/m62_phase_track_66787.err
+```
+Expected report on success:
+`/home/rnag/PULSEJET_validation/m62_filterbank_validation_20261029/results/injection_phase_66787/W2/phase_track_result.json`.
+The job audits only completed Stage 6 W2 against its original background;
+the active Stage 10 UCB100 campaign remains outside scope.
+
+**Status: SUBMITTED, RESULT PENDING.** When stdout and the JSON are available,
+record all five W2 truth versus off-frequency coherence ratios, and the
+acceleration/jerk/DM/no-motion counterfactuals, event-cloud statistics, and
+any errors. Do not infer success from the existence of a Slurm job ID.
