@@ -506,3 +506,69 @@ so Stage 2B W2 signed-parameter checks are not yet interpreted.
 
 Original result preserved on cluster:
 `/home/rnag/PULSEJET_validation/m62_filterbank_validation_20261029/results/injection_phase_66787/W2/phase_track_result.json`.
+
+
+## Stage 2B W2 signed-model counterfactual results — Slurm 66787
+
+**Operator-provided W2 JSON report summary, 2026-10-29.** The final
+`phase_track_result.json` is preserved on the cluster at
+
+```text
+/home/rnag/PULSEJET_validation/m62_filterbank_validation_20261029/results/injection_phase_66787/W2/phase_track_result.json
+```
+
+`status = DIAGNOSTIC_COMPLETE_NOT_SCIENCE_PASS`
+
+**Independent changed-pixel event cloud:**
+`distributed_blocks=32`,
+`time_samples_per_block=4096`,
+`bytes_compared_per_file=33,554,432`,
+`changed_bytes=68,469`,
+`increased=68,469`,
+`decreased=0`,
+`max_abs_delta=1`.
+These values exactly match W2's independently generated Stage 2A
+sampled-difference count, and show only +1 digitization-level changes
+in the sampled pixels.
+
+| Source | Truth coherence | Counterfactual | Counterfactual coherence | Truth/control |
+|---|---:|---|---:|---:|
+| W2 I06 | 0.17538 | DM sign reversed | 0.00395 | 44.37× |
+| W2 I07 | 0.10897 | Acceleration sign reversed | 0.02256 | 4.83× |
+| W2 I07 | 0.10897 | No acceleration or jerk | 0.01317 | 8.28× |
+| W2 I07 | 0.10897 | DM sign reversed | 0.00204 | 53.38× |
+| W2 I08 | 0.31615 | Jerk sign reversed | 0.09357 | 3.38× |
+| W2 I08 | 0.31615 | No acceleration or jerk | 0.10252 | 3.08× |
+| W2 I08 | 0.31615 | DM sign reversed | 0.00419 | 75.53× |
+| W2 I09 | 0.34997 | Acceleration sign reversed | 0.10443 | 3.35× |
+| W2 I09 | 0.34997 | Jerk sign reversed | 0.09069 | 3.86× |
+| W2 I09 | 0.34997 | No acceleration or jerk | 0.01349 | 25.95× |
+| W2 I09 | 0.34997 | DM sign reversed | 0.01318 | 26.55× |
+| W2 I10 | 0.04298 | Acceleration sign reversed | 0.01556 | 2.76× |
+| W2 I10 | 0.04298 | Jerk sign reversed | 0.00480 | 8.94× |
+| W2 I10 | 0.04298 | No acceleration or jerk | 0.00536 | 8.02× |
+| W2 I10 | 0.04298 | DM sign reversed | 0.00183 | 23.46× |
+
+All **15 of 15** tested W2 physical counterfactual models have lower
+changed-pixel first-harmonic coherence than their corresponding intended
+phase models. Combined with W1's 14 tested counterfactuals, this gives
+**29 of 29** comparisons favoring the prescribed model for W1+W2
+(the stationary W1 I01 has no nontrivial sign reversals, and W2 I06
+has only a DM-sign test).
+
+**Interpretation:** positive evidence for the specified W2 timing
+evolution, including the tested signs of negative acceleration,
+negative jerk and additional dispersion. The weakest W2 truth/control
+ratio is 2.76× (I10 reversed acceleration); no tested alternate
+exceeded the truth model. This is a qualitative sparse, phase-coherence
+diagnostic using five simultaneous injected sources, **not** a
+statistically calibrated hypothesis test, independently measured folded
+S/N, parameter uncertainty, or full waveform reconstruction.
+Different reference epoch, pulse profile normalization, and injected
+model/alternative degeneracies remain to be checked separately.
+
+**Stage 2B coverage at this checkpoint:** W1 and W2 each have
+all five intended source tracks preferred over shifted-frequency
+controls and all available tested physical counterfactuals. W3–W4
+are not yet run. No input, completed injection, or active UCB100 file
+was modified by these audits.
