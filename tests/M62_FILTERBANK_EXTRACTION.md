@@ -111,9 +111,9 @@ It constructs 41-sample, four-channel, 8-bit SIGPROC fixtures both with and with
 
 These limitations do **not** establish a defect in the M62 outputs; they define what we have and have not proven.
 
-## Deferred scientific validation: perform after current 100-injection batch
+## Scientific validation: read-only extraction audit now; injection checks after current batch
 
-Do **not** alter the working original, the W1–W4 backgrounds, active injections, or any currently writing files. Validate in read-only mode once the batch is complete and its products are secured.
+Do **not** alter the working original, W1–W4 backgrounds, active injections, or any currently writing files. The **extraction-only, throttled, read-only** audit may run concurrently on a separate node, provided the original and W1–W4 backgrounds are stable. Defer injection-engine/model checks against the active 100-injection outputs until those outputs are finished and secured.
 
 1. Identify the **exact original source**, existing W1–W4 background files, `windows_manifest.json`, extractor commit/version and recorded invocation. Confirm none are being written.
 2. Record `stat` information and SHA-256 of each immutable existing file. Check that actual sample geometry and all manifest boundaries match the original's payload length; verify contiguous offsets, no overlaps, no gaps, and last `stop = N`.
@@ -151,11 +151,23 @@ Suggested independent working directory on cluster:
     tests/test_verify_m62_filterbank_integrity.py
     tests/test_extract_sigproc_windows.py
     run_m62_filterbank_integrity.slurm
+    code_commit.txt
+    code_checksums.sha256
     logs/
     results/<slurm-job-id>/extraction_audit_result.json
 ```
 
-**Deployment (frontend, no checkout/pull or modifications to the running injection pipeline):**
+**Recommended one-time preparation** (frontend; creates only this new working directory, copies pinned scripts with `git show`, runs tiny synthetic tests, and checks the exact known M62 manifest; no local branch checkout, no Slurm submission):
+
+```bash
+REPO=/home/rnag/PULSEJET_beta
+git -C "$REPO" fetch origin dev/polynomial-search
+git -C "$REPO" show origin/dev/polynomial-search:scripts/prepare_m62_filterbank_integrity.sh | bash
+```
+
+The original observation was recorded at `/archive1/ridolfi/DATA/MeerKAT/ALL_TRAPUM_GC_CENTRAL_BEAMS/M62_18U-trapum-pgb_cfbf00001sub_CB.fil`, and the existing manifest was recorded at `/home/rnag/PULSEJET_validation/stage6_m62/m62_15m_windows/windows_manifest.json`. The preparation script checks that the manifest and its referenced inputs exist, but cannot guarantee that no other process is writing to them; the auditor checks file metadata during its read. The 100-injection output directory is not accessed.
+
+**Manual deployment alternative (frontend, no checkout/pull or modifications to running pipeline):**
 
 ```bash
 WD=/home/rnag/PULSEJET_validation/m62_filterbank_validation_20261029
@@ -184,11 +196,11 @@ python3 -m unittest discover -s "$WD/tests" -p "test_extract_sigproc_windows.py"
 python3 -m unittest discover -s "$WD/tests" -p "test_verify_m62_filterbank_integrity.py" -v
 ```
 
-**Submit (after setting the manifest from the `find` output):**
+**Submit** (only after preparation and synthetic tests succeed; default manifest points to the known W1–W4 backgrounds):
 
 ```bash
 WD=/home/rnag/PULSEJET_validation/m62_filterbank_validation_20261029
-MANIFEST=/absolute/path/to/existing/windows_manifest.json
+MANIFEST=/home/rnag/PULSEJET_validation/stage6_m62/m62_15m_windows/windows_manifest.json
 sinfo -N -n node11,node12 -o '%N %T %C %m'
 squeue -w node11,node12
 sbatch --nodelist=node11 \
