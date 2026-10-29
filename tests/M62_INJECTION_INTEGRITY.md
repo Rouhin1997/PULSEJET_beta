@@ -192,3 +192,19 @@ manifest to establish precisely which code produced the results.
 **Explicitly deferred:** requested nominal injector S/N versus independently
 measured S/N, RFI-conditioned completeness, false alarms and blind-search
 selection effects — these belong to the pipeline-paper tests.
+
+## Stage 2A cluster preflight — 2026-10-29
+
+On `frontend2`, the user fetched PULSEJET `origin/dev/polynomial-search` through commit `5866a51` and ran the committed Stage 2A bootstrap:
+`git show origin/dev/polynomial-search:scripts/prepare_m62_injection_integrity.sh | bash`.
+
+**Observed preflight: PASS.** The regression `test_metadata_pass_and_header_corruption_fail` passed (1 test, 0.204 s), and the bootstrap printed `== READY: Stage 2 scripts and regression verified ==`, with existing original and injected files left unchanged. The bootstrap's presence checks for W1–W4 completed-case manifests and Stage 6 configurations passed. The separate WD is:
+`/home/rnag/PULSEJET_validation/m62_filterbank_validation_20261029`.
+
+A second, unnecessary execution of the one-time bootstrap printed `Refusing to overwrite: .../scripts/verify_m62_injection_case.py`. This is the **intended overwrite guard**, not a failed regression or a broken deployment. Do not run the bootstrap again or delete existing copies. The **real-data Stage 2A Slurm audit has not yet been submitted** at this checkpoint.
+
+Next cluster action:
+```bash
+sbatch --nodelist=node11 \
+  /home/rnag/PULSEJET_validation/m62_filterbank_validation_20261029/scripts/run_m62_injection_integrity.slurm
+```
