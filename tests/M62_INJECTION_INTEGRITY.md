@@ -87,6 +87,29 @@ all potential lost-written-block faults, and is NOT independent signal truth
 reconstruction. That is handled in Stage 2B with controlled phase/model
 and folding checks.
 
+## Preferred setup: one safe command
+
+The preflight bootstrap is committed as
+[`scripts/prepare_m62_injection_integrity.sh`](../scripts/prepare_m62_injection_integrity.sh).
+It checks the existence of all four *completed* Stage 6 cases and their
+configs, refuses to overwrite existing Stage 2 scripts, exports the exact
+GitHub source into the independent working directory and runs the synthetic
+regression. It does not submit Slurm jobs.
+
+```bash
+cd /home/rnag/PULSEJET_validation/PULSEJET_dev_source
+git fetch origin
+set -o pipefail
+git show origin/dev/polynomial-search:scripts/prepare_m62_injection_integrity.sh | bash
+```
+
+If the preflight prints `READY`, the Stage 2 Slurm job is prepared. On
+node11 it also fingerprints source code from the actual Singularity image
+without running an injection, compares the image's injector and pulsar-model
+hashes to the completed-case manifest hashes, and reports a separate
+`MATCH` / `MISMATCH_OR_UNRECORDED` status for each window. This does
+not silently equate the image with a newer GitHub checkout.
+
 ## Deploy to the existing isolated working directory
 
 On frontend2 (old Git; do **not** use `git -C`):
