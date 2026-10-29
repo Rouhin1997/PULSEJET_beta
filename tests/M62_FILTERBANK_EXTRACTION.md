@@ -254,3 +254,25 @@ cat /home/rnag/PULSEJET_validation/m62_filterbank_validation_20261029/results/66
 tail -n 5 /home/rnag/PULSEJET_validation/m62_filterbank_validation_20261029/logs/m62_fil_integrity_66707.out
 sacct -j 66707 --format=JobID,State,ExitCode,Elapsed,NodeList
 ```
+
+## Final verification confirmation — Slurm 66707 (2026-10-29)
+
+**Status: PASS — extraction payload and permitted-header-change integrity verified on existing real M62 observational data.**
+
+The operator subsequently inspected the persisted JSON report and final stdout log. Confirmed outputs:
+
+```text
+"status": "PASS",
+"total_payload_bytes_compared": 15177064192,
+AUDIT FINISHED 2026-10-29T12:46:09+0100
+```
+
+The reported `elapsed_seconds` is **452.847 s** (7 min 32.847 s). The audit started at **2026-10-29T12:38:36+0100** on **node11.cluster** (Slurm **66707**). All four complete source-to-window payload comparisons passed: W1 3,794,265,856 bytes; W2/W3/W4 3,794,266,112 bytes each. Total: **15,177,064,192 payload bytes = 59,285,407 time samples** for 256 bytes per time sample. The verification also checked exact permitted header-byte differences (`tstart`, optional `nsamples`), source sample positions, sample counts, output sizes, expected epochs, and file metadata stability.
+
+**Scientific interpretation:** the four existing M62 windows are verified exact, byte-preserving extracts of the corresponding original observational payload. The original observational noise and any RFI encoded in those samples were not modified by the splitter. This confirms the extraction gate used by the 20-source pilot and as background for subsequent experiments; it does **not** validate the injection engine, S/N scaling, timing model, or folds. Independent third-party SIGPROC reader validation remains optional follow-up for interoperability. The `sacct` status was not available in the supplied output, but the report status and final `AUDIT FINISHED` line are both confirmed.
+
+**Permanent cluster artifacts:**
+- `/home/rnag/PULSEJET_validation/m62_filterbank_validation_20261029/results/66707/extraction_audit_result.json`
+- `/home/rnag/PULSEJET_validation/m62_filterbank_validation_20261029/logs/m62_fil_integrity_66707.out`
+
+**Next gate:** inception_lite injection integrity and modeled signal truth on completed outputs; do not disturb the active 100-injection batch. The S/N-versus-RFI study is reserved for the subsequent pipeline-paper analysis.
