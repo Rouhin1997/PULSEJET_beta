@@ -623,3 +623,64 @@ Operator-provided cluster stdout: `2026-10-29T16:23:05+0100` start, `2026-10-29T
 Result JSON: `/home/rnag/PULSEJET_validation/m62_filterbank_validation_20261029/results/injection_phase_66869/W3/phase_track_result.json`.
 
 W1–W3 now show 15/15 tested true phase tracks preferred over shifted-frequency controls. **Pending:** inspect W3 JSON `event_cloud` and `counterfactual_coherence`, including reversed acceleration, jerk and DM, before interpreting sign-specific results. These coherence ratios are not calibrated S/N or significance values.
+
+
+## Stage 2B W3 physical-sign counterfactual results — Slurm 66869
+
+**Operator-provided report contents, 2026-10-29:**
+`/home/rnag/PULSEJET_validation/m62_filterbank_validation_20261029/results/injection_phase_66869/W3/phase_track_result.json`
+
+```text
+STATUS: DIAGNOSTIC_COMPLETE_NOT_SCIENCE_PASS
+distributed_blocks: 32
+time_samples_per_block: 4096
+bytes_compared_per_file: 33,554,432
+changed_bytes: 65,834
+increased: 65,834
+decreased: 0
+max_abs_delta: 1
+```
+
+The changed-pixel count, direction and maximum increment agree with the
+earlier independent Stage 2A W3 measurement, confirming consistent
+sampled-payload comparisons.
+
+| Source | Truth coherence | Counterfactual | Control coherence | Truth/control |
+|---|---:|---|---:|---:|
+| W3 I11 | 0.29161 | DM sign reversed | 0.00661 | 44.14× |
+| W3 I12 | 0.07952 | Acceleration sign reversed | 0.01385 | 5.74× |
+| W3 I12 | 0.07952 | No acceleration/jerk | 0.01702 | 4.67× |
+| W3 I12 | 0.07952 | DM sign reversed | 0.00075 | 105.80× |
+| W3 I13 | 0.20760 | Jerk sign reversed | 0.03800 | 5.46× |
+| W3 I13 | 0.20760 | No acceleration/jerk | 0.06401 | 3.24× |
+| W3 I13 | 0.20760 | DM sign reversed | 0.01040 | 19.95× |
+| W3 I14 | 0.14883 | Acceleration sign reversed | 0.01168 | 12.74× |
+| W3 I14 | 0.14883 | Jerk sign reversed | 0.03286 | 4.53× |
+| W3 I14 | 0.14883 | No acceleration/jerk | 0.02742 | 5.43× |
+| W3 I14 | 0.14883 | DM sign reversed | 0.00812 | 18.33× |
+| W3 I15 | 0.26183 | Acceleration sign reversed | 0.00104 | 251.13× |
+| W3 I15 | 0.26183 | Jerk sign reversed | 0.07670 | 3.41× |
+| W3 I15 | 0.26183 | No acceleration/jerk | 0.02355 | 11.12× |
+| W3 I15 | 0.26183 | DM sign reversed | 0.00195 | 134.30× |
+
+**All 15 W3 physical counterfactuals have lower coherence than the intended
+models.** This includes cases with positive acceleration and jerk as well
+as mixed signed motion. The weakest relative preference is 3.24×
+(W3 I13 zero-motion control). The large 251.13× W3 I15
+acceleration-reversal ratio is a ratio of small circular coherence
+numbers and is **not a likelihood ratio or a significance level**.
+The source W3 I11 has no acceleration/jerk to reverse but has a DM-sign
+comparison.
+
+**Cumulative checkpoint:** across completed W1–W3, the intended models
+outperform all shifted-frequency alternatives for **15/15 pulsars**;
+the independently recorded physical-model comparisons favor the
+prescribed models in **44/44 specific alternatives** (W1 14,
+W2 15, W3 15). These are diagnostic model-discrimination counts, not
+15 independent detection successes or 44 independent hypothesis tests.
+They neither quantify calibrated recovered S/N nor verify every pixel.
+
+**Status:** W3 differential phase-track model-control audit reviewed;
+W4 five-source audit remains outstanding. Keep the real-data
+`DIAGNOSTIC_COMPLETE_NOT_SCIENCE_PASS` label until separate,
+calibrated truth-fold and signal-strength validation is completed.
