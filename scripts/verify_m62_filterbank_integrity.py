@@ -78,9 +78,10 @@ def expect(condition, message):
         raise ValueError(message)
 
 
-def compare_payload(original, original_offset, window, window_offset, length, chunk):
+def compare_payload(original, original_offset, window, window_offset, length, chunk, max_io_mib_s):
     """Streaming comparison: both files are *only* opened rb; no output .fil."""
     checked = 0
+    begin = time.monotonic()
     with original.open("rb") as fsrc, window.open("rb") as fout:
         fsrc.seek(original_offset)
         fout.seek(window_offset)
@@ -95,10 +96,15 @@ def compare_payload(original, original_offset, window, window_offset, length, ch
                     (window, checked + first)
                 )
             checked += size
+            if max_io_mib_s > 0:
+                target = (2 * checked) / (max_io_mib_s * 1024 * 1024)
+                delay = target - (time.monotonic() - begin)
+                if delay > 0:
+                    time.sleep(delay)
     return checked
 
 
-def run(manifest_path, report_dir, chunk_size):
+def run(manifest_path, report_dir, chunk_size, max_io_mib_s):
     manifest = json.loads(manifest_path.read_text())
     expect(isinstance(manifest.get("segments"), list) and manifest["segments"], "Missing segments")
     src = Path(manifest["source"]).expanduser().resolve(strict=True)
@@ -163,7 +169,7 @@ def run(manifest_path, report_dir, chunk_size):
         expect(out_fields == expected_fields, "%s decoded fields mismatch" % name)
         expect(out_offsets["tstart"] == src_offsets["tstart"], "%s tstart field offset differs" % name)
 
-        copied = compare_payload(src, src_data + start * bps, output, out_data, count * bps, chunk_size)
+        copied = compare_payload(src, src_data + start * bps, output, out_data, count * bps, chunk_size, max_io_mib_s)
         verify_stable(src, src_stat)
         verify_stable(output, out_stat)
         checks.append({
@@ -192,16 +198,21 @@ def main():
     p.add_argument("--manifest", type=Path, required=True, help="Existing windows_manifest.json")
     p.add_argument("--report-dir", type=Path, required=True, help="New, separate audit workspace")
     p.add_argument("--chunk-mib", type=int, default=4)
+    p.add_argument("--max-io-mib-s", type=float, default=64.0,
+                   help="Approximate aggregate source+window read cap; 0 disables")
     args = p.parse_args()
     if not 1 <= args.chunk_mib <= 64:
         p.error("--chunk-mib must be between 1 and 64")
+    if not math.isfinite(args.max_io_mib_s) or args.max_io_mib_s < 0:
+        p.error("--max-io-mib-s must be finite and nonnegative")
     report = args.report_dir.expanduser().resolve()
     report.mkdir(parents=True, exist_ok=True)
     manifest = args.manifest.expanduser().resolve(strict=True)
-    expect = None
+    if (report / 'extraction_audit_result.json').exists():
+        p.error('Refusing to overwrite an existing audit report in ' + str(report))
     started = time.time()
     try:
-        result = run(manifest, report, args.chunk_mib * 1024 * 1024)
+        result = run(manifest, report, args.chunk_mib * 1024 * 1024, args.max_io_mib_s)
     except Exception as exc:
         result = {
             "status": "FAIL_OR_INCOMPLETE",
