@@ -146,7 +146,10 @@ Suggested independent working directory on cluster:
 
 ```text
 /home/rnag/PULSEJET_validation/m62_filterbank_validation_20261029/
-    verify_m62_filterbank_integrity.py
+    scripts/verify_m62_filterbank_integrity.py
+    scripts/extract_sigproc_windows.py
+    tests/test_verify_m62_filterbank_integrity.py
+    tests/test_extract_sigproc_windows.py
     run_m62_filterbank_integrity.slurm
     logs/
     results/<slurm-job-id>/extraction_audit_result.json
@@ -157,9 +160,12 @@ Suggested independent working directory on cluster:
 ```bash
 WD=/home/rnag/PULSEJET_validation/m62_filterbank_validation_20261029
 REPO=/home/rnag/PULSEJET_beta
-mkdir -p "$WD"/logs "$WD"/results
+mkdir -p "$WD"/scripts "$WD"/tests "$WD"/logs "$WD"/results
 git -C "$REPO" fetch origin dev/polynomial-search
-git -C "$REPO" show origin/dev/polynomial-search:scripts/verify_m62_filterbank_integrity.py > "$WD/verify_m62_filterbank_integrity.py"
+git -C "$REPO" show origin/dev/polynomial-search:scripts/verify_m62_filterbank_integrity.py > "$WD/scripts/verify_m62_filterbank_integrity.py"
+git -C "$REPO" show origin/dev/polynomial-search:scripts/extract_sigproc_windows.py > "$WD/scripts/extract_sigproc_windows.py"
+git -C "$REPO" show origin/dev/polynomial-search:tests/test_verify_m62_filterbank_integrity.py > "$WD/tests/test_verify_m62_filterbank_integrity.py"
+git -C "$REPO" show origin/dev/polynomial-search:tests/test_extract_sigproc_windows.py > "$WD/tests/test_extract_sigproc_windows.py"
 git -C "$REPO" show origin/dev/polynomial-search:scripts/run_m62_filterbank_integrity.slurm > "$WD/run_m62_filterbank_integrity.slurm"
 
 # Identify the one correct existing extraction manifest; do NOT regenerate files.
@@ -170,13 +176,12 @@ find /home/rnag/PULSEJET_validation/stage6_m62 \
 
 Inspect the returned manifest and confirm `source` points to the **original immutable M62 filterbank** and each `segments[].path` points to the **existing W1–W4 background .fil**, not the injected .fil. These paths cannot be safely inferred from the repository.
 
-**Local CPU-only synthetic regressions** (optional, in the existing repo without checkout):
+**Run CPU-only synthetic regressions in the isolated working directory** (before submitting real-data audit):
 
 ```bash
-cd /home/rnag/PULSEJET_beta
-# Run from a workspace containing the new test and script, after preparing code;
-# do NOT switch the active pipeline's checkout just to execute these tests.
-python3 -m unittest tests/test_verify_m62_filterbank_integrity.py -v
+WD=/home/rnag/PULSEJET_validation/m62_filterbank_validation_20261029
+python3 -m unittest discover -s "$WD/tests" -p "test_extract_sigproc_windows.py" -v
+python3 -m unittest discover -s "$WD/tests" -p "test_verify_m62_filterbank_integrity.py" -v
 ```
 
 **Submit (after setting the manifest from the `find` output):**
