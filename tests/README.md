@@ -237,3 +237,5 @@ the exact extra DM, period, midpoint A0/A1 values versus deliberately
 incorrect frequency, DM and sign controls. **Not yet run on real data.**
 Synthetic tests and real-data results must be recorded separately; this
 is not a calibrated injected S/N or blind-search recovery measurement.
+
+**Stage 2B completed 20-source diagnostic (2026-10-29):** The independent read-only differential phase-track tests on completed M62 Stage 6 W1–W4 were executed under Slurm jobs 66727, 66787, 66869 and 66892. All 20/20 injected pulsars favored their truth phase tracks over fixed off-frequency controls and all 59/59 tested reversed-sign, reversed-DM and zero-motion alternatives had lower phase coherence. All four sampled changed-byte counts agree with Stage 2A (251,826 cumulative positive one-count changes). **This is diagnostic model consistency, not calibrated S/N or formal detection significance.** See the complete per-source tables, W4 counterfactuals, limitations, and next gate in [`results/M62_STAGE2B_20_SOURCE_SUMMARY.md`](results/M62_STAGE2B_20_SOURCE_SUMMARY.md).
