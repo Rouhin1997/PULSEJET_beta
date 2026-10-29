@@ -17,7 +17,7 @@ umask 077
 
 AUDIT_WD="${AUDIT_WD:-/home/rnag/PULSEJET_validation/m62_filterbank_validation_20261029}"
 : "${AUDIT_MANIFEST:?Set AUDIT_MANIFEST to the existing windows_manifest.json}"
-AUDIT_CODE="${AUDIT_WD}/verify_m62_filterbank_integrity.py"
+AUDIT_CODE="${AUDIT_WD}/scripts/verify_m62_filterbank_integrity.py"
 REPORT_DIR="${AUDIT_WD}/results/${SLURM_JOB_ID:-manual}"
 
 [[ -f "$AUDIT_MANIFEST" ]] || { echo "Missing manifest: $AUDIT_MANIFEST" >&2; exit 2; }
