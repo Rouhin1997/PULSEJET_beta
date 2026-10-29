@@ -10,18 +10,20 @@ MANIFEST="${AUDIT_MANIFEST:-/home/rnag/PULSEJET_validation/stage6_m62/m62_15m_wi
 REF="origin/dev/polynomial-search"
 
 [[ -d "$REPO/.git" ]] || { echo "No git repository at $REPO" >&2; exit 2; }
+# Old cluster Git (without -C) compatible. Never switch the active checkout.
+repo_git() ( cd "$REPO" && git "$@" )
 [[ -r "$MANIFEST" ]] || { echo "Missing M62 manifest: $MANIFEST" >&2; exit 2; }
 [[ ! -e "$WD/scripts/verify_m62_filterbank_integrity.py" ]] || { echo "Refusing to overwrite existing audit scripts in $WD" >&2; exit 2; }
 mkdir -p "$WD/scripts" "$WD/tests" "$WD/logs" "$WD/results"
 
 # Export committed code to a new WD; git show does not switch or touch the active checkout.
-git -C "$REPO" show "$REF:scripts/verify_m62_filterbank_integrity.py" > "$WD/scripts/verify_m62_filterbank_integrity.py"
-git -C "$REPO" show "$REF:scripts/extract_sigproc_windows.py" > "$WD/scripts/extract_sigproc_windows.py"
-git -C "$REPO" show "$REF:tests/test_verify_m62_filterbank_integrity.py" > "$WD/tests/test_verify_m62_filterbank_integrity.py"
-git -C "$REPO" show "$REF:tests/test_extract_sigproc_windows.py" > "$WD/tests/test_extract_sigproc_windows.py"
-git -C "$REPO" show "$REF:scripts/run_m62_filterbank_integrity.slurm" > "$WD/run_m62_filterbank_integrity.slurm"
+repo_git show "$REF:scripts/verify_m62_filterbank_integrity.py" > "$WD/scripts/verify_m62_filterbank_integrity.py"
+repo_git show "$REF:scripts/extract_sigproc_windows.py" > "$WD/scripts/extract_sigproc_windows.py"
+repo_git show "$REF:tests/test_verify_m62_filterbank_integrity.py" > "$WD/tests/test_verify_m62_filterbank_integrity.py"
+repo_git show "$REF:tests/test_extract_sigproc_windows.py" > "$WD/tests/test_extract_sigproc_windows.py"
+repo_git show "$REF:scripts/run_m62_filterbank_integrity.slurm" > "$WD/run_m62_filterbank_integrity.slurm"
 
-git -C "$REPO" rev-parse "$REF" > "$WD/code_commit.txt"
+repo_git rev-parse "$REF" > "$WD/code_commit.txt"
 sha256sum "$WD/scripts/"*.py "$WD/tests/"*.py "$WD/run_m62_filterbank_integrity.slurm" > "$WD/code_checksums.sha256"
 
 echo "== Isolated synthetic regressions =="
