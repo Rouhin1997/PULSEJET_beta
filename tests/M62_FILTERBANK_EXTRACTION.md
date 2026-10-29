@@ -313,3 +313,21 @@ sha256sum "$ORIGINAL" "$TOOL_COPY" "$ARCHIVED"
 ```
 
 If both print `EXACT MATCH`, then the actual cluster extractor source is also archived byte-for-byte. If not, retain both versions and inspect their differences before claiming exact-source archival. The independent verifier, its tests, and job code have already been committed and exercised in the successful Stage 1 run. **The inception_lite injection engine and its cluster-local runtime configuration are a separate Stage 2 provenance audit**; do not presume they are identical to GitHub without checking.
+
+## Source provenance closed — original extractor parity confirmed
+
+**Confirmed 2026-10-29 by direct read-only `cmp` execution on frontend2:** the two original cluster copies of the M62 extractor are **byte-identical** to the independent validation workspace copy exported from GitHub:
+
+```text
+cmp /home/rnag/PULSEJET_validation/stage6_m62/extract_sigproc_windows.py \\
+    /home/rnag/PULSEJET_validation/m62_filterbank_validation_20261029/scripts/extract_sigproc_windows.py
+PASS: GitHub archive matches original extractor
+
+cmp /home/rnag/PULSEJET_validation/inception_injection_test_tool/scripts/extract_sigproc_windows.py \\
+    /home/rnag/PULSEJET_validation/m62_filterbank_validation_20261029/scripts/extract_sigproc_windows.py
+PASS: GitHub archive matches injection-tool copy
+```
+
+Both commands returned success (`cmp` exit status 0, as confirmed by their `&& echo` outputs). Therefore the archived GitHub splitter is **an exact bytewise copy of both source copies**, rather than merely a reconstructed equivalent. This resolves the outstanding original-source archival qualification in the previous section.
+
+**Stage 1 final status: COMPLETE for extraction integrity and code archival.** Evidence: 2/2 original extractor tests and 1/1 verifier regression passed, full W1–W4 payload `PASS` (15,177,064,192 bytes), final report `"status": "PASS"`, `AUDIT FINISHED` log line, and exact source-code parity. An external SIGPROC decoder cross-check remains optional interoperability work; Stage 2 injection-engine/model integrity is not yet validated.
