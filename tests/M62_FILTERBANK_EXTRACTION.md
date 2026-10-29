@@ -219,3 +219,38 @@ cat /home/rnag/PULSEJET_validation/m62_filterbank_validation_20261029/results/<j
 ```
 
 A failure or an aborted attempt should remain **FAIL_OR_INCOMPLETE** pending inspection; never convert it into a PASS from the mere presence of folded pulses. Logs/results remain in the new working directory. Source and background `.fil` are opened only for reading. Follow-up injection-geometry and model tests should be designed after reviewing the exact INCEPTION-Lite output manifests and injection quantization/scaling implementation; they should run only against **completed** outputs.
+
+## Observed execution result — 2026-10-29, Slurm 66707 (node11)
+
+**Evidence supplied:** terminal output of `tail -f` on `/home/rnag/PULSEJET_validation/m62_filterbank_validation_20261029/logs/m62_fil_integrity_66707.out`. This subsection records the **observed log**, not an independently retrieved cluster report or a blanket science-validation certificate.
+
+- Preflight on frontend2: original extractor synthetic regression **2/2 tests passed**; new full-payload integrity verifier's positive/negative corruption test **1/1 passed**. The preparation check found the source M62 observation and W1–W4 backgrounds.
+- Job ID **66707**, running on `node11.cluster`; audit began **2026-10-29T12:38:36+0100**.
+- Input manifest: `/home/rnag/PULSEJET_validation/stage6_m62/m62_15m_windows/windows_manifest.json`.
+- Read rate cap: approx. **64 MiB/s** across source and window reads.
+- The verification script printed the following **four PASS lines**:
+
+| Window | Time samples | Payload bytes compared | Reported result |
+| --- | ---: | ---: | --- |
+| W1 | 14,821,351 | 3,794,265,856 | PASS |
+| W2 | 14,821,352 | 3,794,266,112 | PASS |
+| W3 | 14,821,352 | 3,794,266,112 | PASS |
+| W4 | 14,821,352 | 3,794,266,112 | PASS |
+| **Total** | **59,285,407** | **15,177,064,192** | **4/4 per-window checks passed** |
+
+The verifier emits each `PASS Wk` only after exact binary payload comparison, expected source-to-segment indexing, and raw-header checks (with `tstart` and optional `nsamples` being the only allowed differences). It also checked input stat metadata stability at completion of each window.
+
+The excerpt ended with:
+```text
+REPORT /home/rnag/PULSEJET_validation/m62_filterbank_validation_20261029/results/66707/extraction_audit_result.json
+```
+
+**Not yet independently read here:** the JSON contents, final `AUDIT FINISHED` log line, `sacct` exit status, and third-party SIGPROC parser result. Please obtain these before marking the *entire Slurm job* finalized. The per-window full-payload comparison **has passed**. This directly supports that the splitter preserved the existing observational sample bytes, not that injection generation, injector S/N, or folding were validated. These remain separate gates.
+
+Finalization command on cluster:
+
+```bash
+cat /home/rnag/PULSEJET_validation/m62_filterbank_validation_20261029/results/66707/extraction_audit_result.json
+tail -n 5 /home/rnag/PULSEJET_validation/m62_filterbank_validation_20261029/logs/m62_fil_integrity_66707.out
+sacct -j 66707 --format=JobID,State,ExitCode,Elapsed,NodeList
+```
