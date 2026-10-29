@@ -572,3 +572,37 @@ all five intended source tracks preferred over shifted-frequency
 controls and all available tested physical counterfactuals. W3–W4
 are not yet run. No input, completed injection, or active UCB100 file
 was modified by these audits.
+
+
+## Stage 2B W3 submission — Slurm 66869
+
+**Operator-confirmed Slurm submission, 2026-10-29:**
+
+```bash
+sbatch --nodelist=node11 \
+  /home/rnag/PULSEJET_validation/m62_filterbank_validation_20261029/scripts/run_m62_injection_phase_tracks.slurm 3
+```
+
+Slurm returned `Submitted batch job 66869`. This establishes
+**submission only**, not completion, successful output, or a scientific
+W3 phase-tracking result.
+
+Expected outputs on the cluster:
+
+```text
+/home/rnag/PULSEJET_validation/m62_filterbank_validation_20261029/logs/m62_phase_track_66869.out
+/home/rnag/PULSEJET_validation/m62_filterbank_validation_20261029/logs/m62_phase_track_66869.err
+/home/rnag/PULSEJET_validation/m62_filterbank_validation_20261029/results/injection_phase_66869/W3/phase_track_result.json
+```
+
+The dedicated job is read-only, targeting completed Stage 6 W3
+injected/background filterbanks; the active Stage 10 UCB100
+campaign is excluded. The W3 truth configuration contains
+`M62_W3_I11`–`I15`, spanning stationary, positive acceleration,
+positive jerk, and mixed positive/negative acceleration/jerk models.
+
+**Status: W3 SUBMITTED / PENDING RESULTS.** Next steps are to read the
+stdout/stderr, verify the `DIAGNOSTIC_COMPLETE_NOT_SCIENCE_PASS`
+completion marker, and inspect all five truth-vs-off-frequency and
+available acceleration/jerk/DM counterfactual coherence values from
+the JSON. Do not mark W3 passed until these are examined.
