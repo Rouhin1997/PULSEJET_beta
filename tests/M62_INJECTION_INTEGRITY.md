@@ -362,3 +362,43 @@ the real W1 injection is phase coherent. Submit the dedicated
 `scripts/run_m62_injection_phase_tracks.slurm 1` on node11 to test W1
 read-only, then inspect its truth-vs-control coherence report before
 extending to W2–W4.
+
+
+## Stage 2B W1 real-data differential phase-track pilot — 2026-10-29
+
+**Observed operator result:** the W1 Stage 2B Slurm pilot completed at
+`2026-10-29T15:17:27+0100` with the end marker
+`STAGE2B PILOT FINISHED`. The independent differential-pixel first-harmonic
+analysis reported:
+
+| Source | Truth coherence | Maximum off-frequency control | Truth/off-frequency ratio |
+|---|---:|---:|---:|
+| M62_W1_I01 | 0.36111 | 0.03895 | 9.27 |
+| M62_W1_I02 | 0.21270 | 0.03079 | 6.91 |
+| M62_W1_I03 | 0.08546 | 0.01113 | 7.68 |
+| M62_W1_I04 | 0.26713 | 0.03136 | 8.52 |
+| M62_W1_I05 | 0.06358 | 0.00619 | 10.28 |
+
+**Interpretation:** all five injected sources' prescribed time-frequency
+phase tracks exhibit substantially greater weighted phase concentration in
+the observed changed-pixel cloud than four deliberately shifted spin
+frequencies. This is meaningful positive evidence that the injected
+changes follow their intended periods and *combined* polynomial/dispersion
+tracks. Because each window contains five sources and these are not
+significance-calibrated controls, the ratios are not statistical
+significances, recovered S/Ns or formal proof of unique orbital parameters.
+
+**Still required before declaring a fully validated sign/DM convention:**
+inspect the W1 `phase_track_result.json` fields
+`counterfactual_coherence` for reversed acceleration (I02, I04, I05),
+reversed jerk (I03, I04, I05), reversed DM (I02–I05), and no-motion tracks.
+Only the shifted-frequency controls were included in the supplied stdout;
+those additional control results are saved in the JSON but not yet
+reported. Also inspect `event_cloud` change counts and any error log.
+No independent folded-S/N or real-data recovery claim follows from this
+diagnostic.
+
+**W1 job number:** not included in the provided log fragment. The report
+may be located without guessing its ID using
+`/home/rnag/PULSEJET_validation/m62_filterbank_validation_20261029/results/injection_phase_*/W1/phase_track_result.json`.
+Work remains read-only and separate from Stage 10 UCB100.
