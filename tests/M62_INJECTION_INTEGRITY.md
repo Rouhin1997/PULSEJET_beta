@@ -472,3 +472,37 @@ the active Stage 10 UCB100 campaign remains outside scope.
 record all five W2 truth versus off-frequency coherence ratios, and the
 acceleration/jerk/DM/no-motion counterfactuals, event-cloud statistics, and
 any errors. Do not infer success from the existence of a Slurm job ID.
+
+
+## Stage 2B W2 real-data phase-track frequency-control results — Slurm 66787
+
+**Operator-provided completed Slurm stdout and empty stderr** (2026-10-29):
+`STAGE2B PILOT START 2026-10-29T16:02:53+0100`;
+`NODE node11.cluster JOB 66787 W2`;
+`RESULT DIAGNOSTIC_COMPLETE_NOT_SCIENCE_PASS`;
+`STAGE2B PILOT FINISHED 2026-10-29T16:03:05+0100`
+(12 seconds elapsed by timestamp difference). The job read sampled data
+from completed Stage 6 W2 observational and injected filterbanks; no new
+injection or folding. The operator displayed no stderr content.
+
+| Pulsar | Truth coherence | Max shifted-frequency control | Truth/control |
+|---|---:|---:|---:|
+| M62_W2_I06 | 0.17538 | 0.02136 | 8.21× |
+| M62_W2_I07 | 0.10897 | 0.01316 | 8.28× |
+| M62_W2_I08 | 0.31615 | 0.04087 | 7.74× |
+| M62_W2_I09 | 0.34997 | 0.04110 | 8.51× |
+| M62_W2_I10 | 0.04298 | 0.00633 | 6.79× |
+
+Thus **all five W2 sources preferentially match their prescribed complete
+time/frequency phase tracks compared with these incorrect spin-frequency
+controls**. Together with W1, this gives 10/10 cases showing this
+specific diagnostic preference, not a detection-completeness or calibrated
+S/N measurement.
+
+**Pending:** inspect W2 report's `event_cloud` and
+`counterfactual_coherence` for acceleration sign, jerk sign, DM sign
+and no-motion contrasts. The stdout does **not** include these results,
+so Stage 2B W2 signed-parameter checks are not yet interpreted.
+
+Original result preserved on cluster:
+`/home/rnag/PULSEJET_validation/m62_filterbank_validation_20261029/results/injection_phase_66787/W2/phase_track_result.json`.
