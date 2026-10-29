@@ -22,6 +22,13 @@ mkdir -p "$REPORT"
 echo "STAGE2 START $(date --iso-8601=seconds)"
 echo "NODE $(hostname) JOB $SLURM_JOB_ID"
 echo "AUDIT SCOPE: completed stage6_m62 W1-W4 only; stage10_ucb100 untouched"
+SIF="$ROOT/images/inception_lite.sif"
+[[ -s "$SIF" ]] || { echo "Missing pinned INCEPTION SIF: $SIF" >&2; exit 2; }
+[[ -r "$WD/scripts/inspect_inception_runtime.py" ]] || { echo "Missing runtime fingerprint script" >&2; exit 2; }
+singularity exec --cleanenv "$SIF" env PYTHONNOUSERSITE=1 \
+    python3 "$WD/scripts/inspect_inception_runtime.py" \
+    > "$REPORT/inception_sif_source_sha256.json"
+echo "INCEPTION runtime source fingerprint saved in $REPORT/inception_sif_source_sha256.json"
 for i in 1 2 3 4; do
     case_dir="$ROOT/stage6_m62/m62_15m_injections/W${i}/case_0001"
     config="$ROOT/stage6_m62/weekend_configs/m62_weekend_20_w${i}.json"
@@ -32,4 +39,19 @@ for i in 1 2 3 4; do
         --report-dir "$REPORT/W${i}" --blocks 32 --samples-per-block 4096
     echo "===== W${i} METADATA AND GEOMETRY PASS ====="
 done
+python3 - "$REPORT" <<'PY'
+import json, sys
+from pathlib import Path
+root=Path(sys.argv[1])
+fingerprints=json.loads((root/'inception_sif_source_sha256.json').read_text())['code_sha256']
+for w in range(1,5):
+    result=json.loads((root/('W%d' % w)/'injection_integrity_result.json').read_text())
+    recorded=result.get('injector_provenance',{})
+    for key, filename in [('injector_script_sha256','injector/SCRIPT_inject_pulsars.py'),
+                          ('pulsar_model_sha256','injector/pulsar_model.py')]:
+        got=recorded.get(key)
+        expect=fingerprints.get(filename)
+        print('W%d %s %s' % (w, key, 'MATCH' if got == expect else 'MISMATCH_OR_UNRECORDED'),
+              flush=True)
+PY
 echo "STAGE2A FINISHED $(date --iso-8601=seconds)"
