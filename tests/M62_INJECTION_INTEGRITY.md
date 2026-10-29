@@ -606,3 +606,20 @@ stdout/stderr, verify the `DIAGNOSTIC_COMPLETE_NOT_SCIENCE_PASS`
 completion marker, and inspect all five truth-vs-off-frequency and
 available acceleration/jerk/DM counterfactual coherence values from
 the JSON. Do not mark W3 passed until these are examined.
+
+
+## W3 Stage 2B result: job 66869
+
+Operator-provided cluster stdout: `2026-10-29T16:23:05+0100` start, `2026-10-29T16:23:13+0100` finished, `node11.cluster`, empty stderr, `DIAGNOSTIC_COMPLETE_NOT_SCIENCE_PASS`. Existing completed Stage 6 W3 observations and injections were read-only; no folding or injection.
+
+| Source | Truth coherence | Largest shifted-frequency control | Truth/control |
+|---|---:|---:|---:|
+| M62_W3_I11 | 0.29161 | 0.03401 | 8.57 |
+| M62_W3_I12 | 0.07952 | 0.00699 | 11.38 |
+| M62_W3_I13 | 0.20760 | 0.02524 | 8.22 |
+| M62_W3_I14 | 0.14883 | 0.01571 | 9.47 |
+| M62_W3_I15 | 0.26183 | 0.03494 | 7.49 |
+
+Result JSON: `/home/rnag/PULSEJET_validation/m62_filterbank_validation_20261029/results/injection_phase_66869/W3/phase_track_result.json`.
+
+W1–W3 now show 15/15 tested true phase tracks preferred over shifted-frequency controls. **Pending:** inspect W3 JSON `event_cloud` and `counterfactual_coherence`, including reversed acceleration, jerk and DM, before interpreting sign-specific results. These coherence ratios are not calibrated S/N or significance values.
